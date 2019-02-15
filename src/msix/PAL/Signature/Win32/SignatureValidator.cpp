@@ -152,50 +152,56 @@ namespace MSIX
     static bool GetEnhancedKeyUsage(PCCERT_CONTEXT pCertContext, std::vector<std::string>& values)
     {                   
         //get OIDS from the extension or property
-
-        DWORD cbExtensionUsage = 0;
+ 
+		DWORD cbExtensionUsage = 0;
         std::vector<byte> extensionUsage(0);
         CertGetEnhancedKeyUsage(pCertContext, CERT_FIND_EXT_ONLY_ENHKEY_USAGE_FLAG, NULL, &cbExtensionUsage);
-        extensionUsage.resize(cbExtensionUsage);
-        ThrowErrorIf(Error::SignatureInvalid, (
-            !CertGetEnhancedKeyUsage(
-                pCertContext,
-                CERT_FIND_EXT_ONLY_ENHKEY_USAGE_FLAG,
-                reinterpret_cast<PCERT_ENHKEY_USAGE>(extensionUsage.data()),                
-                &cbExtensionUsage) &&
-            GetLastError() != CRYPT_E_NOT_FOUND
-        ), "CertGetEnhacnedKeyUsage on extension usage failed.");
+		if (cbExtensionUsage > 0)
+		{
+			extensionUsage.resize(cbExtensionUsage);
+			ThrowErrorIf(Error::SignatureInvalid, (
+				!CertGetEnhancedKeyUsage(
+					pCertContext,
+					CERT_FIND_EXT_ONLY_ENHKEY_USAGE_FLAG,
+					reinterpret_cast<PCERT_ENHKEY_USAGE>(extensionUsage.data()),
+					&cbExtensionUsage) &&
+				GetLastError() != CRYPT_E_NOT_FOUND
+				), "CertGetEnhacnedKeyUsage on extension usage failed.");
 
-        if (extensionUsage.size() > 0)
-        {
-            PCERT_ENHKEY_USAGE pExtensionUsageT = reinterpret_cast<PCERT_ENHKEY_USAGE>(extensionUsage.data());
-            for (DWORD i = 0; i < pExtensionUsageT->cUsageIdentifier; i++)
-            {   values.push_back(std::move(std::string(pExtensionUsageT->rgpszUsageIdentifier[i])));
-            }
-            return (pExtensionUsageT->cUsageIdentifier > 0);
-        }
+			if (extensionUsage.size() > 0)
+			{
+				PCERT_ENHKEY_USAGE pExtensionUsageT = reinterpret_cast<PCERT_ENHKEY_USAGE>(extensionUsage.data());
+				for (DWORD i = 0; i < pExtensionUsageT->cUsageIdentifier; i++)
+				{   values.push_back(std::move(std::string(pExtensionUsageT->rgpszUsageIdentifier[i])));
+				}
+				return (pExtensionUsageT->cUsageIdentifier > 0);
+			}
+		}
 
         DWORD cbPropertyUsage = 0;
         std::vector<byte> propertyUsage(0);
         CertGetEnhancedKeyUsage(pCertContext, CERT_FIND_PROP_ONLY_ENHKEY_USAGE_FLAG, NULL, &cbPropertyUsage);
-        propertyUsage.resize(cbPropertyUsage);
-        ThrowErrorIf(Error::SignatureInvalid, (            
-            !CertGetEnhancedKeyUsage(
-                pCertContext,
-                CERT_FIND_PROP_ONLY_ENHKEY_USAGE_FLAG,
-                reinterpret_cast<PCERT_ENHKEY_USAGE>(propertyUsage.data()),
-                &cbPropertyUsage) &&
-            GetLastError() != CRYPT_E_NOT_FOUND
-        ), "CertGetEnhancedKeyUsage on property usage failed.");
+		if (cbPropertyUsage > 0)
+		{
+			propertyUsage.resize(cbPropertyUsage);
+			ThrowErrorIf(Error::SignatureInvalid, (
+				!CertGetEnhancedKeyUsage(
+					pCertContext,
+					CERT_FIND_PROP_ONLY_ENHKEY_USAGE_FLAG,
+					reinterpret_cast<PCERT_ENHKEY_USAGE>(propertyUsage.data()),
+					&cbPropertyUsage) &&
+				GetLastError() != CRYPT_E_NOT_FOUND
+				), "CertGetEnhancedKeyUsage on property usage failed.");
 
-        if (propertyUsage.size() > 0)
-        {
-            PCERT_ENHKEY_USAGE pPropertyUsageT = reinterpret_cast<PCERT_ENHKEY_USAGE>(propertyUsage.data());
-            for (DWORD i = 0; i < pPropertyUsageT->cUsageIdentifier; i++)
-            {   values.push_back(std::move(std::string(pPropertyUsageT->rgpszUsageIdentifier[i])));
-            }
-            return (pPropertyUsageT->cUsageIdentifier > 0);
-        }
+			if (propertyUsage.size() > 0)
+			{
+				PCERT_ENHKEY_USAGE pPropertyUsageT = reinterpret_cast<PCERT_ENHKEY_USAGE>(propertyUsage.data());
+				for (DWORD i = 0; i < pPropertyUsageT->cUsageIdentifier; i++)
+				{   values.push_back(std::move(std::string(pPropertyUsageT->rgpszUsageIdentifier[i])));
+				}
+				return (pPropertyUsageT->cUsageIdentifier > 0);
+			}
+		}
 
         return false;
     }
@@ -203,7 +209,7 @@ namespace MSIX
     // Check that the top level certificate contains the public key for the Microsoft root on Win7.
     static bool IsMicrosoftTrustedChainForLegacySystems(PCCERT_CHAIN_CONTEXT certChainContext)
     {
-        PCERT_SIMPLE_CHAIN chain = certChainContext->rgpChain[0];
+		PCERT_SIMPLE_CHAIN chain = certChainContext->rgpChain[0];
         DWORD chainElement = chain->cElement;;
         PCCERT_CONTEXT cert = chain->rgpElement[chainElement - 1]->pCertContext;
         BYTE keyId[HASH_BYTES];
@@ -219,7 +225,7 @@ namespace MSIX
                 keyId,
                 &keyIdLength) || HASH_BYTES != keyIdLength),
             "CryptHashCertificate2 failed");
-        return (0 == memcmp(MicrosoftApplicationRootList, keyId, HASH_BYTES));
+		return (0 == memcmp(MicrosoftApplicationRootList, keyId, HASH_BYTES));
     }
 
     static bool IsMicrosoftTrustedChain(_In_ PCCERT_CHAIN_CONTEXT certChainContext)
@@ -300,8 +306,8 @@ namespace MSIX
                 (LPVOID*)&basicConstraintsT,
                 &cbDecoded))
         {
-            unique_local_alloc_handle basicConstraints(basicConstraintsT);
-            return basicConstraintsT->fCA ? true : false;
+			unique_local_alloc_handle basicConstraints(basicConstraintsT);
+			return basicConstraintsT->fCA ? true : false;
         }
         return false;
     }
@@ -325,7 +331,7 @@ namespace MSIX
 
     static PCCERT_CONTEXT GetCertContext(BYTE *signatureBuffer, ULONG cbSignatureBuffer)
     {
-        //get cert context from strCertificate;
+		//get cert context from strCertificate;
         DWORD dwExpectedContentType = CERT_QUERY_CONTENT_FLAG_CERT |
             CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED |
             CERT_QUERY_CONTENT_FLAG_PKCS7_UNSIGNED;
@@ -335,7 +341,7 @@ namespace MSIX
         CERT_BLOB blob;
         blob.pbData = signatureBuffer;
         blob.cbData = cbSignatureBuffer;
-        ThrowErrorIfNot(Error::SignatureInvalid, (
+		ThrowErrorIfNot(Error::SignatureInvalid, (
             CryptQueryObject(
                 CERT_QUERY_OBJECT_BLOB,
                 &blob,
@@ -354,7 +360,7 @@ namespace MSIX
         PCCERT_CONTEXT pCertContext = NULL;
         if (dwContentType == CERT_QUERY_CONTENT_CERT)
         {   //get the certificate context
-            pCertContext = CertEnumCertificatesInStore(certStoreHandle.get(), NULL);
+			pCertContext = CertEnumCertificatesInStore(certStoreHandle.get(), NULL);
         }
         else 
         {   //pkcs7 -- get the end entity
@@ -368,32 +374,34 @@ namespace MSIX
                 }
             }
         }
-        return pCertContext;
+		return pCertContext;
     }
     
     static bool DoesSignatureCertContainStoreEKU(_In_ byte* rawSignatureBuffer, _In_ ULONG dataSize)
     {
-        unique_cert_context certificateContext(GetCertContext(rawSignatureBuffer, dataSize));        
+		unique_cert_context certificateContext(GetCertContext(rawSignatureBuffer, dataSize));
+		if (certificateContext.get() == NULL)
+			return false;
         std::vector<std::string> oids;
         if (GetEnhancedKeyUsage(certificateContext.get(), oids)) {
             std::size_t count = oids.size();
             for (std::size_t i = 0; i < count; i++) {
                 if (0 == oids.at(i).compare(OID::WindowsStore())) {
-                    return true;
+					return true;
                 }
             }
         }
-        return false;
+		return false;
     }
 
     // Best effort to determine whether the signature file is associated with a store cert
     static bool IsStoreOrigin(byte* signatureBuffer, ULONG cbSignatureBuffer)
     {
-        if (DoesSignatureCertContainStoreEKU(signatureBuffer, cbSignatureBuffer))
+		if (DoesSignatureCertContainStoreEKU(signatureBuffer, cbSignatureBuffer))
         {   unique_cert_chain_context certChainContext(GetCertChainContext(signatureBuffer, cbSignatureBuffer));
-            return IsMicrosoftTrustedChain(certChainContext.get());
+		return IsMicrosoftTrustedChain(certChainContext.get());
         }
-        return false;
+		return false;
     }
 
     // Best effort to determine whether the signature file is associated with a store cert
@@ -404,9 +412,11 @@ namespace MSIX
 
     static bool GetPublisherName(/*in*/byte* signatureBuffer, /*in*/ ULONG cbSignatureBuffer, /*inout*/ std::string& publisher)
     {
-        unique_cert_context certificateContext(GetCertContext(signatureBuffer, cbSignatureBuffer));
+		unique_cert_context certificateContext(GetCertContext(signatureBuffer, cbSignatureBuffer));
+		if (certificateContext.get() == NULL)
+			return false;
         
-        int requiredLength = CertNameToStrA(
+		int requiredLength = CertNameToStrA(
             X509_ASN_ENCODING,
             &certificateContext.get()->pCertInfo->Subject,
             CERT_X500_NAME_STR | CERT_NAME_STR_REVERSE_FLAG,
@@ -423,10 +433,10 @@ namespace MSIX
             publisherT.data(),
             requiredLength) > 0)
         {
-            publisher = std::string(publisherT.data());
-            return true;
+			publisher = std::string(publisherT.data());
+			return true;
         }
-        return false;
+		return false;
     }
 
 
@@ -451,7 +461,7 @@ namespace MSIX
         std::vector<std::uint8_t> p7x(uli.LowPart);
         ThrowHrIfFailed(stream->Seek(li, StreamBase::Reference::START, &uli));
 
-        ULONG actualRead = 0;
+		ULONG actualRead = 0;
         ThrowHrIfFailed(stream->Read(p7x.data(), static_cast<ULONG>(p7x.size()), &actualRead));
         ThrowErrorIf(Error::SignatureInvalid,
             ((actualRead != p7x.size() || (*(DWORD*)p7x.data() != P7X_FILE_ID))),
@@ -507,7 +517,7 @@ namespace MSIX
                 &innerContentTypeSize) &&
             HRESULT_FROM_WIN32(GetLastError()) != HRESULT_FROM_WIN32(ERROR_MORE_DATA)
         ), "CryptMsgGetParam failed");
-        
+
         // Allocate a temporary buffer
         std::vector<std::uint8_t> innerContentType(innerContentTypeSize);
         ThrowErrorIfNot(Error::SignatureInvalid, (
@@ -546,7 +556,7 @@ namespace MSIX
                 innerContent.data(),
                 &innerContentSize)
         ), "CryptMsgGetParam failed");
-        
+
         // Parse the ASN.1 to the the indirect data structure
         SPC_INDIRECT_DATA_CONTENT* indirectContent = NULL;
         DWORD indirectContentSize = 0;
