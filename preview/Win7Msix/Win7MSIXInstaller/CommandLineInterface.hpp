@@ -50,21 +50,21 @@ public:
 
     /// Displays contextual formatted help to the user used for command line tool
     void DisplayHelp();
-
     HRESULT CreateRequest(_Outptr_ MsixRequest** msixRequest);
+	bool IsQuietMode() { return m_quietMode; }
 
 private:
     int m_argc = 0;
     char ** m_argv = nullptr;
     char * m_toolName = nullptr;
-    static std::map<std::wstring, Option, CaseInsensitiveLess> s_options;
+	static std::map<std::wstring, Option, CaseInsensitiveLess> s_options;
     static std::map<std::wstring, std::wstring> s_optionAliases;
 
     std::wstring m_packageFilePath;
     std::wstring m_packageFullName;
+	bool m_quietMode;
 
     MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
-    Flags m_flags = NoFlags;
     OperationType m_operationType = OperationType::Undefined;
 
     CommandLineInterface() {}

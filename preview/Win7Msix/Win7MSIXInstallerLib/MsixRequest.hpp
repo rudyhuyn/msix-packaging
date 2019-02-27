@@ -1,6 +1,7 @@
 #pragma once
 #include "PackageInfo.hpp"
 #include "FilePaths.hpp"
+#include "IUI.hpp"
 class UI;
 
 enum OperationType
@@ -12,13 +13,6 @@ enum OperationType
     FindAllPackages = 4,
 };
 
-enum Flags
-{
-    NoFlags = 0,
-    QuietUX = 0x1,
-};
-DEFINE_ENUM_FLAG_OPERATORS(Flags);
-
 /// MsixRequest represents what this instance of the executable will be doing and tracks the state of the current operation
 class MsixRequest
 {
@@ -27,7 +21,6 @@ private:
     std::wstring m_packageFilePath;
     std::wstring m_packageFullName;
     MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
-    Flags m_flags = NoFlags;
     OperationType m_operationType = Add;
     FilePathMappings m_filePathMappings;
 
@@ -35,10 +28,10 @@ private:
     AutoPtr<PackageInfo> m_packageInfo;
 
     /// Filled in by CreateAndShowUI 
-    AutoPtr<UI> m_UI;
+    AutoPtr<IUI> m_UI;
 
 public:
-    static HRESULT Make(OperationType operationType, Flags flags, std::wstring packageFilePath, std::wstring packageFullName, MsixRequest** outInstance);
+    static HRESULT Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MsixRequest** outInstance);
 
     /// The main function processes the request based on whichever operation type was requested and then
     /// going through the sequence of individual handlers.
@@ -48,7 +41,9 @@ public:
     void SetPackageInfo(PackageInfo* packageInfo);
 
     /// Called by CreateAndShowUI 
-    void SetUI(UI* ui);
+	void SetUI(IUI* ui) {
+		m_UI = ui;
+	}
 
     // Getters
     MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
@@ -59,9 +54,8 @@ public:
     /// @return can return null if called before PopulatePackageInfo.
     PackageInfo* GetPackageInfo() { return m_packageInfo; }
 
-    /// @return can return null if called before CreateAndShowUI or if Flags::QuietUX was passed in and there is no UI.
-    UI* GetUI() { return m_UI; }
-    bool IsQuietUX() { return (m_flags & Flags::QuietUX) == Flags::QuietUX; }
+    /// @return the UI to display. If NULL, the operations will be quiet.
+	IUI * GetUI() { return m_UI; }
     
     bool IsRemove()
     {

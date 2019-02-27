@@ -12,7 +12,6 @@
 
 #include "FootprintFiles.hpp"
 #include "FilePaths.hpp"
-#include "InstallUI.hpp"
 #include <cstdio>
 #include <experimental/filesystem> // C++-standard header file name
 #include <filesystem> // Microsoft-specific implementation header file name
@@ -25,7 +24,8 @@
 #include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
-
+#include "InstallUI.hpp"
+#include "GeneralUtil.hpp"
 
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
@@ -62,7 +62,7 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
     {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr}},
 };
 
-HRESULT MsixRequest::Make(OperationType operationType, Flags flags, std::wstring packageFilePath, std::wstring packageFullName, MsixRequest ** outInstance)
+HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MsixRequest ** outInstance)
 {
     std::unique_ptr<MsixRequest> instance(new MsixRequest());
     if (instance == nullptr)
@@ -71,7 +71,6 @@ HRESULT MsixRequest::Make(OperationType operationType, Flags flags, std::wstring
     }
 
     instance->m_operationType = operationType;
-    instance->m_flags = flags;
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     RETURN_IF_FAILED(instance->InitializeFilePathMappings());
@@ -193,11 +192,6 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     }
 
     return S_OK;
-}
-
-void MsixRequest::SetUI(UI * ui)
-{
-    m_UI = ui;
 }
 
 void MsixRequest::SetPackageInfo(PackageInfo* packageInfo) 

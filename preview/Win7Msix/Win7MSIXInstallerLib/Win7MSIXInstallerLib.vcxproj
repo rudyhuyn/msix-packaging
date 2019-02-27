@@ -20,11 +20,11 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{B2E31763-47FD-5E65-958A-08E35AB83025}</ProjectGuid>
+    <ProjectGuid>{AAD31763-5E65-47FD-958A-08E35AB83025}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Win7MSIXInstaller</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
-    <ProjectName>Win7MSIXInstaller</ProjectName>
+    <ProjectName>Win7MSIXInstallerLib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -47,7 +47,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -166,7 +166,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\Win7MSIXInstallerLib\;..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -184,24 +184,40 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CommandLineInterface.hpp" />
+    <ClInclude Include="AddRemovePrograms.hpp" />
+    <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="Extractor.hpp" />
+    <ClInclude Include="FileTypeAssociation.hpp" />
+    <ClInclude Include="FootprintFiles.hpp" />
+    <ClInclude Include="GeneralUtil.hpp" />
+    <ClInclude Include="FilePaths.hpp" />
     <ClInclude Include="InstallUI.hpp" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Win7MSIXInstallerLogger.hpp" />
+    <ClInclude Include="IUI.hpp" />
+    <ClInclude Include="PopulatePackageInfo.hpp" />
+    <ClInclude Include="PackageInfo.hpp" />
+    <ClInclude Include="IPackageHandler.hpp" />
+    <ClInclude Include="MsixRequest.hpp" />
+    <ClInclude Include="MSIXPackaging\AppxPackaging.hpp" />
+    <ClInclude Include="MSIXPackaging\MSIXWindows.hpp" />
+    <ClInclude Include="Protocol.hpp" />
+    <ClInclude Include="RegistryDevirtualizer.hpp" />
+    <ClInclude Include="RegistryKey.hpp" />
+    <ClInclude Include="StartMenuLink.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Extractor.cpp" />
+    <ClCompile Include="FilePaths.cpp" />
+    <ClCompile Include="FileTypeAssociation.cpp" />
+    <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="InstallUI.cpp" />
-    <ClCompile Include="CommandLineInterface.cpp" />
-    <ClCompile Include="Win7MSIXInstaller.cpp" />
-    <ClCompile Include="Win7MSIXInstallerLogger.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Win7MSIXInstaller.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Win7MSIXInstallerLib\Win7MSIXInstallerLib.vcxproj">
-      <Project>{aad31763-5e65-47fd-958a-08e35ab83025}</Project>
-    </ProjectReference>
+    <ClCompile Include="PackageInfo.cpp" />
+    <ClCompile Include="Protocol.cpp" />
+    <ClCompile Include="RegistryDevirtualizer.cpp" />
+    <ClCompile Include="RegistryKey.cpp" />
+    <ClCompile Include="MsixRequest.cpp" />
+    <ClCompile Include="PopulatePackageInfo.cpp" />
+    <ClCompile Include="AddRemovePrograms.cpp" />
+    <ClCompile Include="StartMenuLink.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
