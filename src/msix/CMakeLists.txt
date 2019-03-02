@@ -69,6 +69,10 @@ else()
         set(CMAKE_VISIBILITY_INLINES_HIDDEN     1)
         set(CMAKE_C_VISIBILITY_PRESET           hidden)
         set(CMAKE_CXX_VISIBILITY_PRESET         hidden)
+        if (ASAN)
+            set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fsanitize=address")
+        endif()
+
         # iOS and Mac exports start with '_' .The first '_' is be in the exports.def.cmakein
         string(REGEX REPLACE ";" "\n_" MSIX_EXPORTS "${MSIX_EXPORTS}")
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/exports.def.cmakein ${CMAKE_CURRENT_BINARY_DIR}/exports.def CRLF)
@@ -206,7 +210,7 @@ if(WIN32)
     string(REPLACE "/GR" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set_target_properties(${PROJECT_NAME} PROPERTIES
         COMPILE_FLAGS "/source-charset:utf-8 /Gw /GL /GR-"
-        VS_WINRT_COMPONENT TRUE)
+        )
     # Using /DELAYLOAD as linker option will use a helper funtion provided by
     # Visual C++ that will load the dll at runtime by calling LoadLibrary and GetProcAddress.
     # This dlls are NOT supposed to be loaded ever on Win7. See Exceptions.cpp
