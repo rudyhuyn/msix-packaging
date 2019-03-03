@@ -2,6 +2,7 @@
 #include "FilePaths.hpp"
 #include "Constants.hpp"
 #include <vector>
+using namespace Win7MsixInstallerLib;
 
 struct VirtualRegistryMapping
 {
@@ -319,7 +320,7 @@ HRESULT RegistryDevirtualizer::RemoveDevirtualizeRegistryTree(RegistryKey * virt
     return S_OK;
 }
 
-HRESULT RegistryDevirtualizer::Create(std::wstring hiveFileName, MsixRequest* msixRequest, RegistryDevirtualizer ** instance)
+HRESULT RegistryDevirtualizer::Create(std::wstring hiveFileName, MsixRequestImpl* msixRequest, RegistryDevirtualizer ** instance)
 {
     std::unique_ptr<RegistryDevirtualizer> localInstance(new RegistryDevirtualizer(hiveFileName, msixRequest));
     if (localInstance == nullptr)

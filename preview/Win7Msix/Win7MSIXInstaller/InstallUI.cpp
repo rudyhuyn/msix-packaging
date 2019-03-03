@@ -11,10 +11,12 @@
 #include <sstream>
 #include <iostream>
 #include "resource.h"
-
+#include "Util.hpp"
+#include "Win7MSIXInstallerLogger.hpp"
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
+using namespace Win7MsixInstaller;
 #include <GdiPlus.h>
 
 // Global variables
@@ -65,7 +67,7 @@ HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** 
 // windowText: pointer to a wstring that the window message will be saved to
 HRESULT UI::DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText)
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
+    IPackageInfo* packageInfo = m_msixRequest->GetIPackageInfo();
     CreateProgressBar(hWnd, windowRect, packageInfo->GetNumberOfPayloadFiles());
 
     ComPtr<IMsixDocumentElement> domElement;

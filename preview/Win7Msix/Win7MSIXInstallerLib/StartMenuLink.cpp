@@ -10,6 +10,7 @@
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
 
+using namespace Win7MsixInstallerLib;
 const PCWSTR StartMenuLink::HandlerName = L"StartMenuLink";
 
 HRESULT StartMenuLink::CreateLink(PCWSTR targetFilePath, PCWSTR linkFilePath, PCWSTR description, PCWSTR appUserModelId)
@@ -67,7 +68,7 @@ HRESULT StartMenuLink::ExecuteForRemoveRequest()
     return S_OK;
 }
 
-HRESULT StartMenuLink::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT StartMenuLink::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<StartMenuLink> localInstance(new StartMenuLink(msixRequest));
     if (localInstance == nullptr)

@@ -3,16 +3,7 @@
 #include <codecvt>
 #include <iostream>
 
-/// Converts a wstring from utf16 to utf8
-///
-/// @param utf16string - A utf16 wstring
-/// @return utf8 string
-std::string utf16_to_utf8(const std::wstring& utf16string)
-{
-	auto converted = std::wstring_convert<std::codecvt_utf8<wchar_t>>{}.to_bytes(utf16string.data());
-	std::string result(converted.begin(), converted.end());
-	return result;
-}
+using namespace Win7MsixInstaller;
 
 /// Converts a string from utf8 to utf16
 ///
@@ -32,24 +23,24 @@ std::wstring utf8_to_utf16(const std::string& utf8string)
 /// @return a.b.c.d string representation of version
 std::wstring ConvertVersionToString(UINT64 version)
 {
-    return std::to_wstring((version >> 0x30) & 0xFFFF) + L"."
-        + std::to_wstring((version >> 0x20) & 0xFFFF) + L"."
-        + std::to_wstring((version >> 0x10) & 0xFFFF) + L"."
-        + std::to_wstring((version) & 0xFFFF);
+	return std::to_wstring((version >> 0x30) & 0xFFFF) + L"."
+		+ std::to_wstring((version >> 0x20) & 0xFFFF) + L"."
+		+ std::to_wstring((version >> 0x10) & 0xFFFF) + L"."
+		+ std::to_wstring((version) & 0xFFFF);
 }
 
 std::wstring GetStringResource(UINT resourceId)
 {
-    HMODULE instance = GetModuleHandle(nullptr);
+	HMODULE instance = GetModuleHandle(nullptr);
 
-    WCHAR buffer[MAX_PATH] = L"";
-    int loadStringRet = LoadStringW(instance, resourceId, buffer, ARRAYSIZE(buffer));
-    if (loadStringRet <= 0)
-    {
-        return std::wstring(L"Failed to load string resource");
-    }
+	WCHAR buffer[MAX_PATH] = L"";
+	int loadStringRet = LoadStringW(instance, resourceId, buffer, ARRAYSIZE(buffer));
+	if (loadStringRet <= 0)
+	{
+		return std::wstring(L"Failed to load string resource");
+	}
 
-    std::wstring stringResource(buffer);
+	std::wstring stringResource(buffer);
 
-    return stringResource;
+	return stringResource;
 }

@@ -9,6 +9,8 @@
 #include <TraceLoggingProvider.h>
 #include "Constants.hpp"
 
+using namespace Win7MsixInstallerLib;
+
 const PCWSTR AddRemovePrograms::HandlerName = L"AddRemovePrograms";
 
 HRESULT AddRemovePrograms::ExecuteForAddRequest()
@@ -41,7 +43,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
     std::wstring publisherString(packageInfo->GetPublisher());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"Publisher", publisherString));
     
-    std::wstring versionString(ConvertVersionToString(packageInfo->GetVersion()));
+    std::wstring versionString(Win7MsixInstallerLib_ConvertVersionToString(packageInfo->GetVersion()));
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
     std::wstring packageIconString = m_msixRequest->GetFilePathMappings()->GetExecutablePath(packageInfo->GetExecutableFilePath(), packageInfo->GetPackageFullName().c_str());
@@ -72,7 +74,7 @@ HRESULT AddRemovePrograms::ExecuteForRemoveRequest()
     return S_OK;
 }
 
-HRESULT AddRemovePrograms::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT AddRemovePrograms::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<AddRemovePrograms> localInstance(new AddRemovePrograms(msixRequest));
     if (localInstance == nullptr)

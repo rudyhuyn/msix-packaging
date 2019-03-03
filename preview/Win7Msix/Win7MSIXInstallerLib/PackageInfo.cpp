@@ -4,6 +4,8 @@
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
 
+using namespace Win7MsixInstallerLib;
+
 HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
     BOOL hc = FALSE;

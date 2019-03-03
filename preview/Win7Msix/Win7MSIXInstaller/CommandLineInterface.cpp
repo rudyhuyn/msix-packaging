@@ -1,11 +1,13 @@
 #include <iostream>
 #include <iomanip>
 #include "CommandLineInterface.hpp"
-#include <TraceLoggingProvider.h>
-#include "GeneralUtil.hpp"
 #include "Win7MSIXInstallerLogger.hpp"
+#include <TraceLoggingProvider.h>
+#include <MsixRequestBuilder.hpp>
+#include "Util.hpp"
 #include "resource.h"
-
+using namespace Win7MsixInstaller;
+using namespace Win7MsixInstallerLib;
 std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_options =
 {
     {
@@ -99,7 +101,7 @@ void CommandLineInterface::DisplayHelp()
     }
 }
 
-HRESULT CommandLineInterface::CreateRequest(MsixRequest** msixRequest)
+HRESULT CommandLineInterface::CreateRequest(IMsixRequest** msixRequest)
 {
     for (int i = 0; i < m_argc; i++)
     {
@@ -147,8 +149,8 @@ HRESULT CommandLineInterface::CreateRequest(MsixRequest** msixRequest)
         ++index;
     }
 
-    AutoPtr<MsixRequest> localRequest;
-    RETURN_IF_FAILED(MsixRequest::Make(
+    AutoPtr<IMsixRequest> localRequest;
+    RETURN_IF_FAILED(MsixRequestBuilder::Create(
 		m_operationType, 
 		m_packageFilePath, 
 		m_packageFullName, 

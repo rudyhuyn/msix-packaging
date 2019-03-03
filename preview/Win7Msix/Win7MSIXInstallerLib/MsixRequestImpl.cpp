@@ -1,5 +1,5 @@
 #include "generalutil.hpp"
-#include "MsixRequest.hpp"
+#include "MsixRequestImpl.hpp"
 
 #include <string>
 #include <map>
@@ -24,14 +24,14 @@
 #include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
-#include "InstallUI.hpp"
+#include "CreateAndShowUI.hpp"
 #include "GeneralUtil.hpp"
 
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
 #include <GdiPlus.h>
-
+using namespace Win7MsixInstallerLib;
 struct HandlerInfo
 {
     CreateHandler create;
@@ -62,9 +62,9 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
     {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr}},
 };
 
-HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
+HRESULT MsixRequestImpl::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequestImpl ** outInstance)
 {
-    std::unique_ptr<MsixRequest> instance(new MsixRequest());
+    std::unique_ptr<MsixRequestImpl> instance(new MsixRequestImpl());
     if (instance == nullptr)
     {
         return E_OUTOFMEMORY;
@@ -80,12 +80,12 @@ HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFileP
     return S_OK;
 }
 
-HRESULT MsixRequest::InitializeFilePathMappings()
+HRESULT MsixRequestImpl::InitializeFilePathMappings()
 {
     return m_filePathMappings.Initialize();
 }
 
-HRESULT MsixRequest::ProcessRequest()
+HRESULT MsixRequestImpl::ProcessRequest()
 {
     switch (m_operationType)
     {
@@ -116,7 +116,7 @@ HRESULT MsixRequest::ProcessRequest()
     return S_OK;
 }
 
-HRESULT MsixRequest::DisplayPackageInfo()
+HRESULT MsixRequestImpl::DisplayPackageInfo()
 {
     AutoPtr<IPackageHandler> handler;
     RETURN_IF_FAILED(PopulatePackageInfo::CreateHandler(this, &handler));
@@ -131,7 +131,7 @@ HRESULT MsixRequest::DisplayPackageInfo()
     return S_OK;
 }
 
-HRESULT MsixRequest::FindAllPackages()
+HRESULT MsixRequestImpl::FindAllPackages()
 {
     int numPackages = 0;
     for (auto& p : std::experimental::filesystem::directory_iterator(m_filePathMappings.GetMsix7Directory()))
@@ -145,7 +145,7 @@ HRESULT MsixRequest::FindAllPackages()
     return S_OK;
 }
 
-HRESULT MsixRequest::ProcessAddRequest()
+HRESULT MsixRequestImpl::ProcessAddRequest()
 {
     PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
 
@@ -166,7 +166,7 @@ HRESULT MsixRequest::ProcessAddRequest()
     return S_OK;
 }
 
-HRESULT MsixRequest::ProcessRemoveRequest()
+HRESULT MsixRequestImpl::ProcessRemoveRequest()
 {
     PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
 
@@ -195,7 +195,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     return S_OK;
 }
 
-void MsixRequest::SetPackageInfo(PackageInfo* packageInfo) 
+void MsixRequestImpl::SetPackageInfo(PackageInfo* packageInfo) 
 {
     m_packageInfo = packageInfo; 
 }

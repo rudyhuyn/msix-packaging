@@ -1,24 +1,27 @@
 #pragma once
-
+// Install UI Header
+// UI Functions
+#include <windows.h>
+#include <string>
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
+#include "IInstallerUI.hpp"
+
 namespace Win7MsixInstallerLib
 {
-	class FileTypeAssociation : IPackageHandler
+	class CreateAndShowUI : IPackageHandler
 	{
 	public:
-		/// Adds the file type associations to the registry so this application can handle specific file types.
 		HRESULT ExecuteForAddRequest();
 
 		static const PCWSTR HandlerName;
 		static HRESULT CreateHandler(_In_ MsixRequestImpl* msixRequest, _Out_ IPackageHandler** instance);
-		~FileTypeAssociation() {}
+		~CreateAndShowUI() {}
 	private:
 		MsixRequestImpl* m_msixRequest = nullptr;
 
-		FileTypeAssociation() {}
-		FileTypeAssociation(_In_ MsixRequestImpl* msixRequest) : m_msixRequest(msixRequest) {}
+		CreateAndShowUI() {}
+		CreateAndShowUI(_In_ MsixRequestImpl* msixRequest) : m_msixRequest(msixRequest) {}
 
-		HRESULT AddFta(PCWSTR name, PCWSTR parameters);
 	};
 }

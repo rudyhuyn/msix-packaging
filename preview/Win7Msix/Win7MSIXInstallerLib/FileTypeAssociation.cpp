@@ -7,7 +7,7 @@
 #include "FileTypeAssociation.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
-
+using namespace Win7MsixInstallerLib;
 const PCWSTR FileTypeAssociation::HandlerName = L"FileTypeAssociation";
 
 HRESULT FileTypeAssociation::AddFta(PCWSTR name, PCWSTR parameters)
@@ -66,7 +66,7 @@ HRESULT FileTypeAssociation::ExecuteForAddRequest()
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT FileTypeAssociation::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<FileTypeAssociation> localInstance(new FileTypeAssociation(msixRequest));
     if (localInstance == nullptr)

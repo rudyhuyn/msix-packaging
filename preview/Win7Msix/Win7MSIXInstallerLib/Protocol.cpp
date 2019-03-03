@@ -7,6 +7,7 @@
 #include "Protocol.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR Protocol::HandlerName = L"Protocol";
 
@@ -52,7 +53,7 @@ HRESULT Protocol::ExecuteForAddRequest()
     return S_OK;
 }
 
-HRESULT Protocol::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT Protocol::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<Protocol> localInstance(new Protocol(msixRequest));
     if (localInstance == nullptr)

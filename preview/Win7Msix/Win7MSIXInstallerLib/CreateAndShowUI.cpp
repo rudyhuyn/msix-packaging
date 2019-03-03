@@ -1,6 +1,6 @@
 // UI Functions
 
-#include "InstallUI.hpp"
+#include "CreateAndShowUI.hpp"
 #include <windows.h>
 #include <string>
 #include <commctrl.h>
@@ -14,7 +14,7 @@
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
-
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR CreateAndShowUI::HandlerName = L"UI";
 
@@ -28,7 +28,7 @@ HRESULT CreateAndShowUI::ExecuteForAddRequest()
     return S_OK;
 }
 
-HRESULT CreateAndShowUI::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT CreateAndShowUI::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<CreateAndShowUI> localInstance(new CreateAndShowUI(msixRequest));
     if (localInstance == nullptr)

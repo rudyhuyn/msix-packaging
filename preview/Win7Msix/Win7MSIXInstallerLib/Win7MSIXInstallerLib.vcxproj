@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)MSIXPackaging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)MSIXPackaging;inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -114,7 +114,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\.vs\src\msix;inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)MSIXPackaging;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)MSIXPackaging;inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -166,7 +166,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>inc;..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -191,14 +191,15 @@
     <ClInclude Include="FootprintFiles.hpp" />
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="FilePaths.hpp" />
-    <ClInclude Include="InstallUI.hpp" />
-    <ClInclude Include="IUI.hpp" />
+    <ClInclude Include="CreateAndShowUI.hpp" />
+    <ClInclude Include="inc\IInstallerUI.hpp" />
+    <ClInclude Include="inc\IMsixRequest.hpp" />
+    <ClInclude Include="inc\IPackageInfo.hpp" />
+    <ClInclude Include="inc\MsixRequestBuilder.hpp" />
+    <ClInclude Include="inc\OperationType.hpp" />
+    <ClInclude Include="MsixRequestImpl.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
     <ClInclude Include="PackageInfo.hpp" />
-    <ClInclude Include="IPackageHandler.hpp" />
-    <ClInclude Include="MsixRequest.hpp" />
-    <ClInclude Include="MSIXPackaging\AppxPackaging.hpp" />
-    <ClInclude Include="MSIXPackaging\MSIXWindows.hpp" />
     <ClInclude Include="Protocol.hpp" />
     <ClInclude Include="RegistryDevirtualizer.hpp" />
     <ClInclude Include="RegistryKey.hpp" />
@@ -209,12 +210,13 @@
     <ClCompile Include="FilePaths.cpp" />
     <ClCompile Include="FileTypeAssociation.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
-    <ClCompile Include="InstallUI.cpp" />
+    <ClCompile Include="CreateAndShowUI.cpp" />
+    <ClCompile Include="MsixRequestBuilder.cpp" />
+    <ClCompile Include="MsixRequestImpl.cpp" />
     <ClCompile Include="PackageInfo.cpp" />
     <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="RegistryDevirtualizer.cpp" />
     <ClCompile Include="RegistryKey.cpp" />
-    <ClCompile Include="MsixRequest.cpp" />
     <ClCompile Include="PopulatePackageInfo.cpp" />
     <ClCompile Include="AddRemovePrograms.cpp" />
     <ClCompile Include="StartMenuLink.cpp" />

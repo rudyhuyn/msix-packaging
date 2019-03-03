@@ -6,6 +6,8 @@
 #include <experimental/filesystem> // C++-standard header file name
 #include "Constants.hpp"
 
+using namespace Win7MsixInstallerLib;
+
 const PCWSTR PopulatePackageInfo::HandlerName = L"PopulatePackageInfo";
 
 HRESULT PopulatePackageInfo::CreatePackageReader()
@@ -17,7 +19,7 @@ HRESULT PopulatePackageInfo::CreatePackageReader()
     // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
     // So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(MyAllocate, MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
 
     // Create a new package reader using the factory.
     ComPtr<IAppxPackageReader> packageReader;
@@ -63,7 +65,7 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath.c_str(), true /*forRead*/, &stream));
 
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(MyAllocate, MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
 
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
@@ -75,7 +77,7 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT PopulatePackageInfo::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo(msixRequest));
     if (localInstance == nullptr)

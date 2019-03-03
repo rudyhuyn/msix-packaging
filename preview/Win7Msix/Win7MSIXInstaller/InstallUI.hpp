@@ -3,9 +3,8 @@
 // UI Functions
 #include <windows.h>
 #include <string>
-#include "GeneralUtil.hpp"
-#include "IPackageHandler.hpp"
-#include <IUI.hpp>
+#include <IMsixRequest.hpp>
+#include <IInstallerUI.hpp>
 
 // Child window identifiers
 #define IDC_LAUNCHCHECKBOX 1
@@ -21,26 +20,28 @@ static bool g_installed = false;
 static bool g_displayInfo = false;
 static bool g_displayCompleteText = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
-
-class UI: public IUI
+using namespace Win7MsixInstallerLib;
+namespace Win7MsixInstaller
 {
-public:
-    HRESULT ShowUI();
-	UI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
-    ~UI() {}
-private:
-    MsixRequest* m_msixRequest = nullptr;
+	class UI : public IInstallerUI
+	{
+	public:
+		HRESULT ShowUI();
+		UI(_In_ IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
+		~UI() {}
+	private:
+		IMsixRequest* m_msixRequest = nullptr;
 
-    HANDLE m_buttonClickedEvent;
-    
-public:
-    HRESULT DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText);
-    int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
+		HANDLE m_buttonClickedEvent;
 
-    void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
-	void UpdateProgressBar();
-};
+	public:
+		HRESULT DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText);
+		int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
 
+		void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
+		void UpdateProgressBar();
+	};
+}
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
 //
