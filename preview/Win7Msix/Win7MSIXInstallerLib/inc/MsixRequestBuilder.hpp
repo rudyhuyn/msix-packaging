@@ -1,13 +1,16 @@
 #pragma once
+#include "DllExport.hpp"
 #include "IMsixRequest.hpp"
-#include "OperationType.hpp"
 #include <AppxPackaging.hpp>
 namespace Win7MsixInstallerLib
 {
-	class MsixRequestBuilder
+	class DLLEXPORT MsixRequestBuilder
 	{
 	public:
-		static HRESULT Create(Win7MsixInstallerLib::OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, Win7MsixInstallerLib::IMsixRequest** outInstance);
+		static HRESULT CreateAddPackageRequest(std::wstring packageFilePath, MSIX_VALIDATION_OPTION validationOption, Win7MsixInstallerLib::IMsixRequest** outInstance);
+		static HRESULT CreateRemovePackageRequest(std::wstring packageFullName, Win7MsixInstallerLib::IMsixRequest** outInstance);
+		static HRESULT CreateFindAllPackagesRequest(Win7MsixInstallerLib::IMsixRequest** outInstance);
+		static HRESULT CreateFindPackageRequest(std::wstring packageFullName, Win7MsixInstallerLib::IMsixRequest** outInstance);
 	private:
 		MsixRequestBuilder();
 	};

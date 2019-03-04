@@ -47,7 +47,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -164,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;WIN7MSIXINSTALLER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>inc;..\..\..\.vs\src\msix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -186,6 +186,7 @@
   <ItemGroup>
     <ClInclude Include="AddRemovePrograms.hpp" />
     <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="inc\DllExport.hpp" />
     <ClInclude Include="Extractor.hpp" />
     <ClInclude Include="FileTypeAssociation.hpp" />
     <ClInclude Include="FootprintFiles.hpp" />
@@ -196,7 +197,7 @@
     <ClInclude Include="inc\IMsixRequest.hpp" />
     <ClInclude Include="inc\IPackageInfo.hpp" />
     <ClInclude Include="inc\MsixRequestBuilder.hpp" />
-    <ClInclude Include="inc\OperationType.hpp" />
+    <ClInclude Include="IPackageHandler.hpp" />
     <ClInclude Include="MsixRequestImpl.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
     <ClInclude Include="PackageInfo.hpp" />

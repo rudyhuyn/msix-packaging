@@ -2,11 +2,19 @@
 
 #include <map>
 #include <functional>
-#include <IMsixRequest.hpp>
-#include <OperationType.hpp>
+#include <IPackageInfo.hpp>
 
 namespace Win7MsixInstaller
 {
+	enum CommandLineOperationType
+	{
+		Undefined = 0,
+		Add = 1,
+		Remove = 2,
+		FindPackage = 3,
+		FindAllPackages = 4,
+	};
+
 	class CommandLineInterface;
 	/// Describes an option to a command that the user may specify used for the command line tool
 	struct Option
@@ -53,9 +61,12 @@ namespace Win7MsixInstaller
 
 		/// Displays contextual formatted help to the user used for command line tool
 		void DisplayHelp();
-		HRESULT CreateRequest(_Outptr_ Win7MsixInstallerLib::IMsixRequest** msixRequest);
+		HRESULT Init();
 		bool IsQuietMode() { return m_quietMode; }
-
+		std::wstring GetPackageFilePath() { return m_packageFilePath; }
+		std::wstring GetPackageFullName() { return m_packageFullName; }
+		MSIX_VALIDATION_OPTION GetValidationOption() { return m_validationOptions; }
+		CommandLineOperationType GetOperationType() { return m_operationType; }
 	private:
 		int m_argc = 0;
 		char ** m_argv = nullptr;
@@ -68,7 +79,7 @@ namespace Win7MsixInstaller
 		bool m_quietMode;
 
 		MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
-		Win7MsixInstallerLib::OperationType m_operationType = Win7MsixInstallerLib::OperationType::Undefined;
+		CommandLineOperationType m_operationType = CommandLineOperationType::Undefined;
 
 		CommandLineInterface() {}
 	};

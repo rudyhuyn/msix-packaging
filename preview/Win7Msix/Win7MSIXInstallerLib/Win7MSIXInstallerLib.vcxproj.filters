@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Extractor.cpp" />
+    <ClCompile Include="FilePaths.cpp" />
+    <ClCompile Include="FileTypeAssociation.cpp" />
+    <ClCompile Include="GeneralUtil.cpp" />
+    <ClCompile Include="PackageInfo.cpp" />
+    <ClCompile Include="Protocol.cpp" />
+    <ClCompile Include="RegistryDevirtualizer.cpp" />
+    <ClCompile Include="RegistryKey.cpp" />
+    <ClCompile Include="PopulatePackageInfo.cpp" />
+    <ClCompile Include="AddRemovePrograms.cpp" />
+    <ClCompile Include="StartMenuLink.cpp" />
+    <ClCompile Include="CreateAndShowUI.cpp" />
+    <ClCompile Include="MsixRequestImpl.cpp" />
+    <ClCompile Include="MsixRequestBuilder.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AddRemovePrograms.hpp" />
+    <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="Extractor.hpp" />
+    <ClInclude Include="FileTypeAssociation.hpp" />
+    <ClInclude Include="FootprintFiles.hpp" />
+    <ClInclude Include="GeneralUtil.hpp" />
+    <ClInclude Include="FilePaths.hpp" />
+    <ClInclude Include="PopulatePackageInfo.hpp" />
+    <ClInclude Include="PackageInfo.hpp" />
+    <ClInclude Include="Protocol.hpp" />
+    <ClInclude Include="RegistryDevirtualizer.hpp" />
+    <ClInclude Include="RegistryKey.hpp" />
+    <ClInclude Include="StartMenuLink.hpp" />
+    <ClInclude Include="CreateAndShowUI.hpp" />
+    <ClInclude Include="MsixRequestImpl.hpp" />
+    <ClInclude Include="inc\IInstallerUI.hpp" />
+    <ClInclude Include="inc\IMsixRequest.hpp" />
+    <ClInclude Include="inc\IPackageInfo.hpp" />
+    <ClInclude Include="inc\MsixRequestBuilder.hpp" />
+    <ClInclude Include="inc\DllExport.hpp" />
+    <ClInclude Include="IPackageHandler.hpp" />
+  </ItemGroup>
+</Project>

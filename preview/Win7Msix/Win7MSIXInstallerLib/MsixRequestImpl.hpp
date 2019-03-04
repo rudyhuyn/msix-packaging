@@ -2,12 +2,19 @@
 #include "PackageInfo.hpp"
 #include "FilePaths.hpp"
 #include "IInstallerUI.hpp"
-#include "OperationType.hpp"
 #include "IMsixRequest.hpp"
 
 namespace Win7MsixInstallerLib
 {
 	class UI;
+
+	enum OperationType
+	{
+		Add = 1,
+		Remove = 2,
+		FindPackage = 3,
+		FindAllPackages = 4,
+	};
 
 	/// MsixRequestImpl represents what this instance of the executable will be doing and tracks the state of the current operation
 	class MsixRequestImpl :IMsixRequest
