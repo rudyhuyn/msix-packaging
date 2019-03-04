@@ -99,11 +99,6 @@ HRESULT MsixRequestImpl::ProcessRequest()
             RETURN_IF_FAILED(ProcessRemoveRequest());
             break;
         }
-        case OperationType::FindAllPackages:
-        {
-            RETURN_IF_FAILED(FindAllPackages());
-            break;
-        }
         case OperationType::FindPackage:
         {
             RETURN_IF_FAILED(DisplayPackageInfo());
@@ -128,20 +123,6 @@ HRESULT MsixRequestImpl::DisplayPackageInfo()
     std::wcout << L"DirectoryPath: " << m_packageInfo->GetPackageDirectoryPath().c_str() << std::endl;
     std::wcout << std::endl;
 
-    return S_OK;
-}
-
-HRESULT MsixRequestImpl::FindAllPackages()
-{
-    int numPackages = 0;
-    for (auto& p : std::experimental::filesystem::directory_iterator(m_filePathMappings.GetMsix7Directory()))
-    {
-        std::cout << p.path().filename() << std::endl;
-        numPackages++;
-    }
-
-    std::cout << numPackages << " Packages found" << std::endl;
-    
     return S_OK;
 }
 

@@ -13,7 +13,6 @@ namespace Win7MsixInstallerLib
 		Add = 1,
 		Remove = 2,
 		FindPackage = 3,
-		FindAllPackages = 4,
 	};
 
 	/// MsixRequestImpl represents what this instance of the executable will be doing and tracks the state of the current operation
@@ -77,9 +76,6 @@ namespace Win7MsixInstallerLib
 	private:
 		/// FilePath Mappings maps the VFS tokens (e.g. Windows) to the actual folder on disk (e.g. C:\windows)
 		HRESULT InitializeFilePathMappings();
-
-		/// This handles FindAllPackages operation and finds all packages installed by the Win7MSIXInstaller
-		HRESULT FindAllPackages();
 
 		/// This handles Add operation and proceeds through each of the AddSequenceHandlers to install the package
 		HRESULT ProcessAddRequest();
