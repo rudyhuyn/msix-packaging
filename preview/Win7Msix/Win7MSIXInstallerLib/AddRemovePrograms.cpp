@@ -43,7 +43,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
     std::wstring publisherString(packageInfo->GetPublisher());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"Publisher", publisherString));
     
-    std::wstring versionString(Win7MsixInstallerLib_ConvertVersionToString(packageInfo->GetVersion()));
+    std::wstring versionString(Win7MsixInstaller_ConvertVersionToString(packageInfo->GetVersion()));
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
     std::wstring packageIconString = m_msixRequest->GetFilePathMappings()->GetExecutablePath(packageInfo->GetExecutableFilePath(), packageInfo->GetPackageFullName().c_str());

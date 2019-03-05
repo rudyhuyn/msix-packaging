@@ -196,7 +196,7 @@
     <ClInclude Include="inc\IInstallerUI.hpp" />
     <ClInclude Include="inc\IMsixRequest.hpp" />
     <ClInclude Include="inc\IPackageInfo.hpp" />
-    <ClInclude Include="inc\MsixRequestBuilder.hpp" />
+    <ClInclude Include="inc\Win7MSIXInstallerActions.hpp" />
     <ClInclude Include="IPackageHandler.hpp" />
     <ClInclude Include="MsixRequestImpl.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
@@ -212,7 +212,7 @@
     <ClCompile Include="FileTypeAssociation.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="CreateAndShowUI.cpp" />
-    <ClCompile Include="MsixRequestBuilder.cpp" />
+    <ClCompile Include="Win7MSIXInstallerActions.cpp" />
     <ClCompile Include="MsixRequestImpl.cpp" />
     <ClCompile Include="PackageInfo.cpp" />
     <ClCompile Include="Protocol.cpp" />

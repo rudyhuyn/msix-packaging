@@ -3,7 +3,7 @@
 #include <shlobj_core.h>
 #include <KnownFolders.h>
 using namespace Win7MsixInstallerLib;
-void Win7MsixInstallerLib_GetPathChild(std::wstring &path)
+void Win7MsixInstaller_GetPathChild(std::wstring &path)
 {
     while (path.front() != '\\')
     {
@@ -12,7 +12,7 @@ void Win7MsixInstallerLib_GetPathChild(std::wstring &path)
     path.erase(0, 1);
 }
 
-void Win7MsixInstallerLib_GetPathParent(std::wstring &path)
+void Win7MsixInstaller_GetPathParent(std::wstring &path)
 {
     while (!path.empty() && path.back() != '\\')
     {
@@ -40,7 +40,7 @@ std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutableP
     //Checks if the executable is inside the VFS
     if (executionPathWSTR.find(L"VFS") != std::wstring::npos)
     {
-        Win7MsixInstallerLib_GetPathChild(executionPathWSTR);
+        Win7MsixInstaller_GetPathChild(executionPathWSTR);
         //Checks if the executable is in one of the known folders
         for (auto pair : m_map) 
         {
@@ -49,7 +49,7 @@ std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutableP
                 //The executable exists in an unpacked directory
                 std::wstring executablePath = pair.second;
                 
-                Win7MsixInstallerLib_GetPathChild(executionPathWSTR);
+                Win7MsixInstaller_GetPathChild(executionPathWSTR);
                 executablePath.push_back(L'\\');
                 executablePath.append(executionPathWSTR);
                 return executablePath;
@@ -101,7 +101,7 @@ HRESULT FilePathMappings::Initialize()
     appVSystem32SpoolPath.append(L"\\spool");
 
     std::wstring systemDrive = std::wstring(windowsPath.Get());
-    Win7MsixInstallerLib_GetPathParent(systemDrive);
+    Win7MsixInstaller_GetPathParent(systemDrive);
     m_map[L"AppVPackageDrive"] = systemDrive;
     m_map[L"SystemX86"] = std::wstring(systemX86Path.Get());
     m_map[L"System"] = std::wstring(systemPath.Get());
@@ -130,9 +130,17 @@ HRESULT FilePathMappings::Initialize()
     m_map[L"SystemX64"] = std::wstring(systemX64Path.Get());
 #endif
 
-    TextOle<WCHAR> programFilesPath;
-    RETURN_IF_FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, NULL, &programFilesPath));
-
-    m_msix7Directory = std::wstring(programFilesPath.Get()) + std::wstring(L"\\Msix7apps\\");
+  	m_msix7Directory = GetInstallationDirectoryPath();
     return S_OK;
+}
+
+LPCWSTR FilePathMappings::GetInstallationDirectoryPath()
+{
+	TextOle<WCHAR> programFilesPath;
+	if (FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, NULL, &programFilesPath)))
+	{
+		return NULL;
+	}
+	auto msix7Directory = std::wstring(programFilesPath.Get()) + std::wstring(L"\\Msix7apps\\");
+	return msix7Directory.c_str();
 }

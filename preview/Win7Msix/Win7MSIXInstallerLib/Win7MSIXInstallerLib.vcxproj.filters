@@ -14,7 +14,7 @@
     <ClCompile Include="StartMenuLink.cpp" />
     <ClCompile Include="CreateAndShowUI.cpp" />
     <ClCompile Include="MsixRequestImpl.cpp" />
-    <ClCompile Include="MsixRequestBuilder.cpp" />
+    <ClCompile Include="Win7MSIXInstallerActions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddRemovePrograms.hpp" />
@@ -35,8 +35,8 @@
     <ClInclude Include="inc\IInstallerUI.hpp" />
     <ClInclude Include="inc\IMsixRequest.hpp" />
     <ClInclude Include="inc\IPackageInfo.hpp" />
-    <ClInclude Include="inc\MsixRequestBuilder.hpp" />
     <ClInclude Include="inc\DllExport.hpp" />
     <ClInclude Include="IPackageHandler.hpp" />
+    <ClInclude Include="inc\Win7MSIXInstallerActions.hpp" />
   </ItemGroup>
 </Project>

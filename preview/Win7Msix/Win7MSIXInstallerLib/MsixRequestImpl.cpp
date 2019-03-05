@@ -64,19 +64,13 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 
 HRESULT MsixRequestImpl::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequestImpl ** outInstance)
 {
-    std::unique_ptr<MsixRequestImpl> instance(new MsixRequestImpl());
-    if (instance == nullptr)
-    {
-        return E_OUTOFMEMORY;
-    }
-
+	MsixRequestImpl* instance = new MsixRequestImpl();
     instance->m_operationType = operationType;
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
     RETURN_IF_FAILED(instance->InitializeFilePathMappings());
-    *outInstance = instance.release();
-
+    *outInstance = instance;
     return S_OK;
 }
 
@@ -99,29 +93,9 @@ HRESULT MsixRequestImpl::ProcessRequest()
             RETURN_IF_FAILED(ProcessRemoveRequest());
             break;
         }
-        case OperationType::FindPackage:
-        {
-            RETURN_IF_FAILED(DisplayPackageInfo());
-            break;
-        }
         default:
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
     }
-
-    return S_OK;
-}
-
-HRESULT MsixRequestImpl::DisplayPackageInfo()
-{
-    AutoPtr<IPackageHandler> handler;
-    RETURN_IF_FAILED(PopulatePackageInfo::CreateHandler(this, &handler));
-    RETURN_IF_FAILED(handler->ExecuteForRemoveRequest());
-
-    std::wcout << std::endl;
-    std::wcout << L"PackageFullName: " << m_packageInfo->GetPackageFullName().c_str() << std::endl;
-    std::wcout << L"DisplayName: " << m_packageInfo->GetDisplayName().c_str() << std::endl;
-    std::wcout << L"DirectoryPath: " << m_packageInfo->GetPackageDirectoryPath().c_str() << std::endl;
-    std::wcout << std::endl;
 
     return S_OK;
 }

@@ -19,12 +19,12 @@ namespace Win7MsixInstallerLib
 		static const PCWSTR HandlerName;
 		static HRESULT CreateHandler(_In_ MsixRequestImpl* msixRequest, _Out_ IPackageHandler** instance);
 		~PopulatePackageInfo() {}
+		static HRESULT GetPackageInfoFromPackage(PCWSTR packageFilePath, MSIX_VALIDATION_OPTION validationOption, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo);
+		static HRESULT GetPackageInfoFromManifest(PCWSTR manifestPath, MSIX_VALIDATION_OPTION validationOption, PCWSTR msix7DirectoryPath, PackageInfo ** packageInfo);
 	private:
 		MsixRequestImpl* m_msixRequest = nullptr;
 
 		PopulatePackageInfo() {}
 		PopulatePackageInfo(_In_ MsixRequestImpl* msixRequest) : m_msixRequest(msixRequest) {}
-
-		HRESULT CreatePackageReader();
 	};
 }

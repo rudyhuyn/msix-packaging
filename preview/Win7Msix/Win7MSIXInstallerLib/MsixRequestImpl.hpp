@@ -12,7 +12,6 @@ namespace Win7MsixInstallerLib
 	{
 		Add = 1,
 		Remove = 2,
-		FindPackage = 3,
 	};
 
 	/// MsixRequestImpl represents what this instance of the executable will be doing and tracks the state of the current operation
@@ -82,10 +81,6 @@ namespace Win7MsixInstallerLib
 
 		/// This handles Remove operation and proceeds through each of the RemoveSequenceHandlers to uninstall the package
 		HRESULT ProcessRemoveRequest();
-
-		/// This handles FindPackage operation and displays the package info for a given package.
-		/// @return E_NOT_SET when the package could not be found
-		HRESULT DisplayPackageInfo();
 	};
 
 }

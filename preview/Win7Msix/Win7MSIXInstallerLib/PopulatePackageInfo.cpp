@@ -10,31 +10,47 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR PopulatePackageInfo::HandlerName = L"PopulatePackageInfo";
 
-HRESULT PopulatePackageInfo::CreatePackageReader()
+HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, MSIX_VALIDATION_OPTION validationOption, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo)
 {
-    ComPtr<IStream> inputStream;
-    RETURN_IF_FAILED(CreateStreamOnFileUTF16(m_msixRequest->GetPackageFilePath(), /*forRead */ true, &inputStream));
+	ComPtr<IStream> inputStream;
+	RETURN_IF_FAILED(CreateStreamOnFileUTF16(packageFilePath, /*forRead */ true, &inputStream));
 
-    // On Win32 platforms CoCreateAppxFactory defaults to CoTaskMemAlloc/CoTaskMemFree
-    // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
-    // So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
-    ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
+	// On Win32 platforms CoCreateAppxFactory defaults to CoTaskMemAlloc/CoTaskMemFree
+	// On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
+	// So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
+	ComPtr<IAppxFactory> appxFactory;
+	RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, validationOption, &appxFactory));
 
-    // Create a new package reader using the factory.
-    ComPtr<IAppxPackageReader> packageReader;
-    RETURN_IF_FAILED(appxFactory->CreatePackageReader(inputStream.Get(), &packageReader));
+	// Create a new package reader using the factory.
+	ComPtr<IAppxPackageReader> packageReader;
+	RETURN_IF_FAILED(appxFactory->CreatePackageReader(inputStream.Get(), &packageReader));
 
-    AutoPtr<PackageInfo> packageInfo;
-    RETURN_IF_FAILED(PackageInfo::MakeFromPackageReader(packageReader.Get(), m_msixRequest->GetFilePathMappings()->GetMsix7Directory(), &packageInfo));
-    m_msixRequest->SetPackageInfo(packageInfo.Detach());
+	RETURN_IF_FAILED(PackageInfo::MakeFromPackageReader(packageReader.Get(), msix7DirectoryPath, packageInfo));
 
-    return S_OK;
+	return S_OK;
+}
+
+HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(PCWSTR manifestPath, MSIX_VALIDATION_OPTION validationOption, PCWSTR msix7DirectoryPath, PackageInfo ** packageInfo)
+{
+	ComPtr<IStream> stream;
+	RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath, true /*forRead*/, &stream));
+
+	ComPtr<IAppxFactory> appxFactory;
+	RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, validationOption, &appxFactory));
+
+	ComPtr<IAppxManifestReader> manifestReader;
+	RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
+
+	RETURN_IF_FAILED(PackageInfo::MakeFromManifestReader(manifestReader.Get(), std::wstring(msix7DirectoryPath), packageInfo));
+
+	return S_OK;
 }
 
 HRESULT PopulatePackageInfo::ExecuteForAddRequest()
 {
-    RETURN_IF_FAILED(CreatePackageReader());
+	AutoPtr<PackageInfo> packageInfo;
+	RETURN_IF_FAILED(GetPackageInfoFromPackage(m_msixRequest->GetPackageFilePath(), m_msixRequest->GetValidationOptions(), m_msixRequest->GetFilePathMappings()->GetMsix7Directory(), &packageInfo));
+	m_msixRequest->SetPackageInfo(packageInfo.Detach());
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "PackageInfo",
@@ -48,7 +64,8 @@ HRESULT PopulatePackageInfo::ExecuteForAddRequest()
 
 HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
 {
-    std::wstring packageDirectoryPath = m_msixRequest->GetFilePathMappings()->GetMsix7Directory() + m_msixRequest->GetPackageFullName();
+	auto msix7Directory = m_msixRequest->GetFilePathMappings()->GetMsix7Directory();
+    std::wstring packageDirectoryPath = msix7Directory + m_msixRequest->GetPackageFullName();
     std::experimental::filesystem::path directory = packageDirectoryPath;
     if (!std::experimental::filesystem::exists(directory))
     {
@@ -60,20 +77,11 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
         RETURN_IF_FAILED(E_NOT_SET);
     }
 
-    std::wstring manifestPath = packageDirectoryPath + manifestFile;
-    ComPtr<IStream> stream;
-    RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath.c_str(), true /*forRead*/, &stream));
-
-    ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
-
-    ComPtr<IAppxManifestReader> manifestReader;
-    RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
-
-    AutoPtr<PackageInfo> packageInfo;
-    RETURN_IF_FAILED(PackageInfo::MakeFromManifestReader(manifestReader.Get(), m_msixRequest->GetFilePathMappings()->GetMsix7Directory(), &packageInfo));
-    m_msixRequest->SetPackageInfo(packageInfo.Detach());
-
+	AutoPtr<PackageInfo> packageInfo;
+	std::wstring manifestPath = packageDirectoryPath + manifestFile;
+	RETURN_IF_FAILED(GetPackageInfoFromManifest(manifestPath.c_str(), m_msixRequest->GetValidationOptions(), msix7Directory.c_str(), &packageInfo));
+	m_msixRequest->SetPackageInfo(packageInfo.Detach());
+	
     return S_OK;
 }
 
