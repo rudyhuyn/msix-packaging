@@ -11,7 +11,8 @@
 #include <sstream>
 #include <iostream>
 #include "resource.h"
-
+#include "GeneralUtil.hpp"
+#include "Win7MSIXInstallerLogger.hpp"
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
@@ -25,8 +26,6 @@ Gdiplus::Image* g_image = nullptr;
 
 static const int g_width = 500;  // width of window
 static const int g_heigth = 400; // height of window
-
-const PCWSTR CreateAndShowUI::HandlerName = L"UI";
 
 //
 // Gets the stream of a file.
@@ -67,7 +66,7 @@ HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** 
 // windowText: pointer to a wstring that the window message will be saved to
 HRESULT UI::DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText)
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
+    IPackageInfo* packageInfo = m_msixRequest->GetIPackageInfo();
     CreateProgressBar(hWnd, windowRect, packageInfo->GetNumberOfPayloadFiles());
 
     ComPtr<IMsixDocumentElement> domElement;
@@ -291,44 +290,12 @@ HRESULT UI::ShowUI()
     return S_OK;
 }
 
-HRESULT CreateAndShowUI::ExecuteForAddRequest()
+// FUNCTION: UpdateProgressBar
+//
+// PURPOSE: Increment the progress bar one tick based on preset tick
+void UI::UpdateProgressBar()
 {
-    if (m_msixRequest->IsQuietUX())
-    {
-        return S_OK;
-    }
-
-    AutoPtr<UI> ui;
-    RETURN_IF_FAILED(UI::Make(m_msixRequest, &ui));
-
-    m_msixRequest->SetUI(ui.Detach());
-    RETURN_IF_FAILED(m_msixRequest->GetUI()->ShowUI());
-
-    return S_OK;
-}
-
-HRESULT CreateAndShowUI::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
-{
-    std::unique_ptr<CreateAndShowUI> localInstance(new CreateAndShowUI(msixRequest));
-    if (localInstance == nullptr)
-    {
-        return E_OUTOFMEMORY;
-    }
-    *instance = localInstance.release();
-
-    return S_OK;
-}
-
-HRESULT UI::Make(MsixRequest * msixRequest, UI ** instance)
-{
-    std::unique_ptr<UI> localInstance(new UI(msixRequest));
-    if (localInstance == nullptr)
-    {
-        return E_OUTOFMEMORY;
-    }
-    *instance = localInstance.release();
-
-    return S_OK;
+	SendMessage(g_progressHWnd, PBM_STEPIT, 0, 0);
 }
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
@@ -537,10 +504,3 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
-// FUNCTION: UpdateProgressBar
-//
-// PURPOSE: Increment the progress bar one tick based on preset tick
-void UpdateProgressBar()
-{
-    SendMessage(g_progressHWnd, PBM_STEPIT, 0, 0);
-}

@@ -3,8 +3,8 @@
 // UI Functions
 #include <windows.h>
 #include <string>
-#include "GeneralUtil.hpp"
-#include "IPackageHandler.hpp"
+#include <IMsixRequest.hpp>
+#include <IInstallerUI.hpp>
 
 // Child window identifiers
 #define IDC_LAUNCHCHECKBOX 1
@@ -20,45 +20,26 @@ static bool g_installed = false;
 static bool g_displayInfo = false;
 static bool g_displayCompleteText = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
+using namespace Win7MsixInstallerLib;
 
-class UI
+class UI : public IInstallerUI
 {
 public:
     HRESULT ShowUI();
-
-    static HRESULT Make(_In_ MsixRequest* msixRequest, _Out_ UI** instance);
+    UI(_In_ IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
     ~UI() {}
 private:
-    MsixRequest* m_msixRequest = nullptr;
+    IMsixRequest* m_msixRequest = nullptr;
 
     HANDLE m_buttonClickedEvent;
 
-    UI() {}
-    UI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
-    
 public:
     HRESULT DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText);
     int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
 
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
+    void UpdateProgressBar();
 };
-
-class CreateAndShowUI : IPackageHandler
-{
-public:
-    HRESULT ExecuteForAddRequest();
-
-    static const PCWSTR HandlerName;
-    static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
-    ~CreateAndShowUI() {}
-private:
-    MsixRequest* m_msixRequest = nullptr;
-
-    CreateAndShowUI() {}
-    CreateAndShowUI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
-
-};
-
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
 //
@@ -113,8 +94,3 @@ BOOL HideButtonWindow();
 // parentHWnd: the HWND of the window to be changed
 // windowText: the text to change the window to
 BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
-
-// FUNCTION: UpdateProgressBar
-//
-// PURPOSE: Increment the progress bar one tick based on preset tick
-void UpdateProgressBar();
