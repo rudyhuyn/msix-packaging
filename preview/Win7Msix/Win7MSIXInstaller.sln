@@ -12,6 +12,10 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Win7MSIXInstallerSetup", "W
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win7MSIXInstallerLib", "Win7MSIXInstallerLib\Win7MSIXInstallerLib.vcxproj", "{46BE19BD-72E0-4452-9919-33A1F8A5F064}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{894863DE-D8D5-4771-9F88-171077AA275D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCSample", "Samples\MFCSample\MFCSample.vcxproj", "{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,9 +48,20 @@ Global
 		{46BE19BD-72E0-4452-9919-33A1F8A5F064}.Release|x64.Build.0 = Release|x64
 		{46BE19BD-72E0-4452-9919-33A1F8A5F064}.Release|x86.ActiveCfg = Release|Win32
 		{46BE19BD-72E0-4452-9919-33A1F8A5F064}.Release|x86.Build.0 = Release|Win32
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Debug|x64.ActiveCfg = Debug|x64
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Debug|x64.Build.0 = Debug|x64
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Debug|x86.ActiveCfg = Debug|Win32
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Debug|x86.Build.0 = Debug|Win32
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Release|x64.ActiveCfg = Release|x64
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Release|x64.Build.0 = Release|x64
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Release|x86.ActiveCfg = Release|Win32
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0C1FBFF0-3B4B-44BD-8AA4-C8FF44A5B88F} = {894863DE-D8D5-4771-9F88-171077AA275D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5E600B53-441D-434D-810A-4F0D87698183}
