@@ -5,6 +5,7 @@
 #include <TraceLoggingProvider.h>
 #include <experimental/filesystem> // C++-standard header file name
 #include "Constants.hpp"
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR PopulatePackageInfo::HandlerName = L"PopulatePackageInfo";
 

@@ -4,6 +4,7 @@
 #include "GeneralUtil.hpp"
 #include "MsixRequest.hpp"
 #include <TraceLoggingProvider.h>
+using namespace Win7MsixInstallerLib;
 
 HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element, PCWSTR packageFullName, MsixRequest * msixRequest)
 {

@@ -2,6 +2,7 @@
 #include "GeneralUtil.hpp"
 #include <shlobj_core.h>
 #include <KnownFolders.h>
+using namespace Win7MsixInstallerLib;
 
 void GetPathChild(std::wstring &path)
 {

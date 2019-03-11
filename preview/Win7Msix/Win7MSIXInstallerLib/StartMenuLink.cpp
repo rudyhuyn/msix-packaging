@@ -9,6 +9,7 @@
 #include "StartMenuLink.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR StartMenuLink::HandlerName = L"StartMenuLink";
 
