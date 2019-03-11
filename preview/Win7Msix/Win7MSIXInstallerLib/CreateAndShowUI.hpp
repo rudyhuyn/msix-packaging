@@ -3,7 +3,7 @@
 // UI Functions
 #include <windows.h>
 #include <string>
-#include "Util.hpp"
+#include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
 #include "IInstallerUI.hpp"
 
@@ -15,13 +15,13 @@ namespace Win7MsixInstallerLib
 		HRESULT ExecuteForAddRequest();
 
 		static const PCWSTR HandlerName;
-		static HRESULT CreateHandler(_In_ MsixRequestImpl* msixRequest, _Out_ IPackageHandler** instance);
+		static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
 		~CreateAndShowUI() {}
 	private:
-		MsixRequestImpl* m_msixRequest = nullptr;
+		MsixRequest* m_msixRequest = nullptr;
 
 		CreateAndShowUI() {}
-		CreateAndShowUI(_In_ MsixRequestImpl* msixRequest) : m_msixRequest(msixRequest) {}
+		CreateAndShowUI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
 	};
 }

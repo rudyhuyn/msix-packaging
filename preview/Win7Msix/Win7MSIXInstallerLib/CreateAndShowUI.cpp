@@ -28,7 +28,7 @@ HRESULT CreateAndShowUI::ExecuteForAddRequest()
     return S_OK;
 }
 
-HRESULT CreateAndShowUI::CreateHandler(MsixRequestImpl * msixRequest, IPackageHandler ** instance)
+HRESULT CreateAndShowUI::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
     std::unique_ptr<CreateAndShowUI> localInstance(new CreateAndShowUI(msixRequest));
     if (localInstance == nullptr)

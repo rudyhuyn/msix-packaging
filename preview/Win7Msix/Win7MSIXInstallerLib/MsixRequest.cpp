@@ -12,7 +12,6 @@
 
 #include "FootprintFiles.hpp"
 #include "FilePaths.hpp"
-#include "InstallUI.hpp"
 #include <cstdio>
 #include <experimental/filesystem> // C++-standard header file name
 #include <filesystem> // Microsoft-specific implementation header file name
@@ -25,15 +24,15 @@
 #include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
+#include "CreateAndShowUI.hpp"
+#include "GeneralUtil.hpp"
 
 
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
-using namespace Win7MsixInstallerLib;
-
 #include <GdiPlus.h>
-
+using namespace Win7MsixInstallerLib;
 struct HandlerInfo
 {
     CreateHandler create;
@@ -63,22 +62,15 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
     {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr}},
 };
 
-HRESULT MsixRequest::Make(OperationType operationType, Flags flags, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
+HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
 {
-    std::unique_ptr<MsixRequest> instance(new MsixRequest());
-    if (instance == nullptr)
-    {
-        return E_OUTOFMEMORY;
-    }
-
+    MsixRequest* instance = new MsixRequest();
     instance->m_operationType = operationType;
-    instance->m_flags = flags;
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
     RETURN_IF_FAILED(instance->InitializeFilePathMappings());
-    *outInstance = instance.release();
-
+    *outInstance = instance;
     return S_OK;
 }
 
@@ -91,59 +83,20 @@ HRESULT MsixRequest::ProcessRequest()
 {
     switch (m_operationType)
     {
-        case OperationType::Add:
-        {
-            RETURN_IF_FAILED(ProcessAddRequest());
-            break;
-        }
-        case OperationType::Remove:
-        {
-            RETURN_IF_FAILED(ProcessRemoveRequest());
-            break;
-        }
-        case OperationType::FindAllPackages:
-        {
-            RETURN_IF_FAILED(FindAllPackages());
-            break;
-        }
-        case OperationType::FindPackage:
-        {
-            RETURN_IF_FAILED(DisplayPackageInfo());
-            break;
-        }
-        default:
-            return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-    }
-
-    return S_OK;
-}
-
-HRESULT MsixRequest::DisplayPackageInfo()
-{
-    AutoPtr<IPackageHandler> handler;
-    RETURN_IF_FAILED(PopulatePackageInfo::CreateHandler(this, &handler));
-    RETURN_IF_FAILED(handler->ExecuteForRemoveRequest());
-
-    std::wcout << std::endl;
-    std::wcout << L"PackageFullName: " << m_packageInfo->GetPackageFullName().c_str() << std::endl;
-    std::wcout << L"DisplayName: " << m_packageInfo->GetDisplayName().c_str() << std::endl;
-    std::wcout << L"DirectoryPath: " << m_packageInfo->GetPackageDirectoryPath().c_str() << std::endl;
-    std::wcout << std::endl;
-
-    return S_OK;
-}
-
-HRESULT MsixRequest::FindAllPackages()
-{
-    int numPackages = 0;
-    for (auto& p : std::experimental::filesystem::directory_iterator(m_filePathMappings.GetMsix7Directory()))
+    case OperationType::Add:
     {
-        std::cout << p.path().filename() << std::endl;
-        numPackages++;
+        RETURN_IF_FAILED(ProcessAddRequest());
+        break;
+    }
+    case OperationType::Remove:
+    {
+        RETURN_IF_FAILED(ProcessRemoveRequest());
+        break;
+    }
+    default:
+        return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
     }
 
-    std::cout << numPackages << " Packages found" << std::endl;
-    
     return S_OK;
 }
 
@@ -202,12 +155,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     return S_OK;
 }
 
-void MsixRequest::SetUI(UI * ui)
+void MsixRequest::SetPackageInfo(PackageInfo* packageInfo)
 {
-    m_UI = ui;
-}
-
-void MsixRequest::SetPackageInfo(PackageInfo* packageInfo) 
-{
-    m_packageInfo = packageInfo; 
+    m_packageInfo = packageInfo;
 }

@@ -2,11 +2,12 @@
 #include "GeneralUtil.hpp"
 #include "AppxPackaging.hpp"
 #include "MSIXWindows.hpp"
+#include "IPackageInfo.hpp"
+
 namespace Win7MsixInstallerLib
 {
-    class MsixRequest;
 
-    class PackageInfo
+    class PackageInfo :IPackageInfo
     {
     private:
         ComPtr<IAppxManifestReader> m_manifestReader;
@@ -28,10 +29,10 @@ namespace Win7MsixInstallerLib
         ///
         /// @param manifestReader - manifestReader to set
         /// @param msix7DirectoryPath - the root msix7 directory path, which is the parent directory of the package directory.
-        HRESULT SetManifestReader(IAppxManifestReader* manifestReader, MsixRequest * msixRequest);
+        HRESULT SetManifestReader(IAppxManifestReader* manifestReader, std::wstring msix7DirectoryPath);
 
-        /// Sets the executable path and app ID by reading it from the manifest element
-        HRESULT SetExecutableAndAppIdFromManifestElement(IMsixElement * element, PCWSTR packageFullName, MsixRequest * msixRequest);
+        /// Sets the executable path by reading it from the manifest element
+        HRESULT SetExecutableAndAppIdFromManifestElement(IMsixElement * element);
 
         /// Sets the display name by reading it from the manifest element
         HRESULT SetDisplayNameFromManifestElement(IMsixElement * element);
@@ -39,14 +40,16 @@ namespace Win7MsixInstallerLib
         /// Sets the application model user id from the manifest reader
         HRESULT SetApplicationUserModelIdFromManifestElement(IAppxManifestReader* manifestReader);
 
+    private:
+        PackageInfo() {}
     public:
         /// Create a PackageInfo using the manifest reader and directory path. This is intended for Remove scenarios where
         /// the actual .msix package file is no longer accessible.
-        static HRESULT MakeFromManifestReader(IAppxManifestReader* manifestReader, MsixRequest * msixRequest, PackageInfo** packageInfo);
+        static HRESULT MakeFromManifestReader(IAppxManifestReader* manifestReader, std::wstring msix7DirectoryPath, PackageInfo** packageInfo);
 
         /// Create a PackageInfo using the package reader. This is intended for Add scenarios where
         /// the actual .msix package file is given.
-        static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, MsixRequest * msixRequest, PackageInfo** packageInfo);
+        static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, std::wstring msix7DirectoryPath, PackageInfo** packageInfo);
 
         /// When made from manifest reader, it won't have PackageReader available. 
         bool HasPackageReader() { return (m_packageReader.Get() != nullptr); };

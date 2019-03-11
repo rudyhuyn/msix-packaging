@@ -1,5 +1,5 @@
 #include "Win7MSIXInstallerActions.hpp"
-#include "MsixRequestImpl.hpp"
+#include "MsixRequest.hpp"
 #include <experimental/filesystem>
 #include <shlobj_core.h>
 #include <KnownFolders.h>
@@ -10,16 +10,16 @@ using namespace Win7MsixInstallerLib;
 
 HRESULT Win7MsixInstaller_CreateAddPackageRequest(std::wstring packageFilePath, MSIX_VALIDATION_OPTION validationOption, Win7MsixInstallerLib::IMsixRequest** outInstance)
 {
-	MsixRequestImpl *impl;
-	RETURN_IF_FAILED(MsixRequestImpl::Make(OperationType::Add, packageFilePath, L"", validationOption, &impl));
+	MsixRequest *impl;
+	RETURN_IF_FAILED(MsixRequest::Make(OperationType::Add, packageFilePath, L"", validationOption, &impl));
 	*outInstance = (IMsixRequest*)impl;
 	return S_OK;
 }
 
 HRESULT Win7MsixInstaller_CreateRemovePackageRequest(std::wstring packageFullName, Win7MsixInstallerLib::IMsixRequest** outInstance)
 {
-	MsixRequestImpl *impl;
-	RETURN_IF_FAILED(MsixRequestImpl::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
+	MsixRequest *impl;
+	RETURN_IF_FAILED(MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
 	*outInstance = (IMsixRequest*)impl;
 	return S_OK;
 }
