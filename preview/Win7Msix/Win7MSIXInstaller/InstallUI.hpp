@@ -17,8 +17,6 @@ static HWND g_checkboxHWnd = NULL;
 static HWND g_progressHWnd = NULL;
 static HWND g_CancelbuttonHWnd = NULL;
 static bool g_installed = false;
-static bool g_displayInfo = false;
-static bool g_displayCompleteText = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
 using namespace Win7MsixInstallerLib;
 
@@ -32,11 +30,18 @@ private:
     IMsixRequest* m_msixRequest = nullptr;
 
     HANDLE m_buttonClickedEvent;
+	std::wstring m_displayName = L"";
+	std::wstring m_publisherCommonName = L"";
+	ComPtr<IStream> m_logoStream;
+	std::wstring m_version = L"";
+	int m_numberOfFiles = 0;
+	HRESULT m_loadingPackageInfoCode = 0;
 
 public:
-    HRESULT DisplayPackageInfo(HWND hWnd, RECT windowRect, std::wstring& displayText, std::wstring& messageText);
-    int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
-
+    HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
+	int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
+	void LoadInfo();
+	int GetNumberOfFiles() { return m_numberOfFiles; }
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
     void UpdateProgressBar();
 };
