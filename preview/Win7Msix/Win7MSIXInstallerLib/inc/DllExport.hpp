@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef WIN7MSIXINSTALLER_EXPORTS
+#ifdef Win7MsixInstallerLib_EXPORTS
 /*Enabled as "export" while compiling the dll project*/
 #define DLLEXPORT __declspec(dllexport)  
 #else

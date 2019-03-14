@@ -31,11 +31,11 @@ TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
 // Parameters:
 // utf16string - A utf16 wstring
 // 
-	std::string Win7MsixInstaller_utf16_to_utf8(const std::wstring& utf16string);
+	std::string Win7MsixInstallerLib_utf16_to_utf8(const std::wstring& utf16string);
 
 
 	// Helper to convert version number to a version number string
-	std::wstring Win7MsixInstaller_ConvertVersionToString(UINT64 version);
+	std::wstring Win7MsixInstallerLib_ConvertVersionToString(UINT64 version);
 
 	//
 	// A designated memory allocator
@@ -43,7 +43,7 @@ TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
 	// Parameters:
 	// cb - The size of memory
 	//
-	inline LPVOID STDMETHODCALLTYPE Win7MsixInstaller_MyAllocate(SIZE_T cb) { return std::malloc(cb); }
+	inline LPVOID STDMETHODCALLTYPE Win7MsixInstallerLib_MyAllocate(SIZE_T cb) { return std::malloc(cb); }
 
 	//
 	// A designated memory freeing method
@@ -51,7 +51,7 @@ TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
 	// Parameters:
 	// pv - A pointer to the file to release
 	//
-	inline void STDMETHODCALLTYPE Win7MsixInstaller_MyFree(LPVOID pv) { std::free(pv); }
+	inline void STDMETHODCALLTYPE Win7MsixInstallerLib_MyFree(LPVOID pv) { std::free(pv); }
 
 
 namespace Win7MsixInstallerLib
@@ -200,7 +200,7 @@ namespace Win7MsixInstallerLib
 
 		T* content = nullptr;
 	protected:
-		void Cleanup() { if (content) { Win7MsixInstaller_MyFree(content); content = nullptr; } }
+		void Cleanup() { if (content) { Win7MsixInstallerLib_MyFree(content); content = nullptr; } }
 	};
 
 

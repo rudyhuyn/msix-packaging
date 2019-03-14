@@ -8,7 +8,7 @@
 
 using namespace Win7MsixInstallerLib;
 
-HRESULT Win7MsixInstaller_CreateAddPackageRequest(std::wstring packageFilePath, MSIX_VALIDATION_OPTION validationOption, Win7MsixInstallerLib::IMsixRequest** outInstance)
+HRESULT Win7MsixInstallerLib_CreateAddPackageRequest(std::wstring packageFilePath, MSIX_VALIDATION_OPTION validationOption, Win7MsixInstallerLib::IMsixRequest** outInstance)
 {
     MsixRequest *impl;
     RETURN_IF_FAILED(MsixRequest::Make(OperationType::Add, packageFilePath, L"", validationOption, &impl));
@@ -16,7 +16,7 @@ HRESULT Win7MsixInstaller_CreateAddPackageRequest(std::wstring packageFilePath, 
     return S_OK;
 }
 
-HRESULT Win7MsixInstaller_CreateRemovePackageRequest(std::wstring packageFullName, Win7MsixInstallerLib::IMsixRequest** outInstance)
+HRESULT Win7MsixInstallerLib_CreateRemovePackageRequest(std::wstring packageFullName, Win7MsixInstallerLib::IMsixRequest** outInstance)
 {
     MsixRequest *impl;
     RETURN_IF_FAILED(MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
@@ -24,7 +24,7 @@ HRESULT Win7MsixInstaller_CreateRemovePackageRequest(std::wstring packageFullNam
     return S_OK;
 }
 
-HRESULT Win7MsixInstaller_GetPackageInfo(std::wstring packageFullName, IPackageInfo** outInstance)
+HRESULT Win7MsixInstallerLib_GetPackageInfo(std::wstring packageFullName, IPackageInfo** outInstance)
 {
     auto filemapping = FilePathMappings::GetInstance();
     RETURN_IF_FAILED(filemapping.Initialize());
@@ -40,7 +40,7 @@ HRESULT Win7MsixInstaller_GetPackageInfo(std::wstring packageFullName, IPackageI
     return S_OK;
 }
 
-HRESULT Win7MsixInstaller_ListAllPackages(std::vector<std::wstring> **outPackages)
+HRESULT Win7MsixInstallerLib_ListAllPackages(std::vector<std::wstring> **outPackages)
 {
     std::vector<std::wstring> *packages = new std::vector<std::wstring>();
     auto filemapping = FilePathMappings::GetInstance();

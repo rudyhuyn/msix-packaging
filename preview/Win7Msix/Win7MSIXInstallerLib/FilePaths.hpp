@@ -44,8 +44,8 @@ namespace Win7MsixInstallerLib
 }
 	/// Removes the first directory from a path.
 	/// @param path - A path that contains at least one parent directory
-	void Win7MsixInstaller_GetPathChild(std::wstring &path);
+	void Win7MsixInstallerLib_GetPathChild(std::wstring &path);
 
 	/// Removes the innermost child file from a path
 	/// @param path - A file path 
-	void Win7MsixInstaller_GetPathParent(std::wstring &path);
+	void Win7MsixInstallerLib_GetPathParent(std::wstring &path);

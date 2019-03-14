@@ -18,7 +18,7 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, M
     // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
     // So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, validationOption, &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, validationOption, &appxFactory));
 
     // Create a new package reader using the factory.
     ComPtr<IAppxPackageReader> packageReader;
@@ -35,7 +35,7 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(PCWSTR manifestPath, MSI
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath, true /*forRead*/, &stream));
 
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, validationOption, &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, validationOption, &appxFactory));
 
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
@@ -54,7 +54,7 @@ HRESULT PopulatePackageInfo::CreatePackageReader()
     // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
     // So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
 
     // Create a new package reader using the factory.
     ComPtr<IAppxPackageReader> packageReader;
@@ -100,7 +100,7 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath.c_str(), true /*forRead*/, &stream));
 
     ComPtr<IAppxFactory> appxFactory;
-    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstaller_MyAllocate, Win7MsixInstaller_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
+    RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, m_msixRequest->GetValidationOptions(), &appxFactory));
 
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));

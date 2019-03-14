@@ -13,7 +13,7 @@ TRACELOGGING_DEFINE_PROVIDER(
 ///
 /// @param utf16string - A utf16 wstring
 /// @return utf8 string
-std::string Win7MsixInstaller_utf16_to_utf8(const std::wstring& utf16string)
+std::string Win7MsixInstallerLib_utf16_to_utf8(const std::wstring& utf16string)
 {
 	auto converted = std::wstring_convert<std::codecvt_utf8<wchar_t>>{}.to_bytes(utf16string.data());
 	std::string result(converted.begin(), converted.end());
@@ -24,7 +24,7 @@ std::string Win7MsixInstaller_utf16_to_utf8(const std::wstring& utf16string)
 ///
 /// @param version - version number
 /// @return a.b.c.d string representation of version
-std::wstring Win7MsixInstaller_ConvertVersionToString(UINT64 version)
+std::wstring Win7MsixInstallerLib_ConvertVersionToString(UINT64 version)
 {
     return std::to_wstring((version >> 0x30) & 0xFFFF) + L"."
         + std::to_wstring((version >> 0x20) & 0xFFFF) + L"."

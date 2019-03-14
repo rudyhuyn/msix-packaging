@@ -1,7 +1,6 @@
 #pragma once
 #include <windows.h>
 #include "AppxPackaging.hpp"
-#include <TraceLoggingProvider.h>
 #include <winmeta.h>
 #include <string.h>
 

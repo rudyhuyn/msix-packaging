@@ -44,7 +44,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
         publisherString.find_first_of(L",") - publisherString.find_first_of(L"=") - 1);
     RETURN_IF_FAILED(packageKey.SetStringValue(L"Publisher", publisherCommonName));
     
-    std::wstring versionString(Win7MsixInstaller_ConvertVersionToString(packageInfo->GetVersion()));
+    std::wstring versionString(Win7MsixInstallerLib_ConvertVersionToString(packageInfo->GetVersion()));
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
     std::wstring packageIconString = packageInfo->GetExecutableFilePath();
