@@ -11,15 +11,9 @@ class FilePathMappings
 public:
     static FilePathMappings& GetInstance();
 
-    std::wstring GetMsix7Directory() {
-        Initialize();
-        return m_msix7Directory;
-    }
+    std::map < std::wstring, std::wstring > GetMap() { return m_map; }
 
-    std::map < std::wstring, std::wstring > GetMap() {
-        Initialize();
-        return m_map;
-    }
+    std::wstring GetMsix7Directory() { return m_msix7Directory; }
 
 	/// Gets the resolved full path to the executable.
 	/// The executable path could be the location of the exe within the package's Msix7 directory
@@ -29,23 +23,25 @@ public:
 	/// @param packageFullName   - The packageFullName
 	/// @return the resolved full path to the executable
     std::wstring GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName);
-    HRESULT Initialize();
+    HRESULT GetInitializationResult() { return m_initializationResult; }
 private:
     // Disallow creating an instance of this object
+    HRESULT InitializePaths();
     FilePathMappings()
     {
+        m_initializationResult = InitializePaths();
     }
-    HRESULT InitializePaths();
 private:
 	std::map < std::wstring, std::wstring > m_map;
     std::wstring m_msix7Directory;
     bool m_isInitialized = false;
+    HRESULT m_initializationResult = E_NOT_SET;
 };
 }
-	/// Removes the first directory from a path.
-	/// @param path - A path that contains at least one parent directory
-	void Win7MsixInstallerLib_GetPathChild(std::wstring &path);
+/// Removes the first directory from a path.
+/// @param path - A path that contains at least one parent directory
+void Win7MsixInstallerLib_GetPathChild(std::wstring &path);
 
-	/// Removes the innermost child file from a path
-	/// @param path - A file path 
-	void Win7MsixInstallerLib_GetPathParent(std::wstring &path);
+/// Removes the innermost child file from a path
+/// @param path - A file path 
+void Win7MsixInstallerLib_GetPathParent(std::wstring &path);

@@ -72,7 +72,7 @@ HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFileP
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
-    RETURN_IF_FAILED(FilePathMappings::GetInstance().Initialize());
+    RETURN_IF_FAILED(FilePathMappings::GetInstance().GetInitializationResult());
     *outInstance = instance;
     return S_OK;
 }

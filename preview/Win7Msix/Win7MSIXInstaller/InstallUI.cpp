@@ -289,7 +289,7 @@ bool UI::ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage)
 // PURPOSE: Modify the value of the progress bar
 void UI::UpdateProgressBarStep(float value)
 {
-	SendMessage(g_progressHWnd, PBM_SETPOS, value * 100, 0);
+	SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)(value * 100), 0);
 }
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)

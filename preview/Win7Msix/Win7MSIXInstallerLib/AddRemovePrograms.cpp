@@ -48,6 +48,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
     std::wstring packageIconString = packageInfo->GetExecutableFilePath();
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayIcon", packageIconString));
 
+    std::wstring publisherString(packageInfo->GetPublisher());
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Added Uninstall key successfully",
         TraceLoggingValue(packageFullName.c_str(), "packageFullName"),

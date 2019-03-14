@@ -46,8 +46,6 @@ FilePathMappings& FilePathMappings::GetInstance()
 
 std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName)
 {
-    Initialize();
-
     // make a local copy so we can modify in place
     std::wstring executionPathWSTR = packageExecutablePath;
     
@@ -77,19 +75,6 @@ std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutableP
     executablePath.push_back(L'\\');
     executablePath.append(packageExecutablePath);
     return executablePath;
-}
-
-HRESULT FilePathMappings::Initialize()
-{
-    if (m_isInitialized)
-        return S_OK;
-    std::unique_lock<std::mutex> lock(filePathMappings_Init_lock);
-
-    if (m_isInitialized)
-        return S_OK;
-    auto res = InitializePaths();
-    m_isInitialized = res == S_OK;
-    return res;
 }
 
 HRESULT FilePathMappings::InitializePaths()
