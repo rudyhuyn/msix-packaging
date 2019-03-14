@@ -56,167 +56,167 @@ TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
 
 namespace Win7MsixInstallerLib
 {
-	//
-	// Stripped down ComPtr class provided for those platforms that do not already have a ComPtr class.
-	//
-	template <class T>
-	class ComPtr
+//
+// Stripped down ComPtr class provided for those platforms that do not already have a ComPtr class.
+//
+template <class T>
+class ComPtr
+{
+public:
+	// default ctor
+	ComPtr() = default;
+	ComPtr(T* ptr) : m_ptr(ptr) { InternalAddRef(); }
+
+	~ComPtr() { InternalRelease(); }
+	inline T* operator->() const { return m_ptr; }
+	inline T* Get() const { return m_ptr; }
+
+	inline T** operator&()
 	{
-	public:
-		// default ctor
-		ComPtr() = default;
-		ComPtr(T* ptr) : m_ptr(ptr) { InternalAddRef(); }
+		InternalRelease();
+		return &m_ptr;
+	}
 
-		~ComPtr() { InternalRelease(); }
-		inline T* operator->() const { return m_ptr; }
-		inline T* Get() const { return m_ptr; }
+	inline T* operator=(__in_opt T* ptr) throw()
+	{
+		InternalRelease();
+		m_ptr = ptr;
+		InternalAddRef();
+		return m_ptr;
+	}
 
-		inline T** operator&()
+	void Release() { InternalRelease(); }
+
+protected:
+	T * m_ptr = nullptr;
+
+	inline void InternalAddRef() { if (m_ptr) { m_ptr->AddRef(); } }
+	inline void InternalRelease()
+	{
+		T* temp = m_ptr;
+		if (temp)
 		{
-			InternalRelease();
-			return &m_ptr;
+			m_ptr = nullptr;
+			temp->Release();
 		}
+	}
+};
 
-		inline T* operator=(__in_opt T* ptr) throw()
+template <class T>
+class AutoPtr
+{
+public:
+	AutoPtr() = default;
+	AutoPtr(T * ptr) : m_ptr(ptr) {}
+
+	~AutoPtr() { delete m_ptr; }
+	void Free() { delete m_ptr; m_ptr = 0; }
+
+	inline T* Detach()
+	{
+		T* old = m_ptr;
+		m_ptr = 0;
+		return old;
+	}
+
+	inline operator const T* () const
+	{
+		return (T*)m_ptr;
+	}
+
+	inline operator T* ()
+	{
+		return (T*)m_ptr;
+	}
+
+	inline const T& operator*() const
+	{
+		return *m_ptr;
+	}
+	inline T& operator*()
+	{
+		return *m_ptr;
+	}
+
+	inline const T* Get() const
+	{
+		return m_ptr;
+	}
+
+	inline T* Get()
+	{
+		return m_ptr;
+	}
+
+	inline T** operator&()
+	{
+		return &m_ptr;
+	}
+
+	inline T** AddressOf()
+	{
+		return &m_ptr;
+	}
+
+	inline T** FreeAndAddressOf()
+	{
+		Free();
+		return &m_ptr;
+	}
+
+	inline const T* operator->() const
+	{
+		return m_ptr;
+	}
+	inline T* operator->()
+	{
+		return m_ptr;
+	}
+
+	inline T* operator=(T* ptr)
+	{
+		if (m_ptr != ptr)
 		{
-			InternalRelease();
+			delete m_ptr;
 			m_ptr = ptr;
-			InternalAddRef();
-			return m_ptr;
 		}
+		return m_ptr;
+	}
 
-		void Release() { InternalRelease(); }
+protected:
+	T* m_ptr = nullptr;
+};
 
-	protected:
-		T * m_ptr = nullptr;
+//
+// Helper class to free string buffers obtained from the packaging APIs.
+//
+template<typename T>
+class Text
+{
+public:
+	T** operator&() { return &content; }
+	~Text() { Cleanup(); }
+	T* Get() { return content; }
 
-		inline void InternalAddRef() { if (m_ptr) { m_ptr->AddRef(); } }
-		inline void InternalRelease()
-		{
-			T* temp = m_ptr;
-			if (temp)
-			{
-				m_ptr = nullptr;
-				temp->Release();
-			}
-		}
-	};
-
-	template <class T>
-	class AutoPtr
-	{
-	public:
-		AutoPtr() = default;
-		AutoPtr(T * ptr) : m_ptr(ptr) {}
-
-		~AutoPtr() { delete m_ptr; }
-		void Free() { delete m_ptr; m_ptr = 0; }
-
-		inline T* Detach()
-		{
-			T* old = m_ptr;
-			m_ptr = 0;
-			return old;
-		}
-
-		inline operator const T* () const
-		{
-			return (T*)m_ptr;
-		}
-
-		inline operator T* ()
-		{
-			return (T*)m_ptr;
-		}
-
-		inline const T& operator*() const
-		{
-			return *m_ptr;
-		}
-		inline T& operator*()
-		{
-			return *m_ptr;
-		}
-
-		inline const T* Get() const
-		{
-			return m_ptr;
-		}
-
-		inline T* Get()
-		{
-			return m_ptr;
-		}
-
-		inline T** operator&()
-		{
-			return &m_ptr;
-		}
-
-		inline T** AddressOf()
-		{
-			return &m_ptr;
-		}
-
-		inline T** FreeAndAddressOf()
-		{
-			Free();
-			return &m_ptr;
-		}
-
-		inline const T* operator->() const
-		{
-			return m_ptr;
-		}
-		inline T* operator->()
-		{
-			return m_ptr;
-		}
-
-		inline T* operator=(T* ptr)
-		{
-			if (m_ptr != ptr)
-			{
-				delete m_ptr;
-				m_ptr = ptr;
-			}
-			return m_ptr;
-		}
-
-	protected:
-		T* m_ptr = nullptr;
-	};
-
-	//
-	// Helper class to free string buffers obtained from the packaging APIs.
-	//
-	template<typename T>
-	class Text
-	{
-	public:
-		T** operator&() { return &content; }
-		~Text() { Cleanup(); }
-		T* Get() { return content; }
-
-		T* content = nullptr;
-	protected:
-		void Cleanup() { if (content) { Win7MsixInstallerLib_MyFree(content); content = nullptr; } }
-	};
+	T* content = nullptr;
+protected:
+	void Cleanup() { if (content) { Win7MsixInstallerLib_MyFree(content); content = nullptr; } }
+};
 
 
-	//
-	// Helper class to free string buffers created using OLE memory allocator.
-	//
-	template<typename T>
-	class TextOle
-	{
-	public:
-		T** operator&() { return &content; }
-		~TextOle() { Cleanup(); }
-		T* Get() { return content; }
+//
+// Helper class to free string buffers created using OLE memory allocator.
+//
+template<typename T>
+class TextOle
+{
+public:
+	T** operator&() { return &content; }
+	~TextOle() { Cleanup(); }
+	T* Get() { return content; }
 
-		T* content = nullptr;
-	protected:
-		void Cleanup() { if (content) { CoTaskMemFree(content); content = nullptr; } }
-	};
+	T* content = nullptr;
+protected:
+	void Cleanup() { if (content) { CoTaskMemFree(content); content = nullptr; } }
+};
 }
