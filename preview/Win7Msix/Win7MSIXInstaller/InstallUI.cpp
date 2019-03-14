@@ -61,8 +61,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-        LaunchButton(hWnd, windowRect);
-        CreateCheckbox(hWnd, windowRect);
+        ui->LaunchButton(hWnd, windowRect);
+        ui->CreateCheckbox(hWnd, windowRect);
         break;
     case WM_PAINT:
     {
@@ -80,7 +80,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (!g_installed)
                 {
                     DestroyWindow(g_buttonHWnd);
-                    CreateCancelButton(hWnd, windowRect);
+                    ui->CreateCancelButton(hWnd, windowRect);
                     UpdateWindow(hWnd);
                     if (ui != NULL)
                     {
@@ -111,8 +111,73 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
+            case IDC_LAUNCHBUTTON:
+                ui->LaunchInstalledApp();
+                break;
         }
         break;
+    case WM_INSTALLCOMPLETE_MSG:
+    {
+        DestroyWindow(g_CancelbuttonHWnd);
+        ui->CreateLaunchButton(hWnd, windowRect);
+        UpdateWindow(hWnd);
+        ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
+        ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
+        if (g_launchCheckBoxState) {
+            ui->LaunchInstalledApp(); // launch app
+            DestroyWindow(hWnd); // close msix app installer
+        }
+        else
+        {
+            //wait for user to click launch button or close the window
+            while (true)
+            {
+                switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
+                {
+                case WAIT_OBJECT_0:
+                    MSG msg;
+                    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+                    {
+                        TranslateMessage(&msg);
+                        DispatchMessage(&msg);
+                    }
+                    break;
+                }
+            }
+        }
+        break;
+    }
+    case WM_INSTALLCOMPLETE_MSG:
+    {
+        DestroyWindow(g_CancelbuttonHWnd);
+        ui->CreateLaunchButton(hWnd, windowRect);
+        UpdateWindow(hWnd);
+        ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
+        ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
+        if (g_launchCheckBoxState) {
+            ui->LaunchInstalledApp(); // launch app
+            DestroyWindow(hWnd); // close msix app installer
+        }
+        else
+        {
+            //wait for user to click launch button or close the window
+            while (true)
+            {
+                switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
+                {
+                case WAIT_OBJECT_0:
+                    MSG msg;
+                    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+                    {
+                        TranslateMessage(&msg);
+                        DispatchMessage(&msg);
+                    }
+                    break;
+                }
+            }
+        }
+        break;
+    }
     case WM_SIZE:
     case WM_SIZING:
         break;
@@ -141,6 +206,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+
+HRESULT UI::LaunchInstalledApp()
+{
+    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
+    std::wstring resolvedExecutableFullPath = packageInfo->GetExecutableFilePath();
+    //check for error while launching app here
+    ShellExecute(NULL, NULL, resolvedExecutableFullPath.c_str(), NULL, NULL, SW_SHOW);
+    return S_OK;
 }
 
 void StartParseFile(HWND hWnd)
@@ -200,6 +274,7 @@ void StartUIThread(UI* ui)
         MessageBox(NULL, L"Call to RegisterClassEx failed!", title.c_str(), NULL);
         return;
     }
+
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -284,7 +359,7 @@ BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect)
 // 
 // parentHWnd: the HWND of the window to add the button to
 // parentRect: the specs of the parent window
-BOOL LaunchButton(HWND parentHWnd, RECT parentRect) {
+BOOL UI::LaunchButton(HWND parentHWnd, RECT parentRect) {
     LPVOID buttonPointer = nullptr;
     g_buttonHWnd = CreateWindowEx(
         WS_EX_LEFT, // extended window style
@@ -308,7 +383,7 @@ BOOL LaunchButton(HWND parentHWnd, RECT parentRect) {
 // 
 // parentHWnd: the HWND of the window to add the checkbox to
 // parentRect: the specs of the parent window
-BOOL CreateCheckbox(HWND parentHWnd, RECT parentRect)
+BOOL UI::CreateCheckbox(HWND parentHWnd, RECT parentRect)
 {
     g_checkboxHWnd = CreateWindowEx(
         WS_EX_LEFT, // extended window style
@@ -353,18 +428,43 @@ BOOL CreateCancelButton(HWND parentHWnd, RECT parentRect) {
     return TRUE;
 }
 
+// FUNCTION: CreateLaunchButton(HWND parentHWnd, RECT parentRect)
+//
+// PURPOSE: Create the launch button on the botton right after app has been installed
+// 
+// parentHWnd: the HWND of the window to add the checkbox to
+// parentRect: the specs of the parent window
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect) 
+{
+    LPVOID buttonPointer = nullptr;
+    g_LaunchbuttonHWnd = CreateWindowEx(
+        WS_EX_LEFT, // extended window style
+        L"BUTTON",
+        L"Launch",  // text
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+        parentRect.right - 100 - 50, // x coord
+        parentRect.bottom - 60,  // y coord
+        120,  // width
+        35,  // height
+        parentHWnd,  // parent
+        (HMENU)IDC_LAUNCHBUTTON, // menu
+        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
+        buttonPointer); // pointer to button
+    return TRUE;
+}
+
 // FUNCTION: ChangeButtonText(LPARAM newMessage)
 //
 // PURPOSE: Changes the text of the lower right button
 //
 // newMessage: the message to change the button to
-BOOL ChangeButtonText(const std::wstring& newMessage)
+BOOL UI::ChangeButtonText(const std::wstring& newMessage)
 {
     SendMessage(g_buttonHWnd, WM_SETTEXT, NULL, reinterpret_cast<LPARAM>(newMessage.c_str()));
     return ShowWindow(g_buttonHWnd, SW_SHOW);
 }
 
-BOOL HideButtonWindow()
+BOOL UI::HideButtonWindow()
 {
     return ShowWindow(g_buttonHWnd, SW_HIDE);
 }
@@ -375,7 +475,7 @@ BOOL HideButtonWindow()
 //
 // parentHWnd: the HWND of the window to be changed
 // windowText: the text to change the window to
-BOOL ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring messageText, IStream* logoStream)
+BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring messageText, IStream* logoStream)
 {
     PAINTSTRUCT paint;
     HDC deviceContext = BeginPaint(parentHWnd, &paint);
@@ -387,11 +487,13 @@ BOOL ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring messageT
     Gdiplus::Font messageFont(L"Arial", 10);
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear);
-    Gdiplus::SolidBrush blackBrush(Gdiplus::Color(255, 0, 0, 0));
+	auto windowsTextColor = Gdiplus::Color();
+	windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
+	Gdiplus::SolidBrush textBrush(windowsTextColor);
 
-    graphics.DrawString(displayName.c_str(), -1, &displayNameFont, layoutRect, &format, &blackBrush);
+    graphics.DrawString(displayName.c_str(), -1, &displayNameFont, layoutRect, &format, &textBrush);
     layoutRect.Y += 40;
-    graphics.DrawString(messageText.c_str(), -1, &messageFont, layoutRect, &format, &blackBrush);
+    graphics.DrawString(messageText.c_str(), -1, &messageFont, layoutRect, &format, &textBrush);
 
     if (logoStream != nullptr)
     {
@@ -416,7 +518,7 @@ BOOL ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring messageT
 // windowTitle: the window title
 int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title)
 {
-    HWND hWnd = CreateWindow(
+    hWnd = CreateWindow(
         const_cast<wchar_t*>(windowClass.c_str()),
         const_cast<wchar_t*>(title.c_str()),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
@@ -450,3 +552,12 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
+void UI::UpdateProgressBar()
+{
+    SendMessage(g_progressHWnd, PBM_STEPIT, 0, 0);
+}
+
+void UI::SendInstallCompleteMsg()
+{
+    SendMessage(hWnd, WM_INSTALLCOMPLETE_MSG, NULL, NULL);
+}

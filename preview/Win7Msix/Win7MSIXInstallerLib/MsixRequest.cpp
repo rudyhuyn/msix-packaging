@@ -24,6 +24,7 @@
 #include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
+#include "InstallComplete.hpp"
 #include "CreateAndShowUI.hpp"
 #include "GeneralUtil.hpp"
 
@@ -48,7 +49,8 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
     {Protocol::HandlerName,             {Protocol::CreateHandler,            FileTypeAssociation::HandlerName}},
-    {FileTypeAssociation::HandlerName,  {FileTypeAssociation::CreateHandler, nullptr}},
+    {FileTypeAssociation::HandlerName,  {FileTypeAssociation::CreateHandler, InstallComplete::HandlerName }},
+    {InstallComplete::HandlerName,      {InstallComplete::CreateHandler,     nullptr}},
 };
 
 std::map<PCWSTR, HandlerInfo> RemoveHandlers =
