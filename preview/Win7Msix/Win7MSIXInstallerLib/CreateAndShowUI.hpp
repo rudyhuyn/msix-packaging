@@ -9,19 +9,19 @@
 
 namespace Win7MsixInstallerLib
 {
-	class CreateAndShowUI : IPackageHandler
-	{
-	public:
-		HRESULT ExecuteForAddRequest();
+class CreateAndShowUI : IPackageHandler
+{
+public:
+	HRESULT ExecuteForAddRequest();
 
-		static const PCWSTR HandlerName;
-		static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
-		~CreateAndShowUI() {}
-	private:
-		MsixRequest* m_msixRequest = nullptr;
+	static const PCWSTR HandlerName;
+	static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
+	~CreateAndShowUI() {}
+private:
+	MsixRequest* m_msixRequest = nullptr;
 
-		CreateAndShowUI() {}
-		CreateAndShowUI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
+	CreateAndShowUI() {}
+	CreateAndShowUI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
-	};
+};
 }

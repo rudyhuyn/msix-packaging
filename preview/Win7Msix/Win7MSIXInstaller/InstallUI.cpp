@@ -380,30 +380,6 @@ BOOL UI::CreateCheckbox(HWND parentHWnd, RECT parentRect)
 // 
 // parentHWnd: the HWND of the window to add the button to
 // parentRect: the specs of the parent window
-BOOL CreateCancelButton(HWND parentHWnd, RECT parentRect) {
-    LPVOID buttonPointer = nullptr;
-    g_CancelbuttonHWnd = CreateWindowEx(
-        WS_EX_LEFT, // extended window style
-        L"BUTTON",
-        L"Cancel",  // text
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
-        parentRect.right - 100 - 50, // x coord
-        parentRect.bottom - 60,  // y coord
-        120,  // width
-        35,  // height
-        parentHWnd,  // parent
-        (HMENU)IDC_CANCELBUTTON, // menu
-        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
-        buttonPointer); // pointer to button
-    return TRUE;
-}
-
-// FUNCTION: CancelButton(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Create the lower right cancel button when install is clicked
-// 
-// parentHWnd: the HWND of the window to add the button to
-// parentRect: the specs of the parent window
 BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
 {
     LPVOID buttonPointer = nullptr;
