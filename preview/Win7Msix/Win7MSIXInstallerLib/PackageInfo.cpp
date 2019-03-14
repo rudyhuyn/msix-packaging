@@ -2,10 +2,44 @@
 
 #include "PackageInfo.hpp"
 #include "GeneralUtil.hpp"
-#include "MsixRequest.hpp"
 #include <TraceLoggingProvider.h>
+using namespace Win7MsixInstallerLib;
 
-HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element, PCWSTR packageFullName, MsixRequest * msixRequest)
+//
+// Gets the stream of a file.
+//
+// Parameters:
+//   package - The package reader for the app package.
+//   name - Name of the file.
+//   stream - The stream for the file.
+//
+HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** stream)
+{
+    *stream = nullptr;
+
+    ComPtr<IAppxFilesEnumerator> files;
+    RETURN_IF_FAILED(package->GetPayloadFiles(&files));
+
+    BOOL hasCurrent = FALSE;
+    RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
+    while (hasCurrent)
+    {
+        ComPtr<IAppxFile> file;
+        RETURN_IF_FAILED(files->GetCurrent(&file));
+        Text<WCHAR> fileName;
+        file->GetName(&fileName);
+        if (wcscmp(fileName.Get(), name) == 0)
+        {
+            RETURN_IF_FAILED(file->GetStream(stream));
+            return S_OK;
+        }
+        RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
+    }
+    return S_OK;
+}
+
+
+HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
     BOOL hc = FALSE;
     ComPtr<IMsixElementEnumerator> applicationElementEnum;
@@ -26,11 +60,10 @@ HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* elem
     RETURN_IF_FAILED(applicationElementEnum->GetCurrent(&applicationElement));
 
     Text<wchar_t> executablePath;
-    RETURN_IF_FAILED(applicationElement->GetAttributeValue(L"Executable", &executablePath));
-    m_executableFilePath = msixRequest->GetFilePathMappings()->GetExecutablePath(executablePath.Get(), packageFullName);
-
     Text<wchar_t> applicationId;
+    RETURN_IF_FAILED(applicationElement->GetAttributeValue(L"Executable", &executablePath));
     RETURN_IF_FAILED(applicationElement->GetAttributeValue(L"Id", &applicationId));
+    m_executableFilePath = executablePath.Get();
     m_applicationId = applicationId.Get();
 
     return S_OK;
@@ -59,10 +92,14 @@ HRESULT PackageInfo::SetDisplayNameFromManifestElement(IMsixElement* element)
     RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"DisplayName", &displayName));
     m_displayName = displayName.Get();
 
+    Text<WCHAR> logo;
+    RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"Square150x150Logo", &logo));
+    m_logo = logo.Get();
+
     return S_OK;
 }
 
-HRESULT PackageInfo::MakeFromManifestReader(IAppxManifestReader * manifestReader, MsixRequest * msixRequest, PackageInfo ** packageInfo)
+HRESULT PackageInfo::MakeFromManifestReader(IAppxManifestReader * manifestReader, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo)
 {
     std::unique_ptr<PackageInfo> instance(new PackageInfo());
     if (instance == nullptr)
@@ -70,14 +107,14 @@ HRESULT PackageInfo::MakeFromManifestReader(IAppxManifestReader * manifestReader
         return E_OUTOFMEMORY;
     }
 
-    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader, msixRequest));
+    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader, msix7DirectoryPath));
 
     *packageInfo = instance.release();
 
     return S_OK;
 }
 
-HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, MsixRequest * msixRequest, PackageInfo ** packageInfo)
+HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo)
 {
     std::unique_ptr<PackageInfo> instance(new PackageInfo());
     if (instance == nullptr)
@@ -89,7 +126,7 @@ HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, M
 
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(packageReader->GetManifest(&manifestReader));
-    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader.Get(), msixRequest));
+    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader.Get(), msix7DirectoryPath));
 
     // Get the number of payload files
     DWORD numberOfPayloadFiles = 0;
@@ -110,16 +147,17 @@ HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, M
     return S_OK;
 }
 
-HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, MsixRequest * msixRequest)
+HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std::wstring msix7DirectoryPath)
 {
     m_manifestReader = manifestReader;
-
-    std::wstring msix7DirectoryPath = msixRequest->GetFilePathMappings()->GetMsix7Directory();
 
     // Also fill other fields that come from the manifest reader
     ComPtr<IAppxManifestPackageId> manifestId;
     RETURN_IF_FAILED(manifestReader->GetPackageId(&manifestId));
-    RETURN_IF_FAILED(manifestId->GetPublisher(&m_publisher));
+
+    Text<WCHAR> publisher;
+    RETURN_IF_FAILED(manifestId->GetPublisher(&publisher));
+    m_publisher = publisher.Get();
     RETURN_IF_FAILED(manifestId->GetVersion(&m_version));
 
     Text<WCHAR> packageFullName;
@@ -133,7 +171,7 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, Msi
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
 
-    RETURN_IF_FAILED(SetExecutableAndAppIdFromManifestElement(element.Get(), packageFullName.Get(), msixRequest));
+    RETURN_IF_FAILED(SetExecutableAndAppIdFromManifestElement(element.Get()));
 
     RETURN_IF_FAILED(SetDisplayNameFromManifestElement(element.Get()));
 
@@ -144,4 +182,26 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, Msi
         m_appUserModelId = std::wstring(packageFamilyName.Get()) + L"!" + m_applicationId;
     }
     return S_OK;
+}
+
+std::wstring PackageInfo::GetPublisherName()
+{
+    if (m_publisherName.empty())
+    {
+        m_publisherName = m_publisher.substr(m_publisher.find_first_of(L"=") + 1,
+            m_publisher.find_first_of(L",") - m_publisher.find_first_of(L"=") - 1);
+    }
+    return m_publisherName;
+
+
+}
+
+IStream* PackageInfo::GetLogo()
+{
+    IStream * logoStream;
+    if (GetStreamFromFile(m_packageReader.Get(), m_logo.data(), &logoStream) == S_OK)
+    {
+        return logoStream;
+    }
+    return nullptr;
 }
