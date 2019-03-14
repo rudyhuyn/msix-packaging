@@ -7,15 +7,16 @@
 #include "InstallComplete.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
+#include "MsixRequest.hpp"
 
-#include "InstallUI.hpp"
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
 HRESULT InstallComplete::ExecuteForAddRequest()
 {
-    AutoPtr<UI> ui;
-    ui->SendInstallCompleteMsg();
+    auto ui = m_msixRequest->GetUI();
+    ui->InstallCompleted();
     return S_OK;
 }
 

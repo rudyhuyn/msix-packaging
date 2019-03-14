@@ -185,11 +185,6 @@
   <ItemGroup>
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="CommandLineInterface.hpp" />
-    <ClInclude Include="InstallComplete.hpp" />
-    <ClInclude Include="PopulatePackageInfo.hpp" />
-    <ClInclude Include="PackageInfo.hpp" />
-    <ClInclude Include="IPackageHandler.hpp" />
-    <ClInclude Include="MsixRequest.hpp" />
     <ClInclude Include="InstallUI.hpp" />
     <ClInclude Include="..\..\..\.vs\src\msix\AppxPackaging.hpp" />
     <ClInclude Include="..\..\..\.vs\src\msix\MSIXWindows.hpp" />
@@ -198,7 +193,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GeneralUtil.cpp" />
-    <ClCompile Include="InstallComplete.cpp" />
     <ClCompile Include="InstallUI.cpp" />
     <ClCompile Include="CommandLineInterface.cpp" />
     <ClCompile Include="Win7MSIXInstaller.cpp" />

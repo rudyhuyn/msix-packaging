@@ -27,39 +27,36 @@ static bool g_launchCheckBoxState = true; // launch checkbox is checked by defau
 class UI : public Win7MsixInstallerLib::IInstallerUI
 {
 public:
-    HRESULT ShowUI();
+    UI(_In_ Win7MsixInstallerLib::IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
+    bool ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage);
     HRESULT LaunchInstalledApp();
-
-    static HRESULT Make(_In_ MsixRequest* msixRequest, _Out_ UI** instance);
     ~UI() {}
 private:
     Win7MsixInstallerLib::IMsixRequest* m_msixRequest = nullptr;
 
     HANDLE m_buttonClickedEvent;
-	std::wstring m_displayName = L"";
-	std::wstring m_publisherCommonName = L"";
-	ComPtr<IStream> m_logoStream;
-	std::wstring m_version = L"";
-	HRESULT m_loadingPackageInfoCode = 0;
+    std::wstring m_displayName = L"";
+    std::wstring m_publisherCommonName = L"";
+    ComPtr<IStream> m_logoStream;
+    std::wstring m_version = L"";
+    HRESULT m_loadingPackageInfoCode = 0;
 
 public:
     HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
-	int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
-	void LoadInfo();
+    int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
+    void LoadInfo();
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
     void UpdateProgressBarStep(float value);
-private:
-    HRESULT ParseInfoFromPackage();
-};
+    bool InstallCompleted();
 
-// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Creates the progress bar
-//
-// parentHWnd: the HWND of the window to add the progress bar to
-// parentRect: the dimmensions of the parent window
-// count: the number of objects to be iterated through in the progress bar
-BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
+    // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
+    //
+    // PURPOSE: Creates the progress bar
+    //
+    // parentHWnd: the HWND of the window to add the progress bar to
+    // parentRect: the dimmensions of the parent window
+    // count: the number of objects to be iterated through in the progress bar
+    BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
     // FUNCTION: LaunchButton(HWND parentHWnd, RECT parentRect)
     //
@@ -107,13 +104,17 @@ BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
     BOOL HideButtonWindow();
 
     // FUNCTION: SendInstallCompleteMsg
-//
-// PURPOSE: Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
+    //
+    // PURPOSE: Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
     void SendInstallCompleteMsg();
-// FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
-//
-// PURPOSE: Change the text of the installation window based on the given input
-//
-// parentHWnd: the HWND of the window to be changed
-// windowText: the text to change the window to
-BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
+    // FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
+    //
+    // PURPOSE: Change the text of the installation window based on the given input
+    //
+    // parentHWnd: the HWND of the window to be changed
+    // windowText: the text to change the window to
+    BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
+
+private:
+    HRESULT ParseInfoFromPackage();
+};

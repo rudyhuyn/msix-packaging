@@ -10,5 +10,6 @@ namespace Win7MsixInstallerLib {
 	public:
 		virtual void UpdateProgressBarStep(float value) = 0;
 		virtual bool ShowUI(InstallerUIType isAddPackage) = 0;
+        virtual bool InstallCompleted() = 0;
 	};
 }

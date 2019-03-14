@@ -16,6 +16,7 @@
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
 using namespace std;
+using namespace Win7MsixInstallerLib;
 #include <GdiPlus.h>
 
 static const int g_width = 500;  // width of window
@@ -84,7 +85,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     UpdateWindow(hWnd);
                     if (ui != NULL)
                     {
-                        CreateProgressBar(hWnd, windowRect);
+                        ui->CreateProgressBar(hWnd, windowRect);
                     }
                     ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
                     if (ui != NULL)
@@ -116,37 +117,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
         }
         break;
-    case WM_INSTALLCOMPLETE_MSG:
-    {
-        DestroyWindow(g_CancelbuttonHWnd);
-        ui->CreateLaunchButton(hWnd, windowRect);
-        UpdateWindow(hWnd);
-        ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
-        ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
-        if (g_launchCheckBoxState) {
-            ui->LaunchInstalledApp(); // launch app
-            DestroyWindow(hWnd); // close msix app installer
-        }
-        else
-        {
-            //wait for user to click launch button or close the window
-            while (true)
-            {
-                switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
-                {
-                case WAIT_OBJECT_0:
-                    MSG msg;
-                    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-                    {
-                        TranslateMessage(&msg);
-                        DispatchMessage(&msg);
-                    }
-                    break;
-                }
-            }
-        }
-        break;
-    }
     case WM_INSTALLCOMPLETE_MSG:
     {
         DestroyWindow(g_CancelbuttonHWnd);
@@ -210,9 +180,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 HRESULT UI::LaunchInstalledApp()
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
+    auto packageInfo = m_msixRequest->GetIPackageInfo();
     std::wstring resolvedExecutableFullPath = packageInfo->GetExecutableFilePath();
-    //check for error while launching app here
+    //check for error while launching app here                     Win
     ShellExecute(NULL, NULL, resolvedExecutableFullPath.c_str(), NULL, NULL, SW_SHOW);
     return S_OK;
 }
@@ -316,7 +286,7 @@ bool UI::ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage)
 
 // FUNCTION: UpdateProgressBar
 //
-// PURPOSE: Increment the progress bar one tick based on preset tick
+// PURPOSE: Modify the value of the progress bar
 void UI::UpdateProgressBarStep(float value)
 {
 	SendMessage(g_progressHWnd, PBM_SETPOS, value * 100, 0);
@@ -328,7 +298,7 @@ void UI::UpdateProgressBarStep(float value)
 //
 // parentHWnd: the HWND of the window to add the progress bar to
 // parentRect: the dimensions of the parent window
-BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect)
+BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
 {
     int scrollHeight = GetSystemMetrics(SM_CYVSCROLL);
 
@@ -411,6 +381,31 @@ BOOL UI::CreateCheckbox(HWND parentHWnd, RECT parentRect)
 // parentHWnd: the HWND of the window to add the button to
 // parentRect: the specs of the parent window
 BOOL CreateCancelButton(HWND parentHWnd, RECT parentRect) {
+    LPVOID buttonPointer = nullptr;
+    g_CancelbuttonHWnd = CreateWindowEx(
+        WS_EX_LEFT, // extended window style
+        L"BUTTON",
+        L"Cancel",  // text
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+        parentRect.right - 100 - 50, // x coord
+        parentRect.bottom - 60,  // y coord
+        120,  // width
+        35,  // height
+        parentHWnd,  // parent
+        (HMENU)IDC_CANCELBUTTON, // menu
+        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
+        buttonPointer); // pointer to button
+    return TRUE;
+}
+
+// FUNCTION: CancelButton(HWND parentHWnd, RECT parentRect)
+//
+// PURPOSE: Create the lower right cancel button when install is clicked
+// 
+// parentHWnd: the HWND of the window to add the button to
+// parentRect: the specs of the parent window
+BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
+{
     LPVOID buttonPointer = nullptr;
     g_CancelbuttonHWnd = CreateWindowEx(
         WS_EX_LEFT, // extended window style
@@ -552,12 +547,8 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
-void UI::UpdateProgressBar()
-{
-    SendMessage(g_progressHWnd, PBM_STEPIT, 0, 0);
-}
-
-void UI::SendInstallCompleteMsg()
+bool UI::InstallCompleted()
 {
     SendMessage(hWnd, WM_INSTALLCOMPLETE_MSG, NULL, NULL);
+    return true;
 }

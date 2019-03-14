@@ -190,6 +190,7 @@
     <ClInclude Include="Extractor.hpp" />
     <ClInclude Include="FileTypeAssociation.hpp" />
     <ClInclude Include="FootprintFiles.hpp" />
+    <ClInclude Include="InstallComplete.hpp" />
     <ClInclude Include="MsixRequest.hpp" />
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="FilePaths.hpp" />
@@ -210,6 +211,7 @@
     <ClCompile Include="Extractor.cpp" />
     <ClCompile Include="FilePaths.cpp" />
     <ClCompile Include="FileTypeAssociation.cpp" />
+    <ClCompile Include="InstallComplete.cpp" />
     <ClCompile Include="MsixRequest.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="CreateAndShowUI.cpp" />

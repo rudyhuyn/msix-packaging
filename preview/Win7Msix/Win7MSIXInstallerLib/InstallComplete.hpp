@@ -3,6 +3,9 @@
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
 
+namespace Win7MsixInstallerLib
+{
+
 class InstallComplete : IPackageHandler
 {
 public:
@@ -17,3 +20,4 @@ private:
 	InstallComplete() {}
 	InstallComplete(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 };
+}
