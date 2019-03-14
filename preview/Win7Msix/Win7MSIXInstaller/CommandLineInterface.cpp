@@ -1,9 +1,12 @@
 #include <iostream>
 #include <iomanip>
 #include "CommandLineInterface.hpp"
+#include "Win7MSIXInstallerLogger.hpp"
 #include <TraceLoggingProvider.h>
 #include "GeneralUtil.hpp"
 #include "resource.h"
+
+using namespace Win7MsixInstallerLib;
 
 std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_options =
 {
@@ -12,11 +15,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_ADDPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& path)
         {
-            if (commandLineInterface->m_operationType != OperationType::Undefined)
+            if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
             {
                 return E_INVALIDARG;
             }
-            commandLineInterface->m_operationType = OperationType::Add;
+            commandLineInterface->m_operationType = CommandLineOperationType::Add;
             commandLineInterface->m_packageFilePath = utf8_to_utf16(path);
             return S_OK;
         })
@@ -26,11 +29,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_REMOVEPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& packageFullName)
         {
-            if (commandLineInterface->m_operationType != OperationType::Undefined)
+            if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
             {
                 return E_INVALIDARG;
             }
-            commandLineInterface->m_operationType = OperationType::Remove;
+            commandLineInterface->m_operationType = CommandLineOperationType::Remove;
             commandLineInterface->m_packageFullName = utf8_to_utf16(packageFullName);
             return S_OK;
         })
@@ -40,7 +43,7 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(false, IDS_STRING_HELP_OPTION_QUIETMODE,
             [&](CommandLineInterface* commandLineInterface, const std::string&)
             {
-                commandLineInterface->m_flags |= Flags::QuietUX;
+                commandLineInterface->m_quietMode = true;
                 return S_OK; 
             })
     },
@@ -49,11 +52,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(false, IDS_STRING_HELP_OPTION_FINDALLPACKAGES,
             [&](CommandLineInterface* commandLineInterface, const std::string&)
             {
-                if (commandLineInterface->m_operationType != OperationType::Undefined)
+                if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
                 {
                     return E_INVALIDARG;
                 }
-                commandLineInterface->m_operationType = OperationType::FindAllPackages;
+                commandLineInterface->m_operationType = CommandLineOperationType::FindAllPackages;
                 return S_OK;
             })
     },
@@ -62,11 +65,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_FINDPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& packageFullName)
             {
-                if (commandLineInterface->m_operationType != OperationType::Undefined)
+                if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
                 {
                     return E_INVALIDARG;
                 }
-                commandLineInterface->m_operationType = OperationType::FindPackage;
+                commandLineInterface->m_operationType = CommandLineOperationType::FindPackage;
                 commandLineInterface->m_packageFullName = utf8_to_utf16(packageFullName);
                 return S_OK;
             })
@@ -98,11 +101,11 @@ void CommandLineInterface::DisplayHelp()
     }
 }
 
-HRESULT CommandLineInterface::CreateRequest(MsixRequest** msixRequest)
+HRESULT CommandLineInterface::Init()
 {
     for (int i = 0; i < m_argc; i++)
     {
-        TraceLoggingWrite(g_MsixTraceLoggingProvider,
+        TraceLoggingWrite(g_MsixUITraceLoggingProvider,
             "CommandLineArguments",
             TraceLoggingValue(i, "index"),
             TraceLoggingValue(m_argv[i], "arg"));
@@ -126,7 +129,7 @@ HRESULT CommandLineInterface::CreateRequest(MsixRequest** msixRequest)
         auto option = s_options.find(optionString);
         if (option == s_options.end())
         {
-            TraceLoggingWrite(g_MsixTraceLoggingProvider,
+            TraceLoggingWrite(g_MsixUITraceLoggingProvider,
                 "Unknown Argument",
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingValue(m_argv[index], "arg"));
@@ -146,16 +149,5 @@ HRESULT CommandLineInterface::CreateRequest(MsixRequest** msixRequest)
         ++index;
     }
 
-    AutoPtr<MsixRequest> localRequest;
-    RETURN_IF_FAILED(MsixRequest::Make(
-		m_operationType, 
-		m_flags, 
-		m_packageFilePath, 
-		m_packageFullName, 
-		m_validationOptions,
-		&localRequest)
-	);
-
-    *msixRequest = localRequest.Detach();
     return S_OK;
 }

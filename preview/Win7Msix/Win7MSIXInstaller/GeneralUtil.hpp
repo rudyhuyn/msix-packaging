@@ -1,29 +1,8 @@
 #pragma once
 #include <windows.h>
 #include "AppxPackaging.hpp"
-#include <TraceLoggingProvider.h>
 #include <winmeta.h>
 #include <string.h>
-
-TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
-
-// Definition of function to return error if failed
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#define RETURN_IF_FAILED(a) \
-{                       \
-    HRESULT __hr = a;   \
-    if (FAILED(__hr))   \
-    {   \
-        TraceLoggingWrite(g_MsixTraceLoggingProvider, \
-            "RETURN_IF_FAILED", \
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR), \
-            TraceLoggingValue(#a, "Code"), \
-            TraceLoggingHResult(__hr, "HR"), \
-            TraceLoggingUInt32(__LINE__, "Line"), \
-            TraceLoggingValue(__FILENAME__, "Filename")); \
-        return __hr; \
-    }  \
-}
 
 //
 // Converts a wstring from utf16 to utf8
