@@ -23,8 +23,8 @@ HRESULT CreateAndShowUI::ExecuteForAddRequest()
     auto ui = m_msixRequest->GetUI();
     if (ui != NULL)
     {
-        auto uiShowed = ui->ShowUI(Win7MsixInstallerLib::InstallerUIType::InstallerUITypeAddPackage);
-        if (!uiShowed)
+        auto confirmed = ui->InstallationStepChanged(Win7MsixInstallerLib::InstallationStep::InstallationStepWaitForUserConfirmation);
+        if (!confirmed)
         {
             return E_FAIL;
         }

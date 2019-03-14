@@ -78,6 +78,11 @@ HRESULT PopulatePackageInfo::ExecuteForAddRequest()
         TraceLoggingValue(m_msixRequest->GetPackageInfo()->GetExecutableFilePath().c_str(), "ExecutableFilePath"),
         TraceLoggingValue(m_msixRequest->GetPackageInfo()->GetDisplayName().c_str(), "DisplayName"));
 
+    auto ui = m_msixRequest->GetUI();
+    if (ui != nullptr)
+    {
+        ui->InstallationStepChanged(InstallationStep::InstallationStepPackageInformationAvailable);
+    }
     return S_OK;
 }
 
@@ -109,6 +114,11 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
     RETURN_IF_FAILED(PackageInfo::MakeFromManifestReader(manifestReader.Get(), FilePathMappings::GetInstance().GetMsix7Directory(), &packageInfo));
     m_msixRequest->SetPackageInfo(packageInfo.Detach());
 
+    auto ui = m_msixRequest->GetUI();
+    if (ui != nullptr)
+    {
+        ui->InstallationStepChanged(InstallationStep::InstallationStepPackageInformationAvailable);
+    }
     return S_OK;
 }
 

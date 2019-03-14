@@ -28,7 +28,6 @@ class UI : public Win7MsixInstallerLib::IInstallerUI
 {
 public:
     UI(_In_ Win7MsixInstallerLib::IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
-    bool ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage);
     HRESULT LaunchInstalledApp();
     ~UI() {}
 private:
@@ -46,8 +45,8 @@ public:
     int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
     void LoadInfo();
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
-    void UpdateProgressBarStep(float value);
-    bool InstallCompleted();
+    void UpdateProgressBarValue(float value);
+    bool InstallationStepChanged(Win7MsixInstallerLib::InstallationStep step);
 
     // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
     //

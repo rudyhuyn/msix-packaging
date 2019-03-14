@@ -10,7 +10,8 @@
 #include "Constants.hpp"
 #include "RegistryDevirtualizer.hpp"
 #include <TraceLoggingProvider.h>
-using namespace Win7MsixInstallerLib;
+using namespace Win7MsixInstallerLib;
+
 const PCWSTR Extractor::HandlerName = L"Extractor";
 
 /// Replaces all oldchars in input with newchar
@@ -153,7 +154,7 @@ HRESULT Extractor::ExtractPayloadFiles()
         RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
         ++nbrFilesExtracted;
         if (ui != NULL)
-            ui->UpdateProgressBarStep((float)nbrFilesExtracted / totalNumberFiles);
+            ui->UpdateProgressBarValue((float)nbrFilesExtracted / totalNumberFiles);
     }
 
     return S_OK;

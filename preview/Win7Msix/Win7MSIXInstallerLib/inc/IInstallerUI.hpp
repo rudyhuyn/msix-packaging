@@ -1,15 +1,19 @@
 #pragma once
-namespace Win7MsixInstallerLib {
-
-    enum InstallerUIType{
-        InstallerUITypeAddPackage,
-        InstallerUITypeRemovePackage,
+namespace Win7MsixInstallerLib
+{
+    enum InstallationStep {
+        InstallationStepStarted,
+        InstallationStepPackageInformationAvailable,
+        InstallationStepWaitForUserConfirmation,
+        InstallationStepCompleted,
+        //can be extend for future scenarios.
     };
-	class IInstallerUI
-	{
-	public:
-		virtual void UpdateProgressBarStep(float value) = 0;
-		virtual bool ShowUI(InstallerUIType isAddPackage) = 0;
-        virtual bool InstallCompleted() = 0;
-	};
+    class IInstallerUI
+    {
+    public:
+        // Update the progress bar, value from 0 to 100.
+        virtual void UpdateProgressBarValue(float value) = 0;
+        // Indicate that the installation is done
+        virtual bool InstallationStepChanged(InstallationStep value) = 0;
+    };
 }

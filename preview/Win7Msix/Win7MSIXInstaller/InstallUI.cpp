@@ -1,4 +1,4 @@
-    // UI Functions
+// UI Functions
 
 #include "InstallUI.hpp"
 #include <windows.h>
@@ -74,47 +74,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_COMMAND:
-        switch (LOWORD(wParam)) 
+        switch (LOWORD(wParam))
         {
-            case IDC_INSTALLBUTTON:
-            {                
-                if (!g_installed)
-                {
-                    DestroyWindow(g_buttonHWnd);
-                    ui->CreateCancelButton(hWnd, windowRect);
-                    UpdateWindow(hWnd);
-                    if (ui != NULL)
-                    {
-                        ui->CreateProgressBar(hWnd, windowRect);
-                    }
-                    ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
-                    if (ui != NULL)
-                    {
-                        ui->SetButtonClicked();
-                    }
-                }
-                else
-                {
-                    PostQuitMessage(0);
-                    exit(0);
-                }
-            }
-            break;
-            case IDC_LAUNCHCHECKBOX:
+        case IDC_INSTALLBUTTON:
+        {
+            if (!g_installed)
             {
-                if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED) 
+                DestroyWindow(g_buttonHWnd);
+                ui->CreateCancelButton(hWnd, windowRect);
+                UpdateWindow(hWnd);
+                if (ui != NULL)
                 {
-                    g_launchCheckBoxState = true;
+                    ui->CreateProgressBar(hWnd, windowRect);
                 }
-                else
+                ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
+                if (ui != NULL)
                 {
-                    g_launchCheckBoxState = false;
+                    ui->SetButtonClicked();
                 }
             }
+            else
+            {
+                PostQuitMessage(0);
+                exit(0);
+            }
+        }
+        break;
+        case IDC_LAUNCHCHECKBOX:
+        {
+            if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
+                g_launchCheckBoxState = true;
+            }
+            else
+            {
+                g_launchCheckBoxState = false;
+            }
+        }
+        break;
+        case IDC_LAUNCHBUTTON:
+            ui->LaunchInstalledApp();
             break;
-            case IDC_LAUNCHBUTTON:
-                ui->LaunchInstalledApp();
-                break;
         }
         break;
     case WM_INSTALLCOMPLETE_MSG:
@@ -155,21 +155,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         exit(0);
         break;
-	case WM_CTLCOLORSTATIC:
-	{
-		switch (::GetDlgCtrlID((HWND)lParam))
-		{
-			case IDC_LAUNCHCHECKBOX:
-			{
-				HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
-				::DeleteObject(hbr);
-				SetBkMode((HDC)wParam, TRANSPARENT);
-				return (LRESULT)::GetStockObject(NULL_BRUSH);
-			}
-		}
+    case WM_CTLCOLORSTATIC:
+    {
+        switch (::GetDlgCtrlID((HWND)lParam))
+        {
+        case IDC_LAUNCHCHECKBOX:
+        {
+            HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
+            ::DeleteObject(hbr);
+            SetBkMode((HDC)wParam, TRANSPARENT);
+            return (LRESULT)::GetStockObject(NULL_BRUSH);
+        }
+        }
 
-		break;
-	}
+        break;
+    }
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
         break;
@@ -258,7 +258,7 @@ void UI::LoadInfo()
     m_loadingPackageInfoCode = ParseInfoFromPackage();
 }
 
-HRESULT UI::ParseInfoFromPackage() 
+HRESULT UI::ParseInfoFromPackage()
 {
     auto packageInfo = m_msixRequest->GetIPackageInfo();
     // Obtain publisher name
@@ -273,23 +273,12 @@ HRESULT UI::ParseInfoFromPackage()
     return S_OK;
 }
 
-bool UI::ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage)
-{
-    LoadInfo();
-    std::thread thread(StartUIThread, this);
-    thread.detach();
-
-    DWORD waitResult = WaitForSingleObject(m_buttonClickedEvent, INFINITE);
-    
-    return true;
-}
-
 // FUNCTION: UpdateProgressBar
 //
 // PURPOSE: Modify the value of the progress bar
-void UI::UpdateProgressBarStep(float value)
+void UI::UpdateProgressBarValue(float value)
 {
-	SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)(value * 100), 0);
+    SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)(value * 100), 0);
 }
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
@@ -405,7 +394,7 @@ BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
 // 
 // parentHWnd: the HWND of the window to add the checkbox to
 // parentRect: the specs of the parent window
-BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect) 
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect)
 {
     LPVOID buttonPointer = nullptr;
     g_LaunchbuttonHWnd = CreateWindowEx(
@@ -458,9 +447,9 @@ BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring mess
     Gdiplus::Font messageFont(L"Arial", 10);
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear);
-	auto windowsTextColor = Gdiplus::Color();
-	windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
-	Gdiplus::SolidBrush textBrush(windowsTextColor);
+    auto windowsTextColor = Gdiplus::Color();
+    windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
+    Gdiplus::SolidBrush textBrush(windowsTextColor);
 
     graphics.DrawString(displayName.c_str(), -1, &displayNameFont, layoutRect, &format, &textBrush);
     layoutRect.Y += 40;
@@ -508,7 +497,7 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
         return 1;
     }
 
-    SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this); 
+    SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
@@ -523,8 +512,30 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
-bool UI::InstallCompleted()
+bool UI::InstallationStepChanged(InstallationStep step)
 {
-    SendMessage(hWnd, WM_INSTALLCOMPLETE_MSG, NULL, NULL);
+    switch (step)
+    {
+    case InstallationStepPackageInformationAvailable:
+    {
+        LoadInfo();
+        return true;
+    }
+    case InstallationStepWaitForUserConfirmation:
+    {
+        std::thread thread(StartUIThread, this);
+        thread.detach();
+
+        DWORD waitResult = WaitForSingleObject(m_buttonClickedEvent, INFINITE);
+        return waitResult == WAIT_OBJECT_0;
+    }
+    break;
+    case InstallationStepCompleted:
+    {
+        SendMessage(hWnd, WM_INSTALLCOMPLETE_MSG, NULL, NULL);
+        return true;
+    }
+    break;
+    }
     return true;
 }

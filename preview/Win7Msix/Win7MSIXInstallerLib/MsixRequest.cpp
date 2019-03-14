@@ -79,6 +79,9 @@ HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFileP
 
 HRESULT MsixRequest::ProcessRequest()
 {
+    if (m_UI != nullptr)
+        m_UI->InstallationStepChanged(InstallationStep::InstallationStepStarted);
+
     switch (m_operationType)
     {
     case OperationType::Add:
