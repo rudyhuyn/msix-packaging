@@ -3,8 +3,9 @@
 // UI Functions
 #include <windows.h>
 #include <string>
+#include <IMsixRequest.hpp>
+#include <IInstallerUI.hpp>
 #include "GeneralUtil.hpp"
-#include "IPackageHandler.hpp"
 
 // Child window identifiers
 #define IDC_LAUNCHCHECKBOX 1
@@ -23,48 +24,39 @@ static HWND g_LaunchbuttonHWnd = NULL;
 static bool g_installed = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
 
-class UI
+class UI : public Win7MsixInstallerLib::IInstallerUI
 {
 public:
-    HRESULT ShowUI();
-	HRESULT LaunchInstalledApp();
-
-    static HRESULT Make(_In_ MsixRequest* msixRequest, _Out_ UI** instance);
+    UI(_In_ Win7MsixInstallerLib::IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
+    bool ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage);
+    HRESULT LaunchInstalledApp();
     ~UI() {}
 private:
-    MsixRequest* m_msixRequest = nullptr;
+    Win7MsixInstallerLib::IMsixRequest* m_msixRequest = nullptr;
 
+    HANDLE m_buttonClickedEvent;
     std::wstring m_displayName = L"";
     std::wstring m_publisherCommonName = L"";
     ComPtr<IStream> m_logoStream;
     std::wstring m_version = L"";
-    int m_numberOfFiles = 0;
     HRESULT m_loadingPackageInfoCode = 0;
-    HANDLE m_buttonClickedEvent;
-
-    UI() {}
-    UI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) 
-	{
-		m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	}
-    
-    HRESULT ParseInfoFromPackage();
 
 public:
     HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
-	int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
-	void LoadInfo();
-	int GetNumberOfFiles() { return m_numberOfFiles; }
+    int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
+    void LoadInfo();
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
+    void UpdateProgressBarStep(float value);
+    bool InstallCompleted();
 
-    // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
+    // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
     //
     // PURPOSE: Creates the progress bar
     //
     // parentHWnd: the HWND of the window to add the progress bar to
     // parentRect: the dimmensions of the parent window
     // count: the number of objects to be iterated through in the progress bar
-    BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect, int count);
+    BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
     // FUNCTION: LaunchButton(HWND parentHWnd, RECT parentRect)
     //
@@ -111,6 +103,10 @@ public:
     //
     BOOL HideButtonWindow();
 
+    // FUNCTION: SendInstallCompleteMsg
+    //
+    // PURPOSE: Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
+    void SendInstallCompleteMsg();
     // FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
     //
     // PURPOSE: Change the text of the installation window based on the given input
@@ -119,28 +115,6 @@ public:
     // windowText: the text to change the window to
     BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
 
-    // FUNCTION: UpdateProgressBar
-    //
-    // PURPOSE: Increment the progress bar one tick based on preset tick
-    void UpdateProgressBar();
-
-    // FUNCTION: SendInstallCompleteMsg
-    //
-    // PURPOSE: Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
-    void SendInstallCompleteMsg();
-};
-
-class CreateAndShowUI : IPackageHandler
-{
-public:
-    HRESULT ExecuteForAddRequest();
-
-    static const PCWSTR HandlerName;
-    static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
-    ~CreateAndShowUI() {}
 private:
-    MsixRequest* m_msixRequest = nullptr;
-
-    CreateAndShowUI() {}
-    CreateAndShowUI(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
+    HRESULT ParseInfoFromPackage();
 };
