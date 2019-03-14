@@ -13,7 +13,7 @@ namespace Win7MsixInstallerLib
     public:
         // Update the progress bar, value from 0 to 100.
         virtual void UpdateProgressBarValue(float value) = 0;
-        // Indicate that the installation is done
+        // Inform the UI about the current installation step
         virtual bool InstallationStepChanged(InstallationStep value) = 0;
     };
 }
