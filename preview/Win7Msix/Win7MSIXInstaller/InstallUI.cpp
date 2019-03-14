@@ -22,39 +22,6 @@ static const int g_width = 500;  // width of window
 static const int g_heigth = 400; // height of window
 
 //
-// Gets the stream of a file.
-//
-// Parameters:
-//   package - The package reader for the app package.
-//   name - Name of the file.
-//   stream - The stream for the file.
-//
-HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** stream)
-{
-    *stream = nullptr;
-
-    ComPtr<IAppxFilesEnumerator> files;
-    RETURN_IF_FAILED(package->GetPayloadFiles(&files));
-
-    BOOL hasCurrent = FALSE;
-    RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
-    while (hasCurrent)
-    {
-        ComPtr<IAppxFile> file;
-        RETURN_IF_FAILED(files->GetCurrent(&file));
-        Text<WCHAR> fileName;
-        file->GetName(&fileName);
-        if (wcscmp(fileName.Get(), name) == 0)
-        {
-            RETURN_IF_FAILED(file->GetStream(stream));
-            return S_OK;
-        }
-        RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
-    }
-    return S_OK;
-}
-
-//
 // PURPOSE: This compiles the information displayed on the UI when the user selects an msix
 //
 // hWnd: the HWND of the window to draw controls
@@ -117,7 +84,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     UpdateWindow(hWnd);
                     if (ui != NULL)
                     {
-                        CreateProgressBar(hWnd, windowRect, ui->GetNumberOfFiles());
+                        CreateProgressBar(hWnd, windowRect);
                     }
                     ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
                     if (ui != NULL)
@@ -248,74 +215,45 @@ void UI::LoadInfo()
 
 HRESULT UI::ParseInfoFromPackage() 
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
-
-    ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(packageInfo->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
-
-    ComPtr<IMsixElement> element;
-    RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
-
-    // Obtain the Display Name and Logo
-    ComPtr<IMsixElementEnumerator> veElementEnum;
-    RETURN_IF_FAILED(element->GetElements(
-        L"/*[local-name()='Package']/*[local-name()='Applications']/*[local-name()='Application']/*[local-name()='VisualElements']",
-        &veElementEnum));
-
+    auto packageInfo = m_msixRequest->GetIPackageInfo();
     // Obtain publisher name
-    auto wpublisher = std::wstring(packageInfo->GetPublisher());
-    m_publisherCommonName = wpublisher.substr(wpublisher.find_first_of(L"=") + 1,
-        wpublisher.find_first_of(L",") - wpublisher.find_first_of(L"=") - 1);
+    m_publisherCommonName = packageInfo->GetPublisherName();
 
     // Obtain version number
     ConvertVersionToString(packageInfo->GetVersion());
 
     //Obtain the number of files
-    m_numberOfFiles = packageInfo->GetNumberOfPayloadFiles();
-
-    // Obtain logo
-    BOOL hc = FALSE;
-    RETURN_IF_FAILED(veElementEnum->GetHasCurrent(&hc));
-    if (hc)
-    {
-        ComPtr<IMsixElement> visualElementsElement;
-        Text<WCHAR> displayNameValue;
-        RETURN_IF_FAILED(veElementEnum->GetCurrent(&visualElementsElement));
-        RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"DisplayName", &displayNameValue));
-        m_displayName = std::wstring(displayNameValue.Get());
-        Text<WCHAR> logo;
-        RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"Square150x150Logo", &logo));
-        RETURN_IF_FAILED(GetStreamFromFile(packageInfo->GetPackageReader(), logo.Get(), &m_logoStream));
-    }
+    m_displayName = packageInfo->GetDisplayName();
+    m_logoStream = packageInfo->GetLogo();
     return S_OK;
 }
 
-HRESULT UI::ShowUI()
+bool UI::ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage)
 {
+    LoadInfo();
     std::thread thread(StartUIThread, this);
     thread.detach();
 
     DWORD waitResult = WaitForSingleObject(m_buttonClickedEvent, INFINITE);
     
-    return S_OK;
+    return true;
 }
 
 // FUNCTION: UpdateProgressBar
 //
 // PURPOSE: Increment the progress bar one tick based on preset tick
-void UI::UpdateProgressBar()
+void UI::UpdateProgressBarStep(float value)
 {
-	SendMessage(g_progressHWnd, PBM_STEPIT, 0, 0);
+	SendMessage(g_progressHWnd, PBM_SETPOS, value * 100, 0);
 }
 
-// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
+// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
 //
 // PURPOSE: Creates the progress bar
 //
 // parentHWnd: the HWND of the window to add the progress bar to
 // parentRect: the dimensions of the parent window
-// count: the number of objects to be iterated through in the progress bar
-BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
+BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect)
 {
     int scrollHeight = GetSystemMetrics(SM_CYVSCROLL);
 
@@ -336,8 +274,7 @@ BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
     );
 
     // Set defaults for range and increments
-    SendMessage(g_progressHWnd, PBM_SETRANGE, 0, MAKELPARAM(0, count)); // set range
-    SendMessage(g_progressHWnd, PBM_SETSTEP, (WPARAM)1, 0); // set increment
+    SendMessage(g_progressHWnd, PBM_SETRANGE, 0, MAKELPARAM(0, 100)); // set range
     return TRUE;
 }
 

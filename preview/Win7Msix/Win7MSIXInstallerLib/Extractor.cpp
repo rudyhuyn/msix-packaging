@@ -133,8 +133,16 @@ HRESULT Extractor::ExtractPayloadFiles()
 	BOOL hasCurrent = FALSE;
 	RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
 
-	while (hasCurrent)
+    unsigned int totalNumberFiles = this->m_msixRequest->GetPackageInfo()->GetNumberOfPayloadFiles();
+    unsigned int nbrFilesExtracted = 0;
+    auto ui = m_msixRequest->GetUI();
+    bool test = false;
+    while (hasCurrent)
 	{
+        if (nbrFilesExtracted == 38)
+        {
+            test = true;
+        }
 		ComPtr<IAppxFile> file;
 		RETURN_IF_FAILED(files->GetCurrent(&file));
 
@@ -150,17 +158,17 @@ HRESULT Extractor::ExtractPayloadFiles()
 		}
 
 		RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
-		auto ui = m_msixRequest->GetUI();
+        ++nbrFilesExtracted;
 		if (ui != NULL)
-			ui->UpdateProgressBar();
+			ui->UpdateProgressBarStep((float)nbrFilesExtracted / totalNumberFiles);
 	}
 
-	return S_OK;
+	return test? S_OK: E_FAIL;
 }
 
 HRESULT Extractor::CreatePackageRoot()
 {
-	std::wstring packagePath = m_msixRequest->GetFilePathMappings()->GetMsix7Directory();
+	std::wstring packagePath = FilePathMappings::GetInstance().GetMsix7Directory();
 	if (!CreateDirectory(packagePath.c_str(), nullptr))
 	{
 		DWORD lastError = GetLastError();
@@ -520,7 +528,7 @@ HRESULT Extractor::ConvertVfsNameToFullPath(std::wstring fileName, std::wstring&
 	std::wstring remainingFilePath = fileName;
 	Win7MsixInstaller_GetPathChild(remainingFilePath); // remove the VFS directory
 
-	std::map<std::wstring, std::wstring> map = m_msixRequest->GetFilePathMappings()->GetMap();
+	std::map<std::wstring, std::wstring> map = FilePathMappings::GetInstance().GetMap();
 	for (auto& pair : map)
 	{
 		if (remainingFilePath.find(pair.first) != std::wstring::npos)

@@ -5,6 +5,40 @@
 #include <TraceLoggingProvider.h>
 using namespace Win7MsixInstallerLib;
 
+//
+// Gets the stream of a file.
+//
+// Parameters:
+//   package - The package reader for the app package.
+//   name - Name of the file.
+//   stream - The stream for the file.
+//
+HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** stream)
+{
+    *stream = nullptr;
+
+    ComPtr<IAppxFilesEnumerator> files;
+    RETURN_IF_FAILED(package->GetPayloadFiles(&files));
+
+    BOOL hasCurrent = FALSE;
+    RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
+    while (hasCurrent)
+    {
+        ComPtr<IAppxFile> file;
+        RETURN_IF_FAILED(files->GetCurrent(&file));
+        Text<WCHAR> fileName;
+        file->GetName(&fileName);
+        if (wcscmp(fileName.Get(), name) == 0)
+        {
+            RETURN_IF_FAILED(file->GetStream(stream));
+            return S_OK;
+        }
+        RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
+    }
+    return S_OK;
+}
+
+
 HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
     BOOL hc = FALSE;
@@ -57,6 +91,10 @@ HRESULT PackageInfo::SetDisplayNameFromManifestElement(IMsixElement* element)
     Text<wchar_t> displayName;
     RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"DisplayName", &displayName));
     m_displayName = displayName.Get();
+
+    Text<WCHAR> logo;
+    RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"Square150x150Logo", &logo));
+    m_logo = logo.Get();
 
     return S_OK;
 }
@@ -116,7 +154,10 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std
     // Also fill other fields that come from the manifest reader
     ComPtr<IAppxManifestPackageId> manifestId;
     RETURN_IF_FAILED(manifestReader->GetPackageId(&manifestId));
-    RETURN_IF_FAILED(manifestId->GetPublisher(&m_publisher));
+
+    Text<WCHAR> publisher;
+    RETURN_IF_FAILED(manifestId->GetPublisher(&publisher));
+    m_publisher = publisher.Get();
     RETURN_IF_FAILED(manifestId->GetVersion(&m_version));
 
     Text<WCHAR> packageFullName;
@@ -141,4 +182,26 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std
         m_appUserModelId = std::wstring(packageFamilyName.Get()) + L"!" + m_applicationId;
     }
     return S_OK;
+}
+
+std::wstring PackageInfo::GetPublisherName()
+{
+    if (m_publisherName.empty())
+    {
+        m_publisherName = m_publisher.substr(m_publisher.find_first_of(L"=") + 1,
+            m_publisher.find_first_of(L",") - m_publisher.find_first_of(L"=") - 1);
+    }
+    return m_publisherName;
+
+
+}
+
+IStream* PackageInfo::GetLogo()
+{
+    IStream * logoStream;
+    if (GetStreamFromFile(m_packageReader.Get(), m_logo.data(), &logoStream) == S_OK)
+    {
+        return logoStream;
+    }
+    return nullptr;
 }

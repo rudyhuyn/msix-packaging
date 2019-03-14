@@ -17,12 +17,14 @@ namespace Win7MsixInstallerLib
         std::wstring m_displayName;
         std::wstring m_appUserModelId;
         std::wstring m_applicationId;
-        UINT64 m_version = 0;
-        Text<WCHAR> m_publisher;
+        unsigned long long m_version = 0;
+        std::wstring m_publisher;
+        std::wstring m_publisherName;
+        std::wstring m_logo;
 
         /// PackageReader and payloadFiles are available on Add, but not Remove because it's created off the original package itself which is no longer available once it's been installed.
         ComPtr<IAppxPackageReader> m_packageReader;
-        DWORD m_numberOfPayloadFiles = 0;
+        unsigned int m_numberOfPayloadFiles = 0;
 
         /// Sets the manifest reader, and other fields derived from the manifest
         /// Specifically, packageFullName, packageDirectoryPath, executableFilePath, displayname, version and publisher.
@@ -54,7 +56,7 @@ namespace Win7MsixInstallerLib
         /// When made from manifest reader, it won't have PackageReader available. 
         bool HasPackageReader() { return (m_packageReader.Get() != nullptr); };
         IAppxPackageReader * GetPackageReader() { return m_packageReader.Get(); }
-        DWORD GetNumberOfPayloadFiles() { return m_numberOfPayloadFiles; }
+        unsigned int GetNumberOfPayloadFiles() { return m_numberOfPayloadFiles; }
 
         // Getters
         IAppxManifestReader * GetManifestReader() { return m_manifestReader.Get(); }
@@ -63,9 +65,10 @@ namespace Win7MsixInstallerLib
         std::wstring GetExecutableFilePath() { return m_executableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetAppModelUserId() { return m_appUserModelId; }
-        UINT64 GetVersion() { return m_version; }
-        PCWSTR GetPublisher() { return m_publisher.Get(); }
-
+        unsigned long long GetVersion() { return m_version; }
+        std::wstring GetPublisher() { return m_publisher; }
+        std::wstring GetPublisherName();
+        IStream* GetLogo();
         /// This is meant only to be called when deleting the manifest file; the reader needs to first be released so it can be deleted
         void ReleaseManifest() { m_manifestReader.Release(); }
     };

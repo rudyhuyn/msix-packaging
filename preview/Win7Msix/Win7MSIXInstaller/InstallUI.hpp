@@ -5,6 +5,7 @@
 #include <string>
 #include <IMsixRequest.hpp>
 #include <IInstallerUI.hpp>
+#include "GeneralUtil.hpp"
 
 // Child window identifiers
 #define IDC_LAUNCHCHECKBOX 1
@@ -18,42 +19,41 @@ static HWND g_progressHWnd = NULL;
 static HWND g_CancelbuttonHWnd = NULL;
 static bool g_installed = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
-using namespace Win7MsixInstallerLib;
 
-class UI : public IInstallerUI
+class UI : public Win7MsixInstallerLib::IInstallerUI
 {
 public:
-    HRESULT ShowUI();
-    UI(_In_ IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
+    bool ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage);
+    UI(_In_ Win7MsixInstallerLib::IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
     ~UI() {}
 private:
-    IMsixRequest* m_msixRequest = nullptr;
+    Win7MsixInstallerLib::IMsixRequest* m_msixRequest = nullptr;
 
     HANDLE m_buttonClickedEvent;
 	std::wstring m_displayName = L"";
 	std::wstring m_publisherCommonName = L"";
 	ComPtr<IStream> m_logoStream;
 	std::wstring m_version = L"";
-	int m_numberOfFiles = 0;
 	HRESULT m_loadingPackageInfoCode = 0;
 
 public:
     HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
 	int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
 	void LoadInfo();
-	int GetNumberOfFiles() { return m_numberOfFiles; }
     void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
-    void UpdateProgressBar();
+    void UpdateProgressBarStep(float value);
+private:
+    HRESULT ParseInfoFromPackage();
 };
 
-// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
+// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
 //
 // PURPOSE: Creates the progress bar
 //
 // parentHWnd: the HWND of the window to add the progress bar to
 // parentRect: the dimmensions of the parent window
 // count: the number of objects to be iterated through in the progress bar
-BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect, int count);
+BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
 // FUNCTION: LaunchButton(HWND parentHWnd, RECT parentRect)
 //

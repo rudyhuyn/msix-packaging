@@ -3,7 +3,7 @@
 #include <map>
 #include <functional>
 #include <IPackageInfo.hpp>
-
+#include <AppxPackaging.hpp>
 enum CommandLineOperationType
 {
     Undefined = 0,

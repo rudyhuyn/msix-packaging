@@ -54,6 +54,7 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
 std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
+    {PopulatePackageInfo::HandlerName,  {PopulatePackageInfo::CreateHandler, CreateAndShowUI::HandlerName }},
     {CreateAndShowUI::HandlerName,      {CreateAndShowUI::CreateHandler,     StartMenuLink::HandlerName}},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
@@ -69,14 +70,9 @@ HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFileP
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
-    RETURN_IF_FAILED(instance->InitializeFilePathMappings());
+    RETURN_IF_FAILED(FilePathMappings::GetInstance().Initialize());
     *outInstance = instance;
     return S_OK;
-}
-
-HRESULT MsixRequest::InitializeFilePathMappings()
-{
-    return m_filePathMappings.Initialize();
 }
 
 HRESULT MsixRequest::ProcessRequest()

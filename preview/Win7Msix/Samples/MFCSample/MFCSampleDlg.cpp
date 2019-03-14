@@ -8,6 +8,11 @@
 #include "afxdialogex.h"
 #include <Win7MSIXInstallerActions.hpp>
 #include <IMsixRequest.hpp>
+#include <fstream>
+#include <iostream>
+
+
+#include "resource.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,19 +24,19 @@ using namespace Win7MsixInstallerLib;
 // CMFCSampleDlg dialog
 
 CMFCSampleDlg::CMFCSampleDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_MFCSAMPLE_DIALOG, pParent)
+    : CDialogEx(IDD_MFCSAMPLE_DIALOG, pParent)
 {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+    m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CMFCSampleDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+    CDialogEx::DoDataExchange(pDX);
 }
 
 BEGIN_MESSAGE_MAP(CMFCSampleDlg, CDialogEx)
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON()
     ON_BN_CLICKED(IDC_BUTTON1, &CMFCSampleDlg::OnBnClickedButton1)
     ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROGRESS1, &CMFCSampleDlg::OnNMCustomdrawProgress1)
 END_MESSAGE_MAP()
@@ -41,16 +46,16 @@ END_MESSAGE_MAP()
 
 BOOL CMFCSampleDlg::OnInitDialog()
 {
-	CDialogEx::OnInitDialog();
+    CDialogEx::OnInitDialog();
 
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+    // Set the icon for this dialog.  The framework does this automatically
+    //  when the application's main window is not a dialog
+    SetIcon(m_hIcon, TRUE);			// Set big icon
+    SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	// TODO: Add extra initialization here
+    // TODO: Add extra initialization here
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+    return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -59,57 +64,110 @@ BOOL CMFCSampleDlg::OnInitDialog()
 
 void CMFCSampleDlg::OnPaint()
 {
-	if (IsIconic())
-	{
-		CPaintDC dc(this); // device context for painting
+    if (IsIconic())
+    {
+        CPaintDC dc(this); // device context for painting
 
-		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+        SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// Center icon in client rectangle
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
+        // Center icon in client rectangle
+        int cxIcon = GetSystemMetrics(SM_CXICON);
+        int cyIcon = GetSystemMetrics(SM_CYICON);
+        CRect rect;
+        GetClientRect(&rect);
+        int x = (rect.Width() - cxIcon + 1) / 2;
+        int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// Draw the icon
-		dc.DrawIcon(x, y, m_hIcon);
-	}
-	else
-	{
-		CDialogEx::OnPaint();
-	}
+        // Draw the icon
+        dc.DrawIcon(x, y, m_hIcon);
+    }
+    else
+    {
+        CDialogEx::OnPaint();
+    }
 }
+
+bool CMFCSampleDlg::ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage)
+{
+    auto cpr = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
+    cpr->SetRange(0, 100);
+    cpr->SetPos(0);
+    return true;
+
+}
+
 
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CMFCSampleDlg::OnQueryDragIcon()
 {
-	return static_cast<HCURSOR>(m_hIcon);
+    return static_cast<HCURSOR>(m_hIcon);
 }
 
 
-void CMFCSampleDlg::UpdateProgressBar()
+void CMFCSampleDlg::UpdateProgressBarStep(float value)
 {
-auto cpr = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
-cpr->StepIt();
+    auto cpr = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
+    cpr->SetPos((int)(value * 100));
+}
+
+void LoadFileInResource(int name, int type, DWORD& size, const char*& data)
+{
+    HMODULE handle = ::GetModuleHandle(NULL);
+    HRSRC rc = ::FindResource(handle, MAKEINTRESOURCE(name),
+        MAKEINTRESOURCE(type));
+    HGLOBAL rcData = ::LoadResource(handle, rc);
+    size = ::SizeofResource(handle, rc);
+    data = static_cast<const char*>(::LockResource(rcData));
 }
 
 void CMFCSampleDlg::OnBnClickedButton1()
 {
+    DWORD  size;
+    const char* data;
+    LoadFileInResource(IDR_MSIXFILE, BINFILE, size, data);
+
+    if (size <= 0)
+    {
+        return;
+    }
+
+    wchar_t czTempPath[MAX_PATH] = { 0 };
+    GetTempPathW(MAX_PATH, czTempPath); // retrieving temp path
+
+    auto sPath = std::wstring(czTempPath);
+    sPath.append(L"Temp.msix");
+
+    std::ofstream outFile(sPath, std::ios_base::binary);
+    outFile.write(data, size);
+    outFile.close();
 
     IMsixRequest * msixRequest;
     auto res = Win7MsixInstaller_CreateAddPackageRequest(
-        L"C:\\Users\\rudy\\repos\\Win7Msix\\Tests\\notepadplus.msix",
+        sPath,
         MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL,
         &msixRequest);
-    if (res == 0)
+    if (res != 0)
     {
-        msixRequest->SetUI(this);
-        msixRequest->ProcessRequest();
+        return;
     }
 
+    m_msixRequest = msixRequest;
+    msixRequest->SetUI(this);
+    auto requestRes = msixRequest->ProcessRequest();
+    if (requestRes == S_OK)
+    {
+        MessageBox(
+            L"Installation done",
+            L"Installer",
+            MB_OK);
+    }
+    else {
+        MessageBox(
+            L"Error during the installation",
+            L"Installer",
+            MB_OK);
+    }
 }
 
 void CMFCSampleDlg::OnNMCustomdrawProgress1(NMHDR *pNMHDR, LRESULT *pResult)

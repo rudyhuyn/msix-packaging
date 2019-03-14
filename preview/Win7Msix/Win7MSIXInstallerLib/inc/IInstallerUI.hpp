@@ -1,10 +1,14 @@
 #pragma once
 namespace Win7MsixInstallerLib {
 
+    enum InstallerUIType{
+        InstallerUITypeAddPackage,
+        InstallerUITypeRemovePackage,
+    };
 	class IInstallerUI
 	{
 	public:
-		virtual void UpdateProgressBar() = 0;
-		virtual HRESULT ShowUI() = 0;
+		virtual void UpdateProgressBarStep(float value) = 0;
+		virtual bool ShowUI(InstallerUIType isAddPackage) = 0;
 	};
 }

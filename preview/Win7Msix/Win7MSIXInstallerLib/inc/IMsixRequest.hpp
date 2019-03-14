@@ -1,12 +1,11 @@
 #pragma once
-#include "DllExport.hpp"
 #include <Windows.h>
 #include <string>
 #include "IInstallerUI.hpp"
 #include "IPackageInfo.hpp"
 namespace Win7MsixInstallerLib {
 
-	class DLLEXPORT IMsixRequest
+	class IMsixRequest
 	{
 	public:
 		virtual void SetUI(IInstallerUI* ui) = 0;

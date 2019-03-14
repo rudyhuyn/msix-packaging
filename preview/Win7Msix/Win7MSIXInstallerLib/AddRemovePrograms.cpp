@@ -45,7 +45,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
     std::wstring versionString(Win7MsixInstaller_ConvertVersionToString(packageInfo->GetVersion()));
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
-    std::wstring packageIconString = m_msixRequest->GetFilePathMappings()->GetExecutablePath(packageInfo->GetExecutableFilePath(), packageInfo->GetPackageFullName().c_str());
+    std::wstring packageIconString = FilePathMappings::GetInstance().GetExecutablePath(packageInfo->GetExecutableFilePath(), packageInfo->GetPackageFullName().c_str());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayIcon", packageIconString));
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,

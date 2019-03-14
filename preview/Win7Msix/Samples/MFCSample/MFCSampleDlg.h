@@ -4,6 +4,7 @@
 
 #pragma once
 #include <IInstallerUI.hpp>
+#include <IMsixRequest.hpp>
 
 // CMFCSampleDlg dialog
 class CMFCSampleDlg : public CDialogEx, Win7MsixInstallerLib::IInstallerUI
@@ -20,9 +21,9 @@ class CMFCSampleDlg : public CDialogEx, Win7MsixInstallerLib::IInstallerUI
         protected:
         virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
-        virtual void UpdateProgressBar();
-        virtual HRESULT ShowUI() { return 0; }
-    // Implementation
+        virtual void UpdateProgressBarStep(float value);
+        virtual bool ShowUI(Win7MsixInstallerLib::InstallerUIType isAddPackage);
+        // Implementation
     protected:
         HICON m_hIcon;
 
@@ -34,4 +35,7 @@ class CMFCSampleDlg : public CDialogEx, Win7MsixInstallerLib::IInstallerUI
     public:
         afx_msg void OnBnClickedButton1();
         afx_msg void OnNMCustomdrawProgress1(NMHDR *pNMHDR, LRESULT *pResult);
+private:
+    Win7MsixInstallerLib::IMsixRequest * m_msixRequest;
+
 };

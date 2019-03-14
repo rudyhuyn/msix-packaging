@@ -23,8 +23,6 @@ namespace Win7MsixInstallerLib
 		std::wstring m_packageFullName;
 		MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
 		OperationType m_operationType = Add;
-		FilePathMappings m_filePathMappings;
-
 		/// Filled by PopulatePackageInfo
 		AutoPtr<PackageInfo> m_packageInfo;
 
@@ -52,7 +50,6 @@ namespace Win7MsixInstallerLib
 		MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
 		PCWSTR GetPackageFilePath() { return m_packageFilePath.c_str(); }
 		PCWSTR GetPackageFullName() { return m_packageFullName.c_str(); }
-		FilePathMappings* GetFilePathMappings() { return &m_filePathMappings; }
 
 		/// @return can return null if called before PopulatePackageInfo.
 		PackageInfo* GetPackageInfo() { return m_packageInfo; }
@@ -73,8 +70,6 @@ namespace Win7MsixInstallerLib
 		}
 
 	private:
-		/// FilePath Mappings maps the VFS tokens (e.g. Windows) to the actual folder on disk (e.g. C:\windows)
-		HRESULT InitializeFilePathMappings();
 
 		/// This handles Add operation and proceeds through each of the AddSequenceHandlers to install the package
 		HRESULT ProcessAddRequest();

@@ -23,7 +23,11 @@ HRESULT CreateAndShowUI::ExecuteForAddRequest()
     auto ui = m_msixRequest->GetUI();
     if (ui != NULL)
     {
-        RETURN_IF_FAILED(ui->ShowUI());
+        auto uiShowed = ui->ShowUI(Win7MsixInstallerLib::InstallerUIType::InstallerUITypeAddPackage);
+        if (!uiShowed)
+        {
+            return E_FAIL;
+        }
     }
     return S_OK;
 }

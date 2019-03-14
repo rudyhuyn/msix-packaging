@@ -51,6 +51,7 @@
     <None Include="res\MFCSample.rc2">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\Tests\notepadplus.msix" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCSample.ico">

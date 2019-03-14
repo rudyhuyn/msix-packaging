@@ -2,7 +2,13 @@
 #include "GeneralUtil.hpp"
 #include <shlobj_core.h>
 #include <KnownFolders.h>
+#include <mutex>
+
 using namespace Win7MsixInstallerLib;
+
+std::mutex filePathMappings_Init_lock;
+
+
 void Win7MsixInstaller_GetPathChild(std::wstring &path)
 {
     while (path.front() != '\\')
@@ -32,8 +38,16 @@ void Win7MsixInstaller_GetPathParent(std::wstring &path)
     }
 }
 
+FilePathMappings& FilePathMappings::GetInstance()
+{
+    static FilePathMappings s_selfInstance;
+    return s_selfInstance;
+}
+
 std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName)
 {
+    Initialize();
+
     // make a local copy so we can modify in place
     std::wstring executionPathWSTR = packageExecutablePath;
     
@@ -66,6 +80,19 @@ std::wstring FilePathMappings::GetExecutablePath(std::wstring packageExecutableP
 }
 
 HRESULT FilePathMappings::Initialize()
+{
+    if (m_isInitialized)
+        return S_OK;
+    std::unique_lock<std::mutex> lock(filePathMappings_Init_lock);
+
+    if (m_isInitialized)
+        return S_OK;
+    auto res = InitializePaths();
+    m_isInitialized = res == S_OK;
+    return res;
+}
+
+HRESULT FilePathMappings::InitializePaths()
 {
     TextOle<WCHAR> systemX86Path;
     TextOle<WCHAR> systemPath;
@@ -130,17 +157,10 @@ HRESULT FilePathMappings::Initialize()
     m_map[L"SystemX64"] = std::wstring(systemX64Path.Get());
 #endif
 
-  	m_msix7Directory = GetInstallationDirectoryPath();
-    return S_OK;
-}
+    TextOle<WCHAR> programFilesPath;
+    RETURN_IF_FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, NULL, &programFilesPath));
 
-LPCWSTR FilePathMappings::GetInstallationDirectoryPath()
-{
-	TextOle<WCHAR> programFilesPath;
-	if (FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, NULL, &programFilesPath)))
-	{
-		return NULL;
-	}
-	auto msix7Directory = std::wstring(programFilesPath.Get()) + std::wstring(L"\\Msix7apps\\");
-	return msix7Directory.c_str();
+    m_msix7Directory = std::wstring(programFilesPath.Get()) + std::wstring(L"\\Msix7apps\\");
+
+    return S_OK;
 }

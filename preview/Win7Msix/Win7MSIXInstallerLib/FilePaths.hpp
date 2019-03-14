@@ -8,12 +8,18 @@ namespace Win7MsixInstallerLib
 	/// For instance, VFS token: Windows, actual folder: C:\windows
 	class FilePathMappings
 	{
-	public:
-		HRESULT Initialize();
+    public:
+        static FilePathMappings& GetInstance();
 
-		std::map < std::wstring, std::wstring > GetMap() { return m_map; }
+        std::wstring GetMsix7Directory() {
+            Initialize();
+            return m_msix7Directory;
+        }
 
-		std::wstring GetMsix7Directory() { return m_msix7Directory; }
+        std::map < std::wstring, std::wstring > GetMap() {
+            Initialize();
+            return m_map;
+        }
 
 		/// Gets the resolved full path to the executable.
 		/// The executable path could be the location of the exe within the package's Msix7 directory
@@ -22,11 +28,18 @@ namespace Win7MsixInstallerLib
 		///                                 This is relative to the package's Msix7 directory.
 		/// @param packageFullName   - The packageFullName
 		/// @return the resolved full path to the executable
-		std::wstring GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName);
-		static LPCWSTR GetInstallationDirectoryPath();
-	private:
+        std::wstring GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName);
+        HRESULT Initialize();
+    private:
+        // Disallow creating an instance of this object
+        FilePathMappings()
+        {
+        }
+        HRESULT InitializePaths();
+    private:
 		std::map < std::wstring, std::wstring > m_map;
-		std::wstring m_msix7Directory;
+        std::wstring m_msix7Directory;
+        bool m_isInitialized = false;
 	};
 }
 	/// Removes the first directory from a path.
