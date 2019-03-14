@@ -15,13 +15,13 @@ public:
 
     std::wstring GetMsix7Directory() { return m_msix7Directory; }
 
-	/// Gets the resolved full path to the executable.
-	/// The executable path could be the location of the exe within the package's Msix7 directory
-	/// or it could point to a VFS location. 
-	/// @param packageExecutablePath - The path to the executable listed in the package's manifest
-	///                                 This is relative to the package's Msix7 directory.
-	/// @param packageFullName   - The packageFullName
-	/// @return the resolved full path to the executable
+    /// Gets the resolved full path to the executable.
+    /// The executable path could be the location of the exe within the package's Msix7 directory
+    /// or it could point to a VFS location. 
+    /// @param packageExecutablePath - The path to the executable listed in the package's manifest
+    ///                                 This is relative to the package's Msix7 directory.
+    /// @param packageFullName   - The packageFullName
+    /// @return the resolved full path to the executable
     std::wstring GetExecutablePath(std::wstring packageExecutablePath, PCWSTR packageFullName);
     HRESULT GetInitializationResult() { return m_initializationResult; }
 private:
@@ -32,7 +32,7 @@ private:
         m_initializationResult = InitializePaths();
     }
 private:
-	std::map < std::wstring, std::wstring > m_map;
+    std::map < std::wstring, std::wstring > m_map;
     std::wstring m_msix7Directory;
     bool m_isInitialized = false;
     HRESULT m_initializationResult = E_NOT_SET;
