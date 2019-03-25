@@ -97,7 +97,7 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingValue(m_msixRequest->GetPackageFullName(), "PackageFullName"),
             TraceLoggingValue(directory.c_str(), "PackageDirectoryPath"));
-        RETURN_IF_FAILED(E_NOT_SET);
+        return E_NOT_SET;
     }
 
     std::wstring manifestPath = packageDirectoryPath + manifestFile;
