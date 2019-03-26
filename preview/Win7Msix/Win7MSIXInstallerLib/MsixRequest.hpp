@@ -31,7 +31,7 @@ private:
 protected:
     MsixRequest() {}
 public:
-    static HRESULT Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest** outInstance);
+    static HRESULT Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest** outInstance);
 
     /// The main function processes the request based on whichever operation type was requested and then
     /// going through the sequence of individual handlers.

@@ -186,10 +186,13 @@
   <ItemGroup>
     <ClInclude Include="AddRemovePrograms.hpp" />
     <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="inc\IDeploymentResult.hpp" />
+    <ClInclude Include="inc\DeploymentOptions.hpp" />
     <ClInclude Include="inc\DllExport.hpp" />
     <ClInclude Include="Extractor.hpp" />
     <ClInclude Include="FileTypeAssociation.hpp" />
     <ClInclude Include="FootprintFiles.hpp" />
+    <ClInclude Include="inc\IPackageManager.hpp" />
     <ClInclude Include="InstallComplete.hpp" />
     <ClInclude Include="MsixRequest.hpp" />
     <ClInclude Include="GeneralUtil.hpp" />
@@ -200,6 +203,7 @@
     <ClInclude Include="inc\IPackageInfo.hpp" />
     <ClInclude Include="inc\Win7MSIXInstallerActions.hpp" />
     <ClInclude Include="IPackageHandler.hpp" />
+    <ClInclude Include="PackageManager.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
     <ClInclude Include="PackageInfo.hpp" />
     <ClInclude Include="Protocol.hpp" />
@@ -215,7 +219,7 @@
     <ClCompile Include="MsixRequest.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="CreateAndShowUI.cpp" />
-    <ClCompile Include="Win7MSIXInstallerActions.cpp" />
+    <ClCompile Include="PackageManager.cpp" />
     <ClCompile Include="PackageInfo.cpp" />
     <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="RegistryDevirtualizer.cpp" />
@@ -223,6 +227,7 @@
     <ClCompile Include="PopulatePackageInfo.cpp" />
     <ClCompile Include="AddRemovePrograms.cpp" />
     <ClCompile Include="StartMenuLink.cpp" />
+    <ClCompile Include="Win7MSIXInstallerActions.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

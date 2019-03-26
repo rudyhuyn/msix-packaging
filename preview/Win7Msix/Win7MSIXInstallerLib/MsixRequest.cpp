@@ -65,7 +65,7 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
     {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr}},
 };
 
-HRESULT MsixRequest::Make(OperationType operationType, std::wstring packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
+HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
 {
     MsixRequest* instance = new MsixRequest();
     instance->m_operationType = operationType;
