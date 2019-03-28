@@ -506,7 +506,7 @@ void UI::ButtonClicked()
     {
     case InstallUIAdd:
     {
-        m_packageManager->AddPackageAsync(m_path, DeploymentOptions::None, [this](const DeploymentResult & result) {
+        m_packageManager->AddPackage(m_path, DeploymentOptions::None, [this](const DeploymentResult & result) {
 
             SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)result.Progress, 0);
             switch (result.Status)

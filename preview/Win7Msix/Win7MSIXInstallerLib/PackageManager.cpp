@@ -11,7 +11,7 @@ PackageManager::PackageManager()
 {
 }
 
-bool PackageManager::AddPackageAsync(const wstring & packageFilePath, DeploymentOptions options, function<void(const DeploymentResult&)> callback)
+bool PackageManager::AddPackage(const wstring & packageFilePath, DeploymentOptions options, function<void(const DeploymentResult&)> callback)
 {
     MsixRequest *impl;
     auto res = (MsixRequest::Make(OperationType::Add, packageFilePath, L"", MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
@@ -25,7 +25,7 @@ bool PackageManager::AddPackageAsync(const wstring & packageFilePath, Deployment
     return SUCCEEDED(res);
 }
 
-bool PackageManager::RemovePackageAsync(const wstring & packageFullName, function<void(const DeploymentResult&)> callback)
+bool PackageManager::RemovePackage(const wstring & packageFullName, function<void(const DeploymentResult&)> callback)
 {
     MsixRequest *impl;
     auto res = (MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));

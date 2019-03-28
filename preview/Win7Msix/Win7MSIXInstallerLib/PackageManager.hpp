@@ -9,8 +9,8 @@ namespace Win7MsixInstallerLib {
     {
     public:
         PackageManager();
-        bool AddPackageAsync(const std::wstring & packageFilePath, DeploymentOptions options, std::function<void(const DeploymentResult&)> callback = nullptr) override;
-        bool RemovePackageAsync(const std::wstring & packageFullName, std::function<void(const DeploymentResult&)> callback = nullptr) override;
+        bool AddPackage(const std::wstring & packageFilePath, DeploymentOptions options, std::function<void(const DeploymentResult&)> callback = nullptr) override;
+        bool RemovePackage(const std::wstring & packageFullName, std::function<void(const DeploymentResult&)> callback = nullptr) override;
         IInstalledPackageInfo * FindPackage(const std::wstring & packageFamilyName) override;
         std::vector<IInstalledPackageInfo *> * FindPackages() override;
         IPackageInfo * GetPackageInfoMsix(const std::wstring & msixFullPath) override;
