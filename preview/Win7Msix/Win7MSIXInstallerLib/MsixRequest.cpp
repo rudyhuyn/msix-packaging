@@ -146,9 +146,12 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     std::wstring msix7Directory = filemapping.GetMsix7Directory();
 
     InstalledPackageInfo* installedPackageInfo;
-    std::wstring manifestPath = msix7Directory + m_packageFullName + manifestFile;
+    std::wstring applicationDirectoryPath = msix7Directory + m_packageFullName;
 
-    PopulatePackageInfo::GetPackageInfoFromManifest(manifestPath.data(), this->m_validationOptions, &installedPackageInfo);
+    if (FAILED(PopulatePackageInfo::GetPackageInfoFromManifest(applicationDirectoryPath.data(), this->m_validationOptions, &installedPackageInfo)))
+    {
+        return E_FAIL;
+    }
 
     if (installedPackageInfo == nullptr)
     {
