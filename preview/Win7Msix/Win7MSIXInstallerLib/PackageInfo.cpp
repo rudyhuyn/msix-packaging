@@ -3,6 +3,7 @@
 #include "PackageInfo.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
+#include <fstream>
 using namespace Win7MsixInstallerLib;
 
 //
@@ -39,7 +40,7 @@ HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** 
 }
 
 
-HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
+HRESULT PackageInfoBase::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
     BOOL hc = FALSE;
     ComPtr<IMsixElementEnumerator> applicationElementEnum;
@@ -63,13 +64,13 @@ HRESULT PackageInfo::SetExecutableAndAppIdFromManifestElement(IMsixElement* elem
     Text<wchar_t> applicationId;
     RETURN_IF_FAILED(applicationElement->GetAttributeValue(L"Executable", &executablePath));
     RETURN_IF_FAILED(applicationElement->GetAttributeValue(L"Id", &applicationId));
-    m_executableFilePath = executablePath.Get();
+    m_relativeExecutableFilePath = executablePath.Get();
     m_applicationId = applicationId.Get();
 
     return S_OK;
 }
 
-HRESULT PackageInfo::SetDisplayNameFromManifestElement(IMsixElement* element)
+HRESULT PackageInfoBase::SetDisplayNameFromManifestElement(IMsixElement* element)
 {
     ComPtr<IMsixElementEnumerator> visualElementsEnum;
     RETURN_IF_FAILED(element->GetElements(
@@ -94,27 +95,11 @@ HRESULT PackageInfo::SetDisplayNameFromManifestElement(IMsixElement* element)
 
     Text<WCHAR> logo;
     RETURN_IF_FAILED(visualElementsElement->GetAttributeValue(L"Square150x150Logo", &logo));
-    m_logo = logo.Get();
-
+    m_relativeLogoPath = logo.Get();
     return S_OK;
 }
 
-HRESULT PackageInfo::MakeFromManifestReader(IAppxManifestReader * manifestReader, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo)
-{
-    std::unique_ptr<PackageInfo> instance(new PackageInfo());
-    if (instance == nullptr)
-    {
-        return E_OUTOFMEMORY;
-    }
-
-    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader, msix7DirectoryPath));
-
-    *packageInfo = instance.release();
-
-    return S_OK;
-}
-
-HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, std::wstring msix7DirectoryPath, PackageInfo ** packageInfo)
+HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, PackageInfo ** packageInfo)
 {
     std::unique_ptr<PackageInfo> instance(new PackageInfo());
     if (instance == nullptr)
@@ -126,7 +111,7 @@ HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, s
 
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(packageReader->GetManifest(&manifestReader));
-    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader.Get(), msix7DirectoryPath));
+    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader.Get()));
 
     // Get the number of payload files
     DWORD numberOfPayloadFiles = 0;
@@ -147,7 +132,7 @@ HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, s
     return S_OK;
 }
 
-HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std::wstring msix7DirectoryPath)
+HRESULT PackageInfoBase::SetManifestReader(IAppxManifestReader * manifestReader)
 {
     m_manifestReader = manifestReader;
 
@@ -158,12 +143,15 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std
     Text<WCHAR> publisher;
     RETURN_IF_FAILED(manifestId->GetPublisher(&publisher));
     m_publisher = publisher.Get();
+
+    m_publisherName = m_publisher.substr(m_publisher.find_first_of(L"=") + 1,
+        m_publisher.find_first_of(L",") - m_publisher.find_first_of(L"=") - 1);
+
     RETURN_IF_FAILED(manifestId->GetVersion(&m_version));
 
     Text<WCHAR> packageFullName;
     RETURN_IF_FAILED(manifestId->GetPackageFullName(&packageFullName));
     m_packageFullName = packageFullName.Get();
-    m_packageDirectoryPath = msix7DirectoryPath + packageFullName.Get();
 
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(manifestReader->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
@@ -184,24 +172,39 @@ HRESULT PackageInfo::SetManifestReader(IAppxManifestReader * manifestReader, std
     return S_OK;
 }
 
-std::wstring PackageInfo::GetPublisherName()
-{
-    if (m_publisherName.empty())
-    {
-        m_publisherName = m_publisher.substr(m_publisher.find_first_of(L"=") + 1,
-            m_publisher.find_first_of(L",") - m_publisher.find_first_of(L"=") - 1);
-    }
-    return m_publisherName;
-
-
-}
-
 IStream* PackageInfo::GetLogo()
 {
     IStream * logoStream;
-    if (GetStreamFromFile(m_packageReader.Get(), m_logo.data(), &logoStream) == S_OK)
+    if (GetStreamFromFile(m_packageReader.Get(), m_relativeLogoPath.data(), &logoStream) == S_OK)
     {
         return logoStream;
     }
+}
+
+IStream* InstalledPackageInfo::GetLogo()
+{
+    auto iconPath = m_packageDirectoryPath + m_relativeLogoPath;
+    IStream* stream;
+    if (SUCCEEDED(CreateStreamOnFileUTF16(iconPath.c_str(), true, &stream)))
+    {
+        return stream;
+    }
     return nullptr;
+}
+
+
+HRESULT InstalledPackageInfo::MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader * manifestReader, InstalledPackageInfo ** packageInfo)
+{
+    std::unique_ptr<InstalledPackageInfo> instance(new InstalledPackageInfo());
+    if (instance == nullptr)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    RETURN_IF_FAILED(instance->SetManifestReader(manifestReader));
+    instance->m_packageDirectoryPath = directoryPath + L"\\";
+
+    *packageInfo = instance.release();
+
+    return S_OK;
 }

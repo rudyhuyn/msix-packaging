@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_8F1D8BB1BFFB48EF83DF61E07A2719C1"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_C3A242C2F1EF43BDAEF503CAEF990FC3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -124,26 +118,6 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8F1D8BB1BFFB48EF83DF61E07A2719C1"
-            {
-            "SourcePath" = "8:..\\x64\\Release\\Win7MSIXInstallerLib.dll"
-            "TargetName" = "8:Win7MSIXInstallerLib.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_C971D80774084D46BBCB0D87CF82D376"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C3A242C2F1EF43BDAEF503CAEF990FC3"
             {
             "SourcePath" = "8:..\\x64\\Release\\msix.dll"

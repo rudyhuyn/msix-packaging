@@ -10,10 +10,10 @@ class AddRemovePrograms : IPackageHandler
 public:
     /// Creates a registry entry in the Uninstall key.
     /// This is read by the control panel's AddRemovePrograms to show packages that can be removed.
-    HRESULT ExecuteForAddRequest();
+    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the registry entry.
-    HRESULT ExecuteForRemoveRequest();
+    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);

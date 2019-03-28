@@ -11,7 +11,7 @@ PackageManager::PackageManager()
 {
 }
 
-bool PackageManager::AddPackageAsync(const wstring & packageFilePath, DeploymentOptions options, function<IDeploymentResult()> callback)
+bool PackageManager::AddPackageAsync(const wstring & packageFilePath, DeploymentOptions options, function<void(const DeploymentResult&)> callback)
 {
     MsixRequest *impl;
     auto res = (MsixRequest::Make(OperationType::Add, packageFilePath, L"", MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
@@ -19,12 +19,13 @@ bool PackageManager::AddPackageAsync(const wstring & packageFilePath, Deployment
     {
         return false;
     }
+    impl->SetCallback(callback);
     res = impl->ProcessRequest();
     delete impl;
     return SUCCEEDED(res);
 }
 
-bool PackageManager::RemovePackageAsync(const wstring & packageFullName, function<IDeploymentResult()> callback)
+bool PackageManager::RemovePackageAsync(const wstring & packageFullName, function<void(const DeploymentResult&)> callback)
 {
     MsixRequest *impl;
     auto res = (MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
@@ -34,24 +35,23 @@ bool PackageManager::RemovePackageAsync(const wstring & packageFullName, functio
     }
 
     res = impl->ProcessRequest();
+    impl->SetCallback(callback);
     delete impl;
     return SUCCEEDED(res);
 }
 
-IPackageInfo * PackageManager::GetPackageInfo(const std::wstring & msix7Directory, const std::wstring & directoryPath)
+IInstalledPackageInfo * PackageManager::GetPackageInfo(const std::wstring & msix7Directory, const std::wstring & directoryPath)
 {
-    std::wstring manifestPath = directoryPath + manifestFile;
-
-    PackageInfo* packageInfo;
-    auto res = PopulatePackageInfo::GetPackageInfoFromManifest(manifestPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, msix7Directory.c_str(), &packageInfo);
+    InstalledPackageInfo* packageInfo;
+    auto res = PopulatePackageInfo::GetPackageInfoFromManifest(directoryPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &packageInfo);
     if (FAILED(res))
     {
         return nullptr;
     }
-    return (IPackageInfo *)packageInfo;
+    return (IInstalledPackageInfo *)packageInfo;
 }
 
-IPackageInfo * PackageManager::FindPackage(const wstring & packageFamilyName)
+IInstalledPackageInfo * PackageManager::FindPackage(const wstring & packageFamilyName)
 {
     auto filemapping = FilePathMappings::GetInstance();
     auto res = filemapping.GetInitializationResult();
@@ -61,11 +61,10 @@ IPackageInfo * PackageManager::FindPackage(const wstring & packageFamilyName)
     }
     std::wstring msix7Directory = filemapping.GetMsix7Directory();
     std::wstring packageDirectoryPath = msix7Directory + packageFamilyName;
-
     return GetPackageInfo(msix7Directory, packageDirectoryPath);
 }
 
-vector<IPackageInfo *> * PackageManager::FindPackages()
+vector<IInstalledPackageInfo *> * PackageManager::FindPackages()
 {
     auto filemapping = FilePathMappings::GetInstance();
     auto res = filemapping.GetInitializationResult();
@@ -73,14 +72,14 @@ vector<IPackageInfo *> * PackageManager::FindPackages()
     {
         return nullptr;
     }
-    auto packages = new std::vector<IPackageInfo *>();
+    auto packages = new std::vector<IInstalledPackageInfo *>();
     auto msix7Directory = filemapping.GetMsix7Directory();
     for (auto& p : std::experimental::filesystem::directory_iterator(msix7Directory))
     {
         auto packageInfo = GetPackageInfo(msix7Directory, p.path());
         if (packageInfo != nullptr)
         {
-            packages->push_back((IPackageInfo *)packageInfo);
+            packages->push_back((IInstalledPackageInfo *)packageInfo);
         }
     }
 
@@ -96,7 +95,7 @@ IPackageInfo * PackageManager::GetPackageInfoMsix(const wstring & msixFullPath)
         return nullptr;
     }
     PackageInfo* packageInfo;
-    res = PopulatePackageInfo::GetPackageInfoFromPackage(msixFullPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, filemapping.GetMsix7Directory().c_str(), &packageInfo);
+    res = PopulatePackageInfo::GetPackageInfoFromPackage(msixFullPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &packageInfo);
     if (FAILED(res))
     {
         return nullptr;

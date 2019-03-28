@@ -19,15 +19,14 @@
 
 // handlers
 #include "Extractor.hpp"
+#include "PopulatePackageInfo.hpp"
 #include "StartMenuLink.hpp"
 #include "AddRemovePrograms.hpp"
-#include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
 #include "InstallComplete.hpp"
-#include "CreateAndShowUI.hpp"
 #include "GeneralUtil.hpp"
-
+#include "Constants.hpp"
 
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
@@ -43,8 +42,6 @@ struct HandlerInfo
 std::map<PCWSTR, HandlerInfo> AddHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
-    {PopulatePackageInfo::HandlerName,  {PopulatePackageInfo::CreateHandler, CreateAndShowUI::HandlerName }},
-    {CreateAndShowUI::HandlerName,      {CreateAndShowUI::CreateHandler,     Extractor::HandlerName }},
     {Extractor::HandlerName,            {Extractor::CreateHandler,           StartMenuLink::HandlerName }},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
@@ -56,8 +53,6 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
 std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
-    {PopulatePackageInfo::HandlerName,  {PopulatePackageInfo::CreateHandler, CreateAndShowUI::HandlerName }},
-    {CreateAndShowUI::HandlerName,      {CreateAndShowUI::CreateHandler,     StartMenuLink::HandlerName}},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
     {Protocol::HandlerName,             {Protocol::CreateHandler,            FileTypeAssociation::HandlerName}},
@@ -72,15 +67,18 @@ HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & pack
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
-    RETURN_IF_FAILED(FilePathMappings::GetInstance().GetInitializationResult());
+    auto filepathMappings = FilePathMappings::GetInstance();
+    RETURN_IF_FAILED(filepathMappings.GetInitializationResult());
     *outInstance = instance;
     return S_OK;
 }
 
 HRESULT MsixRequest::ProcessRequest()
 {
-    if (m_UI != nullptr)
-        m_UI->InstallationStepChanged(InstallationStep::InstallationStepStarted);
+    auto result = DeploymentResult();
+    result.Progress = 0;
+    result.Status = InstallationStep::InstallationStepStarted;
+    SendCallback(result);
 
     switch (m_operationType)
     {
@@ -103,8 +101,23 @@ HRESULT MsixRequest::ProcessRequest()
 
 HRESULT MsixRequest::ProcessAddRequest()
 {
-    PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
+    auto filemapping = FilePathMappings::GetInstance();
+    auto res = filemapping.GetInitializationResult();
+    if (FAILED(res))
+    {
+        return E_FAIL;
+    }
+    PackageInfo* packageInfo;
+    PopulatePackageInfo::GetPackageInfoFromPackage(this->m_packageFilePath.data(), this->m_validationOptions, &packageInfo);
 
+    if (packageInfo == nullptr)
+    {
+        return E_FAIL;
+    }
+
+    PCWSTR currentHandlerName = Extractor::HandlerName;
+
+    auto installationPath = filemapping.GetMsix7Directory() + packageInfo->GetPackageFullName() + L"\\";
     while (currentHandlerName != nullptr)
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -114,7 +127,7 @@ HRESULT MsixRequest::ProcessAddRequest()
         HandlerInfo currentHandler = AddHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
         RETURN_IF_FAILED(currentHandler.create(this, &handler));
-        RETURN_IF_FAILED(handler->ExecuteForAddRequest());
+        RETURN_IF_FAILED(handler->ExecuteForAddRequest(packageInfo, installationPath));
 
         currentHandlerName = currentHandler.nextHandler;
     }
@@ -124,12 +137,24 @@ HRESULT MsixRequest::ProcessAddRequest()
 
 HRESULT MsixRequest::ProcessRemoveRequest()
 {
-    // Run PopulatePackageInfo separately - if it fails (for instance, if the package is not found) it IS fatal.
-    AutoPtr<IPackageHandler> handler;
-    RETURN_IF_FAILED(PopulatePackageInfo::CreateHandler(this, &handler));
-    RETURN_IF_FAILED(handler->ExecuteForRemoveRequest());
+    auto filemapping = FilePathMappings::GetInstance();
+    auto res = filemapping.GetInitializationResult();
+    if (FAILED(res))
+    {
+        return E_FAIL;
+    }
+    std::wstring msix7Directory = filemapping.GetMsix7Directory();
 
-    PCWSTR currentHandlerName = CreateAndShowUI::HandlerName;
+    InstalledPackageInfo* installedPackageInfo;
+    std::wstring manifestPath = msix7Directory + m_packageFullName + manifestFile;
+
+    PopulatePackageInfo::GetPackageInfoFromManifest(manifestPath.data(), this->m_validationOptions, &installedPackageInfo);
+
+    if (installedPackageInfo == nullptr)
+    {
+        return E_FAIL;
+    }
+    PCWSTR currentHandlerName = StartMenuLink::HandlerName;
 
     while (currentHandlerName != nullptr)
     {
@@ -140,7 +165,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
         HandlerInfo currentHandler = RemoveHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
         RETURN_IF_FAILED(currentHandler.create(this, &handler));
-        HRESULT hrExecute = handler->ExecuteForRemoveRequest();
+        HRESULT hrExecute = handler->ExecuteForRemoveRequest(installedPackageInfo);
         if (FAILED(hrExecute))
         {
             TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -154,9 +179,4 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     }
 
     return S_OK;
-}
-
-void MsixRequest::SetPackageInfo(PackageInfo* packageInfo)
-{
-    m_packageInfo = packageInfo;
 }

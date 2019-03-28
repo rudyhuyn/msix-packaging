@@ -7,7 +7,7 @@ namespace Win7MsixInstallerLib
 class Protocol : IPackageHandler
 {
 public:
-    HRESULT ExecuteForAddRequest();
+    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);

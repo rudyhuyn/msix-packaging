@@ -7,9 +7,9 @@ class IPackageHandler
 {
 public:
 
-    virtual HRESULT ExecuteForAddRequest() = 0;
+    virtual HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath) = 0;
 
-    virtual HRESULT ExecuteForRemoveRequest() { return S_OK; }
+    virtual HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall) { return S_OK; }
 
     virtual ~IPackageHandler() {};
 };

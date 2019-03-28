@@ -45,24 +45,20 @@ HRESULT StartMenuLink::CreateLink(PCWSTR targetFilePath, PCWSTR linkFilePath, PC
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForAddRequest()
+HRESULT StartMenuLink::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
+    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageToInstall->GetDisplayName() + L".lnk";
 
-    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageInfo->GetDisplayName() + L".lnk";
-
-    std::wstring resolvedExecutableFullPath = packageInfo->GetExecutableFilePath();
-    std::wstring appUserModelId = m_msixRequest->GetPackageInfo()->GetAppModelUserId();
+    std::wstring resolvedExecutableFullPath = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
+    std::wstring appUserModelId = packageToInstall->GetAppModelUserId();
     RETURN_IF_FAILED(CreateLink(resolvedExecutableFullPath.c_str(), filePath.c_str(), L"", appUserModelId.c_str()));
 
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForRemoveRequest()
+HRESULT StartMenuLink::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
 {
-    PackageInfo* packageInfo = m_msixRequest->GetPackageInfo();
-
-    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageInfo->GetDisplayName() + L".lnk";
+    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageToUninstall->GetDisplayName() + L".lnk";
 
     RETURN_IF_FAILED(DeleteFile(filePath.c_str()));
     return S_OK;

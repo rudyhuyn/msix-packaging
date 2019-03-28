@@ -13,11 +13,12 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
-HRESULT InstallComplete::ExecuteForAddRequest()
+HRESULT InstallComplete::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
-    auto ui = m_msixRequest->GetUI();
-    if(ui != nullptr)
-        ui->InstallationStepChanged(InstallationStep::InstallationStepCompleted);
+    auto result = DeploymentResult();
+    result.Progress = 100;
+    result.Status = InstallationStep::InstallationStepCompleted;
+    m_msixRequest->SendCallback(result);
     return S_OK;
 }
 

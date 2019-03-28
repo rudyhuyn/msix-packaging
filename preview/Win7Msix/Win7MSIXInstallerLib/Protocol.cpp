@@ -11,10 +11,10 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR Protocol::HandlerName = L"Protocol";
 
-HRESULT Protocol::ExecuteForAddRequest()
+HRESULT Protocol::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
     ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
+    RETURN_IF_FAILED(packageToInstall->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
 
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));

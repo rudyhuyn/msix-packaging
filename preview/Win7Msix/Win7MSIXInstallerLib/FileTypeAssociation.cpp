@@ -12,20 +12,20 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR FileTypeAssociation::HandlerName = L"FileTypeAssociation";
 
-std::wstring FileTypeAssociation::CreateProgID(PCWSTR name)
+std::wstring FileTypeAssociation::CreateProgID(PackageInfoBase * packageToInstall, PCWSTR name)
 {
-    std::wstring packageFullName = m_msixRequest->GetPackageInfo()->GetPackageFullName();
+    std::wstring packageFullName = packageToInstall->GetPackageFullName();
     std::wstring progID = msix7ProgIDPrefix + packageFullName.substr(0, packageFullName.find(L"_")) + name;
     return progID;
 }
 
-HRESULT FileTypeAssociation::ParseFtaElement(IMsixElement* ftaElement)
+HRESULT FileTypeAssociation::ParseFtaElement(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
 {
     Text<wchar_t> ftaName;
     RETURN_IF_FAILED(ftaElement->GetAttributeValue(nameAttribute.c_str(), &ftaName));
 
     std::wstring name = L"." + std::wstring(ftaName.Get());
-    std::wstring progID = CreateProgID(name.c_str());
+    std::wstring progID = CreateProgID(packageToInstall, name.c_str());
 
     Fta fta;
     fta.name = name;
@@ -66,7 +66,7 @@ HRESULT FileTypeAssociation::ParseFtaElement(IMsixElement* ftaElement)
         Text<wchar_t> logoPath;
         RETURN_IF_FAILED(logoElement->GetText(&logoPath));
 
-        fta.logo = m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath() + std::wstring(L"\\") + logoPath.Get();
+        fta.logo = installDirectoryPath + std::wstring(L"\\") + logoPath.Get();
     }
 
     ComPtr<IMsixElementEnumerator> verbsEnum;
@@ -101,10 +101,10 @@ HRESULT FileTypeAssociation::ParseFtaElement(IMsixElement* ftaElement)
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ParseManifest()
+HRESULT FileTypeAssociation::ParseManifest(PackageInfoBase * package, const std::wstring & installationDirectoryPath)
 {
     ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
+    RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
 
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
@@ -132,7 +132,7 @@ HRESULT FileTypeAssociation::ParseManifest()
                 ComPtr<IMsixElement> ftaElement;
                 RETURN_IF_FAILED(ftaEnum->GetCurrent(&ftaElement));
 
-                RETURN_IF_FAILED(ParseFtaElement(ftaElement.Get()));
+                RETURN_IF_FAILED(ParseFtaElement(package, installationDirectoryPath, ftaElement.Get()));
             }
         }
         RETURN_IF_FAILED(extensionEnum->MoveNext(&hasCurrent));
@@ -141,17 +141,22 @@ HRESULT FileTypeAssociation::ParseManifest()
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForAddRequest()
+HRESULT FileTypeAssociation::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
+    std::wstring registryFilePath = installDirectoryPath + registryDatFile;
+    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
+
+    RETURN_IF_FAILED(ParseManifest(packageToInstall, installDirectoryPath));
+
     for (std::vector<Fta>::iterator fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
-        RETURN_IF_FAILED(ProcessFtaForAdd(*fta));
+        RETURN_IF_FAILED(ProcessFtaForAdd(packageToInstall, installDirectoryPath, *fta));
     }
 
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
+HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
     for (std::vector<std::wstring>::iterator extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
@@ -206,7 +211,8 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    std::wstring command = m_msixRequest->GetPackageInfo()->GetExecutableFilePath() + commandArgument;
+    auto executableFilePath = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
+    std::wstring command = executableFilePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 
     for (std::vector<Verb>::iterator verb = fta.verbs.begin(); verb != fta.verbs.end(); ++verb)
@@ -217,7 +223,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
         RegistryKey verbCommandKey;
         RETURN_IF_FAILED(verbKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &verbCommandKey));
 
-        std::wstring verbCommand = m_msixRequest->GetPackageInfo()->GetExecutableFilePath();
+        std::wstring verbCommand = executableFilePath;
         if (verb->parameter.c_str() != nullptr)
         {
             verbCommand += std::wstring(L" ") + verb->parameter.c_str();
@@ -228,8 +234,12 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForRemoveRequest()
+HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
 {
+    std::wstring registryFilePath = packageToUninstall->GetPackageDirectoryPath() + registryDatFile;
+    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
+
+    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetPackageDirectoryPath()));
     for (std::vector<Fta>::iterator fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForRemove(*fta));
@@ -298,11 +308,6 @@ HRESULT FileTypeAssociation::CreateHandler(MsixRequest * msixRequest, IPackageHa
     }
 
     RETURN_IF_FAILED(localInstance->m_classesKey.Open(HKEY_CLASSES_ROOT, nullptr, KEY_READ | KEY_WRITE | WRITE_DAC));
-
-    std::wstring registryFilePath = msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str() + registryDatFile;
-    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, msixRequest, &localInstance->m_registryDevirtualizer));
-
-    RETURN_IF_FAILED(localInstance->ParseManifest());
 
     *instance = localInstance.release();
 

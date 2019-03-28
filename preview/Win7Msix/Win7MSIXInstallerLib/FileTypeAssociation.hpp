@@ -46,10 +46,10 @@ class FileTypeAssociation : IPackageHandler
 {
 public:
     /// Adds the file type associations to the registry so this application can handle specific file types.
-    HRESULT ExecuteForAddRequest();
+    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the file type associations from the registry.
-    HRESULT ExecuteForRemoveRequest();
+    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -64,20 +64,20 @@ private:
     FileTypeAssociation(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Parses the manifest and fills in the m_Ftas vector of FileTypeAssociation (Fta) data
-    HRESULT ParseManifest();
+    HRESULT ParseManifest(PackageInfoBase * packageToInstall, const std::wstring & installationDirectoryPath);
 
     /// Parses the manifest element to populate one Fta struct entry of the m_Ftas vector
     /// 
     /// @param ftaElement - the manifest element representing an Fta
-    HRESULT ParseFtaElement(IMsixElement* ftaElement);
+    HRESULT ParseFtaElement(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement);
 
     /// Adds the file type association (fta) entries if necessary
-    HRESULT ProcessFtaForAdd(Fta& fta);
+    HRESULT ProcessFtaForAdd(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta);
 
     /// Removes the file type association (fta) entries if necessary
     HRESULT ProcessFtaForRemove(Fta& fta);
 
     /// Creates a ProgID from the name of the fta. Simply take the package name and prepend it to the fta
-    std::wstring CreateProgID(PCWSTR name);
+    std::wstring CreateProgID(PackageInfoBase * packageToInstall, PCWSTR name);
 };
 }

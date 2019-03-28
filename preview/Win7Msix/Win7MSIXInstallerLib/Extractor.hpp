@@ -2,6 +2,8 @@
 
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
+#include "PackageInfo.hpp"
+
 namespace Win7MsixInstallerLib
 {
 
@@ -14,10 +16,10 @@ public:
     /// Extracts the files from the package to the package's root directory
     /// Copies over the VFS files from the package root directory to the actual file system location
     /// Devirtualizes the registry keys from the package's registry.dat
-    HRESULT ExecuteForAddRequest();
+    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes all the files, directories and registry keys written during the add.
-    HRESULT ExecuteForRemoveRequest();
+    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
     
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -29,19 +31,19 @@ private:
     Extractor(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Extracts all files from a package.
-    HRESULT ExtractPackage();
+    HRESULT ExtractPackage(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Writes the file from the package to disk.
     ///
     /// @param file - The IAppxFile interface that represents a footprint or payload file 
     ///                in the package.
-    HRESULT ExtractFile(IAppxFile* file);
+    HRESULT ExtractFile(const std::wstring & installDirectoryPath, IAppxFile* file);
 
     /// Extracts all footprint files (i.e. manifest/blockmap/signature) from a package.
-    HRESULT ExtractFootprintFiles();
+    HRESULT ExtractFootprintFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Extracts all payload files from a package.
-    HRESULT ExtractPayloadFiles();
+    HRESULT ExtractPayloadFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Creates a writable IStream over a file with the specified name
     /// under the specified path.  This function will also create intermediate
@@ -55,8 +57,7 @@ private:
     HRESULT GetOutputStream(LPCWSTR path, LPCWSTR fileName, IStream** stream);
 
     /// Creates the package root directory where all the files will be installed to.
-    /// This will be in c:\program files\msix7apps\<packagefullname>
-    HRESULT CreatePackageRoot();
+    HRESULT CreatePackageRoot(const std::wstring & installDirectoryPath);
     
     /// Copies a VFS file from the package root to its resolved location.
     /// for example VFS\ProgramFilesx86\Notepadplusplus\notepadplusplus.exe would get copied over 
@@ -64,12 +65,12 @@ private:
     /// The mapping between the VFS path and the resolved location is obtained through FilePathMappings::GetMap
     ///
     /// @param nameStr - A filepath of the file in the VFS 
-    HRESULT CopyVfsFileToLocal(std::wstring nameStr);
+    HRESULT CopyVfsFileToLocal(const std::wstring & installDirectoryPath, std::wstring nameStr);
 
     /// Extracts or removes the registry information contained inside Registry.dat
     ///
     /// @param remove - if true, removes registry information. if false, adds registry information
-    HRESULT ExtractRegistry(bool remove);
+    HRESULT ExtractRegistry(const std::wstring & installationPath, bool remove);
 
     /// Determines if a file needs to be copied. 
     /// If a file already exists in the target location, the highest version file will be retained
@@ -101,6 +102,6 @@ private:
     HRESULT ConvertVfsNameToFullPath(std::wstring fileName, std::wstring &fileFullPath);
 
     /// Removes all VFS files in the package
-    HRESULT RemoveVfsFiles();
+    HRESULT RemoveVfsFiles(InstalledPackageInfo * packageToUninstall);
 };
 }

@@ -83,15 +83,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(g_buttonHWnd);
                 ui->CreateCancelButton(hWnd, windowRect);
                 UpdateWindow(hWnd);
-                if (ui != NULL)
-                {
-                    ui->CreateProgressBar(hWnd, windowRect);
-                }
+                ui->CreateProgressBar(hWnd, windowRect);
                 ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
-                if (ui != NULL)
-                {
-                    ui->SetButtonClicked();
-                }
+                ui->ButtonClicked();
             }
             else
             {
@@ -117,37 +111,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         break;
-    case WM_INSTALLCOMPLETE_MSG:
-    {
-        DestroyWindow(g_CancelbuttonHWnd);
-        ui->CreateLaunchButton(hWnd, windowRect);
-        UpdateWindow(hWnd);
-        ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
-        ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
-        if (g_launchCheckBoxState) {
-            ui->LaunchInstalledApp(); // launch app
-            DestroyWindow(hWnd); // close msix app installer
-        }
-        else
-        {
-            //wait for user to click launch button or close the window
-            while (true)
-            {
-                switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
-                {
-                case WAIT_OBJECT_0:
-                    MSG msg;
-                    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-                    {
-                        TranslateMessage(&msg);
-                        DispatchMessage(&msg);
-                    }
-                    break;
-                }
-            }
-        }
-        break;
-    }
     case WM_SIZE:
     case WM_SIZING:
         break;
@@ -180,10 +143,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 HRESULT UI::LaunchInstalledApp()
 {
-    auto packageInfo = m_msixRequest->GetIPackageInfo();
-    std::wstring resolvedExecutableFullPath = packageInfo->GetExecutableFilePath();
-    //check for error while launching app here                     Win
-    ShellExecute(NULL, NULL, resolvedExecutableFullPath.c_str(), NULL, NULL, SW_SHOW);
+
+    auto installedPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFullName());
+
+    ShellExecute(NULL, NULL, installedPackage->GetFullExecutableFilePath().c_str(), NULL, NULL, SW_SHOW);
     return S_OK;
 }
 
@@ -253,33 +216,45 @@ void StartUIThread(UI* ui)
 
 }
 
-void UI::LoadInfo()
-{
-    m_loadingPackageInfoCode = ParseInfoFromPackage();
-}
-
 HRESULT UI::ParseInfoFromPackage()
 {
-    auto packageInfo = m_msixRequest->GetIPackageInfo();
+    if (m_packageInfo == nullptr)
+    {
+        switch (m_type)
+        {
+        case InstallUIAdd:
+        {
+            m_packageInfo = m_packageManager->GetPackageInfoMsix(m_path);
+            if (m_packageInfo == nullptr)
+            {
+                return E_FAIL;
+            }
+        }
+        break;
+        case InstallUIRemove:
+        {
+            m_packageInfo = m_packageManager->FindPackage(m_path);
+            if (m_packageInfo == nullptr)
+            {
+                return E_FAIL;
+            }
+        }
+        break;
+        }
+    }
+
     // Obtain publisher name
-    m_publisherCommonName = packageInfo->GetPublisherName();
+    m_publisherCommonName = m_packageInfo->GetPublisherName();
 
     // Obtain version number
-    ConvertVersionToString(packageInfo->GetVersion());
+    m_version = ConvertVersionToString(m_packageInfo->GetVersion());
 
     //Obtain the number of files
-    m_displayName = packageInfo->GetDisplayName();
-    m_logoStream = packageInfo->GetLogo();
+    m_displayName = m_packageInfo->GetDisplayName();
+    m_logoStream = m_packageInfo->GetLogo();
     return S_OK;
 }
 
-// FUNCTION: UpdateProgressBar
-//
-// PURPOSE: Modify the value of the progress bar
-void UI::UpdateProgressBarValue(float value)
-{
-    SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)(value * 100), 0);
-}
 
 // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
 //
@@ -512,30 +487,54 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
-bool UI::InstallationStepChanged(InstallationStep step)
+bool UI::Show()
 {
-    switch (step)
-    {
-    case InstallationStepPackageInformationAvailable:
-    {
-        LoadInfo();
-        return true;
-    }
-    case InstallationStepWaitForUserConfirmation:
-    {
-        std::thread thread(StartUIThread, this);
-        thread.detach();
+    m_loadingPackageInfoCode = ParseInfoFromPackage();
 
-        DWORD waitResult = WaitForSingleObject(m_buttonClickedEvent, INFINITE);
-        return waitResult == WAIT_OBJECT_0;
-    }
-    break;
-    case InstallationStepCompleted:
+    std::thread thread(StartUIThread, this);
+    thread.detach();
+
+    DWORD waitResult = WaitForSingleObject(m_closeUI, INFINITE);
+    return waitResult == WAIT_OBJECT_0;
+}
+
+
+void UI::ButtonClicked()
+{
+    //    SetEvent(m_closeUI);
+    switch (m_type)
     {
-        SendMessage(hWnd, WM_INSTALLCOMPLETE_MSG, NULL, NULL);
-        return true;
+    case InstallUIAdd:
+    {
+        m_packageManager->AddPackageAsync(m_path, DeploymentOptions::None, [this](const DeploymentResult & result) {
+
+            SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)result.Progress, 0);
+            switch (result.Status)
+            {
+            case InstallationStep::InstallationStepCompleted:
+            {
+                ShowCompletedUI();
+            }
+            break;
+            }
+        });
     }
     break;
     }
-    return true;
+}
+
+
+void UI::ShowCompletedUI()
+{
+    DestroyWindow(g_CancelbuttonHWnd);
+    RECT windowRect;
+    GetClientRect(hWnd, &windowRect);
+    CreateLaunchButton(hWnd, windowRect);
+    UpdateWindow(hWnd);
+    ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
+    ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
+    if (g_launchCheckBoxState) {
+        LaunchInstalledApp(); // launch app
+        DestroyWindow(hWnd); // close msix app installer
+    }
 }

@@ -3,16 +3,13 @@
 // UI Functions
 #include <windows.h>
 #include <string>
-#include <IMsixRequest.hpp>
-#include <IInstallerUI.hpp>
+#include <IPackageManager.hpp>
 #include "GeneralUtil.hpp"
-
 // Child window identifiers
 #define IDC_LAUNCHCHECKBOX 1
 #define IDC_INSTALLBUTTON 2
 #define IDC_CANCELBUTTON 3
 #define IDC_LAUNCHBUTTON 4
-#define WM_INSTALLCOMPLETE_MSG (WM_APP+1)
 
 // Global variables
 static HWND hWnd = NULL; // parent window hwnd
@@ -24,29 +21,39 @@ static HWND g_LaunchbuttonHWnd = NULL;
 static bool g_installed = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
 
-class UI : public Win7MsixInstallerLib::IInstallerUI
+enum UIType { InstallUIAdd, InstallUIRemove};
+
+class UI
 {
 public:
-    UI(_In_ Win7MsixInstallerLib::IMsixRequest* msixRequest) : m_msixRequest(msixRequest) { m_buttonClickedEvent = CreateEvent(NULL, FALSE, FALSE, NULL); }
+    UI(_In_ Win7MsixInstallerLib::IPackageManager* packageManager, _In_ const std::wstring & path, UIType type) : m_packageManager(packageManager), m_type(type)
+    {
+        m_path = std::wstring(path);
+        m_closeUI = CreateEvent(NULL, FALSE, FALSE, NULL);
+    }
     HRESULT LaunchInstalledApp();
     ~UI() {}
-private:
-    Win7MsixInstallerLib::IMsixRequest* m_msixRequest = nullptr;
+    bool Show();
 
-    HANDLE m_buttonClickedEvent;
+private:
+    Win7MsixInstallerLib::IPackageManager* m_packageManager = nullptr;
+    Win7MsixInstallerLib::IPackageInfo* m_packageInfo = nullptr;
+    std::wstring m_path;
+    
+    HANDLE m_closeUI;
+
+    //Cached information used to draw the dialog
     std::wstring m_displayName = L"";
     std::wstring m_publisherCommonName = L"";
     ComPtr<IStream> m_logoStream;
     std::wstring m_version = L"";
-    HRESULT m_loadingPackageInfoCode = 0;
 
+    HRESULT m_loadingPackageInfoCode = 0;
+    UIType m_type;
 public:
     HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
     int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
-    void LoadInfo();
-    void SetButtonClicked() { SetEvent(m_buttonClickedEvent); }
-    void UpdateProgressBarValue(float value);
-    bool InstallationStepChanged(Win7MsixInstallerLib::InstallationStep step);
+    void ButtonClicked();
 
     // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
     //
@@ -102,10 +109,6 @@ public:
     //
     BOOL HideButtonWindow();
 
-    // FUNCTION: SendInstallCompleteMsg
-    //
-    // PURPOSE: Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
-    void SendInstallCompleteMsg();
     // FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
     //
     // PURPOSE: Change the text of the installation window based on the given input
@@ -116,4 +119,5 @@ public:
 
 private:
     HRESULT ParseInfoFromPackage();
+    void ShowCompletedUI();
 };

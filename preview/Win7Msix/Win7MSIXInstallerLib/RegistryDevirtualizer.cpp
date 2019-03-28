@@ -409,7 +409,8 @@ HRESULT RegistryDevirtualizer::Create(std::wstring hiveFileName, MsixRequest* ms
     }
 
     RETURN_IF_FAILED(CreateTempKeyName(localInstance->m_loadedHiveKeyName));
-    RETURN_IF_FAILED(HRESULT_FROM_WIN32(RegLoadKey(HKEY_USERS, localInstance->m_loadedHiveKeyName.c_str(), localInstance->m_registryHiveFileName.c_str())));
+    auto s = RegLoadKey(HKEY_USERS, localInstance->m_loadedHiveKeyName.c_str(), localInstance->m_registryHiveFileName.c_str());
+    RETURN_IF_FAILED(HRESULT_FROM_WIN32(s));
 
     *instance = localInstance.release();
     

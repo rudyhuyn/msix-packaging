@@ -9,6 +9,7 @@
 #include "FilePaths.hpp"
 #include "Constants.hpp"
 #include "RegistryDevirtualizer.hpp"
+#include <DeploymentResult.hpp>
 #include <TraceLoggingProvider.h>
 using namespace Win7MsixInstallerLib;
 
@@ -73,7 +74,7 @@ HRESULT Extractor::GetOutputStream(LPCWSTR path, LPCWSTR fileName, IStream** str
     return S_OK;
 }
 
-HRESULT Extractor::ExtractFile(IAppxFile* file)
+HRESULT Extractor::ExtractFile(const std::wstring & installDirectoryPath,IAppxFile* file)
 {
     Text<WCHAR> fileName;
     RETURN_IF_FAILED(file->GetName(&fileName));
@@ -92,23 +93,23 @@ HRESULT Extractor::ExtractFile(IAppxFile* file)
     ComPtr<IStream> fileStream;
     RETURN_IF_FAILED(file->GetStream(&fileStream));
     ComPtr<IStream> outputStream;
-    RETURN_IF_FAILED(GetOutputStream(m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str(), fileName.Get(), &outputStream));
+    RETURN_IF_FAILED(GetOutputStream(installDirectoryPath.c_str(), fileName.Get(), &outputStream));
     RETURN_IF_FAILED(fileStream->CopyTo(outputStream.Get(), fileSizeLargeInteger, nullptr, nullptr));
     return S_OK;
 }
 
-HRESULT Extractor::ExtractFootprintFiles()
+HRESULT Extractor::ExtractFootprintFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting footprint files from the package");
-    
+
     for (int i = 0; i < FootprintFilesCount; i++)
     {
         ComPtr<IAppxFile> footprintFile;
-        HRESULT hr = m_msixRequest->GetPackageInfo()->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
+        HRESULT hr = packageToInstall->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
         if (SUCCEEDED(hr) && footprintFile.Get())
         {
-            RETURN_IF_FAILED(ExtractFile(footprintFile.Get()));
+            RETURN_IF_FAILED(ExtractFile(installDirectoryPath, footprintFile.Get()));
         }
         else if (g_footprintFilesType[i].isRequired)
         {
@@ -121,26 +122,28 @@ HRESULT Extractor::ExtractFootprintFiles()
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPayloadFiles()
+HRESULT Extractor::ExtractPayloadFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
     ComPtr<IAppxFilesEnumerator> files;
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting payload files from the package");
 
-    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetPackageReader()->GetPayloadFiles(&files));
+    RETURN_IF_FAILED(packageToInstall->GetPackageReader()->GetPayloadFiles(&files));
 
     BOOL hasCurrent = FALSE;
     RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
 
-    unsigned int totalNumberFiles = this->m_msixRequest->GetPackageInfo()->GetNumberOfPayloadFiles();
+    // Retrieve the number of files
+
+
+    unsigned int totalNumberFiles = packageToInstall->GetNumberOfPayloadFiles();
     unsigned int nbrFilesExtracted = 0;
-    auto ui = m_msixRequest->GetUI();
     while (hasCurrent)
     {
         ComPtr<IAppxFile> file;
         RETURN_IF_FAILED(files->GetCurrent(&file));
 
-        RETURN_IF_FAILED(ExtractFile(file.Get()));
+        RETURN_IF_FAILED(ExtractFile(installDirectoryPath, file.Get()));
 
         // After extracting the file, if it's a VFS file, copy it to the local location
         Text<WCHAR> name;
@@ -148,22 +151,25 @@ HRESULT Extractor::ExtractPayloadFiles()
         std::wstring nameStr = name.Get();
         if (nameStr.find(L"VFS") != std::wstring::npos)
         {
-            RETURN_IF_FAILED(CopyVfsFileToLocal(nameStr));
+            RETURN_IF_FAILED(CopyVfsFileToLocal(installDirectoryPath, nameStr));
         }
 
         RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
         ++nbrFilesExtracted;
-        if (ui != NULL)
-            ui->UpdateProgressBarValue((float)nbrFilesExtracted / totalNumberFiles);
+
+        auto result = DeploymentResult();
+        result.Progress = 100 * nbrFilesExtracted / totalNumberFiles;
+        result.Status = InstallationStep::InstallationStepGetExtraction;
+        m_msixRequest->SendCallback(result);
+            //    ui->UpdateProgressBarValue((float)nbrFilesExtracted / totalNumberFiles);
     }
 
     return S_OK;
 }
 
-HRESULT Extractor::CreatePackageRoot()
+HRESULT Extractor::CreatePackageRoot(const std::wstring & installDirectoryPath)
 {
-    std::wstring packagePath = FilePathMappings::GetInstance().GetMsix7Directory();
-    if (!CreateDirectory(packagePath.c_str(), nullptr))
+    if (!CreateDirectory(installDirectoryPath.c_str(), nullptr))
     {
         DWORD lastError = GetLastError();
         if (lastError != ERROR_ALREADY_EXISTS)
@@ -172,29 +178,20 @@ HRESULT Extractor::CreatePackageRoot()
         }
     }
 
-    if (!CreateDirectory(m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str(), nullptr))
-    {
-        DWORD lastError = GetLastError();
-        if (lastError != ERROR_ALREADY_EXISTS)
-        {
-            RETURN_IF_FAILED(HRESULT_FROM_WIN32(lastError));
-        }
-    }
-
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForAddRequest()
+HRESULT Extractor::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
-    RETURN_IF_FAILED(CreatePackageRoot());
-    
-    RETURN_IF_FAILED(ExtractPackage());
+    RETURN_IF_FAILED(CreatePackageRoot(installDirectoryPath));
+
+    RETURN_IF_FAILED(ExtractPackage(packageToInstall, installDirectoryPath));
     return S_OK;
 }
 
-HRESULT Extractor::RemoveVfsFiles()
+HRESULT Extractor::RemoveVfsFiles(InstalledPackageInfo * packageToUninstall)
 {
-    std::wstring blockMapPath = m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath() + blockMapFile;
+    std::wstring blockMapPath = packageToUninstall->GetPackageDirectoryPath() + blockMapFile;
     ComPtr<IStream> stream;
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(blockMapPath.c_str(), true /*forRead*/, &stream));
 
@@ -230,9 +227,9 @@ HRESULT Extractor::RemoveVfsFiles()
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForRemoveRequest()
+HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
 {
-    HRESULT hrRemoveRegistry = ExtractRegistry(true);
+    HRESULT hrRemoveRegistry = ExtractRegistry(packageToUninstall->GetPackageDirectoryPath(), true);
     if (FAILED(hrRemoveRegistry))
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -241,7 +238,7 @@ HRESULT Extractor::ExecuteForRemoveRequest()
             TraceLoggingValue(hrRemoveRegistry, "HR"));
     }
 
-    HRESULT hrRemoveVfsFiles = RemoveVfsFiles();
+    HRESULT hrRemoveVfsFiles = RemoveVfsFiles(packageToUninstall);
     if (FAILED(hrRemoveVfsFiles))
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -251,14 +248,14 @@ HRESULT Extractor::ExecuteForRemoveRequest()
     }
 
     // First release manifest so we can delete the file.
-    m_msixRequest->GetPackageInfo()->ReleaseManifest();
+    packageToUninstall->ReleaseManifest();
 
     std::error_code error;
-    uintmax_t numRemoved = std::experimental::filesystem::remove_all(m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath(), error);
+    uintmax_t numRemoved = std::experimental::filesystem::remove_all(packageToUninstall->GetPackageDirectoryPath(), error);
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Removed directory",
-        TraceLoggingValue(m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str(), "PackageDirectoryPath"),
+        TraceLoggingValue(packageToUninstall->GetPackageDirectoryPath().c_str(), "PackageDirectoryPath"),
         TraceLoggingValue(error.value(), "Error"),
         TraceLoggingValue(numRemoved, "NumRemoved"));
 
@@ -277,11 +274,11 @@ HRESULT Extractor::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** i
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPackage()
+HRESULT Extractor::ExtractPackage(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
 {
-    RETURN_IF_FAILED(ExtractFootprintFiles());
-    RETURN_IF_FAILED(ExtractPayloadFiles());
-    RETURN_IF_FAILED(ExtractRegistry(false));
+    RETURN_IF_FAILED(ExtractFootprintFiles(packageToInstall, installDirectoryPath));
+    RETURN_IF_FAILED(ExtractPayloadFiles(packageToInstall, installDirectoryPath));
+    RETURN_IF_FAILED(ExtractRegistry(installDirectoryPath, false));
     return S_OK;
 }
 
@@ -368,7 +365,7 @@ HRESULT IsFileModified(std::wstring file, _Out_ bool& isModified)
             isModified = true;
         }
     }
-    
+
     return S_OK;
 }
 
@@ -471,7 +468,7 @@ HRESULT Extractor::CopyVfsFileIfNecessary(std::wstring sourceFullPath, std::wstr
                 TraceLoggingValue(error, "error"));
         }
     }
-    
+
     return S_OK;
 }
 
@@ -512,7 +509,7 @@ HRESULT Extractor::RemoveVfsFile(std::wstring fileName)
                 TraceLoggingValue(GetLastError(), "error"));
         }
     }
-    
+
     return S_OK;
 }
 
@@ -545,13 +542,13 @@ HRESULT Extractor::ConvertVfsNameToFullPath(std::wstring fileName, std::wstring&
     return E_NOT_SET;
 }
 
-HRESULT Extractor::CopyVfsFileToLocal(std::wstring fileName)
+HRESULT Extractor::CopyVfsFileToLocal(const std::wstring & installDirectoryPath, std::wstring fileName)
 {
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "CopyVfsFileToLocal",
         TraceLoggingValue(fileName.c_str(), "FileName"));
 
-    std::wstring sourceFullPath = m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str() + std::wstring(L"\\") + fileName;
+    std::wstring sourceFullPath = installDirectoryPath + std::wstring(L"\\") + fileName;
 
     std::wstring targetFullPath;
     if (FAILED(ConvertVfsNameToFullPath(fileName, targetFullPath)))
@@ -564,9 +561,9 @@ HRESULT Extractor::CopyVfsFileToLocal(std::wstring fileName)
     return S_OK;
 }
 
-HRESULT Extractor::ExtractRegistry(bool remove)
+HRESULT Extractor::ExtractRegistry(const std::wstring & installationPath, bool remove)
 {
-    std::wstring registryFilePath = m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath().c_str() + registryDatFile;
+    std::wstring registryFilePath = installationPath + registryDatFile;
 
     bool registryFileExists = false;
     RETURN_IF_FAILED(FileExists(registryFilePath, registryFileExists));
