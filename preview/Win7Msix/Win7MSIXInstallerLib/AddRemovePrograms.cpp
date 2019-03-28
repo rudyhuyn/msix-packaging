@@ -37,7 +37,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(PackageInfo * packageToInstall, 
     std::wstring uninstallCommand = filePath + std::wstring(L" -RemovePackage ") + packageFullName;
     RETURN_IF_FAILED(packageKey.SetStringValue(L"UninstallString", uninstallCommand));
 
-    std::wstring publisherNameString(packageToInstall->GetPublisherName());
+    std::wstring publisherNameString(packageToInstall->GetPublisherDisplayName());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"Publisher", publisherNameString));
 
     std::wstring versionString(Win7MsixInstallerLib_ConvertVersionToString(packageToInstall->GetVersion()));

@@ -50,7 +50,7 @@ HRESULT StartMenuLink::ExecuteForAddRequest(PackageInfo * packageToInstall, cons
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageToInstall->GetDisplayName() + L".lnk";
 
     std::wstring resolvedExecutableFullPath = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
-    std::wstring appUserModelId = packageToInstall->GetAppModelUserId();
+    std::wstring appUserModelId = packageToInstall->GetId();
     RETURN_IF_FAILED(CreateLink(resolvedExecutableFullPath.c_str(), filePath.c_str(), L"", appUserModelId.c_str()));
 
     return S_OK;

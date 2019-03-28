@@ -191,7 +191,7 @@ HRESULT Extractor::ExecuteForAddRequest(PackageInfo * packageToInstall, const st
 
 HRESULT Extractor::RemoveVfsFiles(InstalledPackageInfo * packageToUninstall)
 {
-    std::wstring blockMapPath = packageToUninstall->GetPackageDirectoryPath() + blockMapFile;
+    std::wstring blockMapPath = packageToUninstall->GetInstalledLocation() + blockMapFile;
     ComPtr<IStream> stream;
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(blockMapPath.c_str(), true /*forRead*/, &stream));
 
@@ -229,7 +229,7 @@ HRESULT Extractor::RemoveVfsFiles(InstalledPackageInfo * packageToUninstall)
 
 HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
 {
-    HRESULT hrRemoveRegistry = ExtractRegistry(packageToUninstall->GetPackageDirectoryPath(), true);
+    HRESULT hrRemoveRegistry = ExtractRegistry(packageToUninstall->GetInstalledLocation(), true);
     if (FAILED(hrRemoveRegistry))
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -251,11 +251,11 @@ HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUnins
     packageToUninstall->ReleaseManifest();
 
     std::error_code error;
-    uintmax_t numRemoved = std::experimental::filesystem::remove_all(packageToUninstall->GetPackageDirectoryPath(), error);
+    uintmax_t numRemoved = std::experimental::filesystem::remove_all(packageToUninstall->GetInstalledLocation(), error);
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Removed directory",
-        TraceLoggingValue(packageToUninstall->GetPackageDirectoryPath().c_str(), "PackageDirectoryPath"),
+        TraceLoggingValue(packageToUninstall->GetInstalledLocation().c_str(), "PackageDirectoryPath"),
         TraceLoggingValue(error.value(), "Error"),
         TraceLoggingValue(numRemoved, "NumRemoved"));
 

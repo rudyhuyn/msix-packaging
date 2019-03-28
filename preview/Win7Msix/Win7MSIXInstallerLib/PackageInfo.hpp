@@ -35,10 +35,10 @@ namespace Win7MsixInstallerLib
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
-        std::wstring GetAppModelUserId() { return m_appUserModelId; }
+        std::wstring GetId() { return m_appUserModelId; }
         unsigned long long GetVersion() { return m_version; }
         std::wstring GetPublisher() { return m_publisher; }
-        std::wstring GetPublisherName() { return m_publisherName; }
+        std::wstring GetPublisherDisplayName() { return m_publisherName; }
 
     protected:
         PackageInfoBase() {}
@@ -70,10 +70,10 @@ namespace Win7MsixInstallerLib
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
-        std::wstring GetAppModelUserId() { return m_appUserModelId; }
+        std::wstring GetId() { return m_appUserModelId; }
         unsigned long long GetVersion() { return m_version; }
         std::wstring GetPublisher() { return m_publisher; }
-        std::wstring GetPublisherName() { return m_publisherName; }
+        std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
 
         /// Create a PackageInfo using the package reader. This is intended for Add scenarios where
@@ -88,10 +88,10 @@ namespace Win7MsixInstallerLib
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
-        std::wstring GetAppModelUserId() { return m_appUserModelId; }
+        std::wstring GetId() { return m_appUserModelId; }
         unsigned long long GetVersion() { return m_version; }
         std::wstring GetPublisher() { return m_publisher; }
-        std::wstring GetPublisherName() { return m_publisherName; }
+        std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
 
 
@@ -99,7 +99,7 @@ namespace Win7MsixInstallerLib
         {
             return m_packageDirectoryPath + m_relativeExecutableFilePath;
         }
-        virtual std::wstring GetPackageDirectoryPath()
+        virtual std::wstring GetInstalledLocation()
         {
             return m_packageDirectoryPath;
         }

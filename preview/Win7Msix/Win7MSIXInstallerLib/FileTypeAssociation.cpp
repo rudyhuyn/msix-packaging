@@ -236,10 +236,10 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall
 
 HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
 {
-    std::wstring registryFilePath = packageToUninstall->GetPackageDirectoryPath() + registryDatFile;
+    std::wstring registryFilePath = packageToUninstall->GetInstalledLocation() + registryDatFile;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
 
-    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetPackageDirectoryPath()));
+    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetInstalledLocation()));
     for (std::vector<Fta>::iterator fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForRemove(*fta));

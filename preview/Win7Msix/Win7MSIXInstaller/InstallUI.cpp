@@ -244,7 +244,7 @@ HRESULT UI::ParseInfoFromPackage()
     }
 
     // Obtain publisher name
-    m_publisherCommonName = m_packageInfo->GetPublisherName();
+    m_publisherCommonName = m_packageInfo->GetPublisherDisplayName();
 
     // Obtain version number
     m_version = ConvertVersionToString(m_packageInfo->GetVersion());
