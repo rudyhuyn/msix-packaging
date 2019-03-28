@@ -63,7 +63,6 @@ public:
     bool IsQuietMode() { return m_quietMode; }
     std::wstring GetPackageFilePath() { return m_packageFilePath; }
     std::wstring GetPackageFullName() { return m_packageFullName; }
-    MSIX_VALIDATION_OPTION GetValidationOption() { return m_validationOptions; }
     CommandLineOperationType GetOperationType() { return m_operationType; }
 private:
     int m_argc = 0;
@@ -76,7 +75,6 @@ private:
     std::wstring m_packageFullName;
     bool m_quietMode;
 
-    MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
     CommandLineOperationType m_operationType = CommandLineOperationType::Undefined;
 
     CommandLineInterface() {}
