@@ -60,7 +60,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, cons
     return S_OK;
 }
 
-HRESULT AddRemovePrograms::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
+HRESULT AddRemovePrograms::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
 {
     RegistryKey uninstallKey;
     RETURN_IF_FAILED(uninstallKey.Open(HKEY_LOCAL_MACHINE, uninstallKeyPath.c_str(), KEY_WRITE));

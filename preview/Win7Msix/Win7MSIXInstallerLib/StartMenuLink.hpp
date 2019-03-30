@@ -13,7 +13,7 @@ public:
     HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the start menu link
-    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
+    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);

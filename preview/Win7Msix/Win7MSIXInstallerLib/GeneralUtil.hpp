@@ -31,28 +31,41 @@ TRACELOGGING_DECLARE_PROVIDER(g_MsixTraceLoggingProvider);
 // Parameters:
 // utf16string - A utf16 wstring
 // 
-	std::string Win7MsixInstallerLib_utf16_to_utf8(const std::wstring& utf16string);
+std::string Win7MsixInstallerLib_utf16_to_utf8(const std::wstring& utf16string);
 
 
-	// Helper to convert version number to a version number string
-	std::wstring Win7MsixInstallerLib_ConvertVersionToString(UINT64 version);
+// Helper to convert version number to a version number string
+std::wstring Win7MsixInstallerLib_ConvertVersionToString(UINT64 version);
 
-	//
-	// A designated memory allocator
-	// 
-	// Parameters:
-	// cb - The size of memory
-	//
-	inline LPVOID STDMETHODCALLTYPE Win7MsixInstallerLib_MyAllocate(SIZE_T cb) { return std::malloc(cb); }
+//
+// A designated memory allocator
+// 
+// Parameters:
+// cb - The size of memory
+//
+inline LPVOID STDMETHODCALLTYPE Win7MsixInstallerLib_MyAllocate(SIZE_T cb) { return std::malloc(cb); }
 
-	//
-	// A designated memory freeing method
-	//
-	// Parameters:
-	// pv - A pointer to the file to release
-	//
-	inline void STDMETHODCALLTYPE Win7MsixInstallerLib_MyFree(LPVOID pv) { std::free(pv); }
+//
+// A designated memory freeing method
+//
+// Parameters:
+// pv - A pointer to the file to release
+//
+inline void STDMETHODCALLTYPE Win7MsixInstallerLib_MyFree(LPVOID pv) { std::free(pv); }
 
+/// Converts a packageFullName (i.e. examplePackageName_1.0.0.0_x64_resourceId_8wekyb3d8bbwe) 
+/// into a packageFamilyName (i.e. examplePackageName_8wekyb3d8bbwe)
+///
+/// @param fullName - the packageFullName, assumed to be properly formatted and not validated.
+/// @return packageFamilyName for the packageFullName
+std::wstring GetFamilyNameFromFullName(const std::wstring& fullName);
+
+/// Determines if two strings are case-insensitive equals
+///
+/// @param left - one of the two strings
+/// @param right - the other of the two strings
+/// @return true if the strings equal, false otherwise
+bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
 
 namespace Win7MsixInstallerLib
 {

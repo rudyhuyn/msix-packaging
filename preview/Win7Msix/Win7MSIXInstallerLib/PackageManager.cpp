@@ -42,7 +42,7 @@ bool PackageManager::RemovePackage(const wstring & packageFullName, function<voi
 
 IInstalledPackageInfo * PackageManager::GetPackageInfo(const std::wstring & msix7Directory, const std::wstring & directoryPath)
 {
-    InstalledPackageInfo* packageInfo;
+    InstalledPackage* packageInfo;
     auto res = PopulatePackageInfo::GetPackageInfoFromManifest(directoryPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &packageInfo);
     if (FAILED(res))
     {

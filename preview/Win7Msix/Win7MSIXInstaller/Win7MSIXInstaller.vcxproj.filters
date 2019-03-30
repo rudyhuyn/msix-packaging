@@ -30,12 +30,6 @@
     <ClInclude Include="Win7MSIXInstallerLogger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\.vs\src\msix\AppxPackaging.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\.vs\src\msix\MSIXWindows.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GeneralUtil.cpp">

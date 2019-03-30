@@ -40,7 +40,7 @@ HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** 
 }
 
 
-HRESULT PackageInfoBase::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
+HRESULT PackageBase::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
     BOOL hc = FALSE;
     ComPtr<IMsixElementEnumerator> applicationElementEnum;
@@ -70,7 +70,7 @@ HRESULT PackageInfoBase::SetExecutableAndAppIdFromManifestElement(IMsixElement* 
     return S_OK;
 }
 
-HRESULT PackageInfoBase::SetDisplayNameFromManifestElement(IMsixElement* element)
+HRESULT PackageBase::SetDisplayNameFromManifestElement(IMsixElement* element)
 {
     ComPtr<IMsixElementEnumerator> visualElementsEnum;
     RETURN_IF_FAILED(element->GetElements(
@@ -132,7 +132,7 @@ HRESULT Package::MakeFromPackageReader(IAppxPackageReader * packageReader, Packa
     return S_OK;
 }
 
-HRESULT PackageInfoBase::SetManifestReader(IAppxManifestReader * manifestReader)
+HRESULT PackageBase::SetManifestReader(IAppxManifestReader * manifestReader)
 {
     m_manifestReader = manifestReader;
 
@@ -152,6 +152,7 @@ HRESULT PackageInfoBase::SetManifestReader(IAppxManifestReader * manifestReader)
     Text<WCHAR> packageFullName;
     RETURN_IF_FAILED(manifestId->GetPackageFullName(&packageFullName));
     m_packageFullName = packageFullName.Get();
+    m_packageFamilyName = GetFamilyNameFromFullName(m_packageFullName);
 
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(manifestReader->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
@@ -181,7 +182,7 @@ IStream* Package::GetLogo()
     }
 }
 
-IStream* InstalledPackageInfo::GetLogo()
+IStream* InstalledPackage::GetLogo()
 {
     auto iconPath = m_packageDirectoryPath + m_relativeLogoPath;
     IStream* stream;
@@ -193,9 +194,9 @@ IStream* InstalledPackageInfo::GetLogo()
 }
 
 
-HRESULT InstalledPackageInfo::MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader * manifestReader, InstalledPackageInfo ** packageInfo)
+HRESULT InstalledPackage::MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader * manifestReader, InstalledPackage ** packageInfo)
 {
-    std::unique_ptr<InstalledPackageInfo> instance(new InstalledPackageInfo());
+    std::unique_ptr<InstalledPackage> instance(new InstalledPackage());
     if (instance == nullptr)
     {
         return E_OUTOFMEMORY;

@@ -31,3 +31,13 @@ std::wstring Win7MsixInstallerLib_ConvertVersionToString(UINT64 version)
         + std::to_wstring((version >> 0x10) & 0xFFFF) + L"."
         + std::to_wstring((version) & 0xFFFF);
 }
+
+std::wstring GetFamilyNameFromFullName(const std::wstring& fullName)
+{
+    return fullName.substr(0, fullName.find(L"_")) + fullName.substr(fullName.find_last_of(L"_"));
+}
+
+bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right)
+{
+    return (_wcsicmp(left.c_str(), right.c_str()) == 0);
+}

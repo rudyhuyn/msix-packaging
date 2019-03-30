@@ -28,7 +28,7 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, M
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & directoryPath, MSIX_VALIDATION_OPTION validationOption, InstalledPackageInfo ** packageInfo)
+HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & directoryPath, MSIX_VALIDATION_OPTION validationOption, InstalledPackage ** packageInfo)
 {
     std::wstring manifestPath = directoryPath + manifestFile;
 
@@ -41,7 +41,7 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & dir
     ComPtr<IAppxManifestReader> manifestReader;
     RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
 
-    RETURN_IF_FAILED(InstalledPackageInfo::MakeFromManifestReader(directoryPath, manifestReader.Get(), packageInfo));
+    RETURN_IF_FAILED(InstalledPackage::MakeFromManifestReader(directoryPath, manifestReader.Get(), packageInfo));
 
     return S_OK;
 }

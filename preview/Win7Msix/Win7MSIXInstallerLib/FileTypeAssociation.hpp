@@ -5,6 +5,8 @@
 #include "RegistryKey.hpp"
 #include "RegistryDevirtualizer.hpp"
 
+namespace Win7MsixInstallerLib
+{
 /// Data structs to be filled in from the information in the manifest
 struct Verb
 {
@@ -28,7 +30,7 @@ public:
     HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the file type associations from the registry.
-    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
+    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -43,20 +45,20 @@ private:
     FileTypeAssociation(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Parses the manifest and fills in the m_Ftas vector of FileTypeAssociation (Fta) data
-    HRESULT ParseManifest(PackageInfoBase * packageToInstall, const std::wstring & installationDirectoryPath);
+    HRESULT ParseManifest(PackageBase * packageToInstall, const std::wstring & installationDirectoryPath);
 
     /// Parses the manifest element to populate one Fta struct entry of the m_Ftas vector
     /// 
     /// @param ftaElement - the manifest element representing an Fta
-    HRESULT ParseFtaElement(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement);
+    HRESULT ParseFtaElement(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement);
 
     /// Adds the file type association (fta) entries if necessary
-    HRESULT ProcessFtaForAdd(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta);
+    HRESULT ProcessFtaForAdd(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta);
 
     /// Removes the file type association (fta) entries if necessary
     HRESULT ProcessFtaForRemove(Fta& fta);
 
     /// Creates a ProgID from the name of the fta. Simply take the package name and prepend it to the fta
-    std::wstring CreateProgID(PackageInfoBase * packageToInstall, PCWSTR name);
+    std::wstring CreateProgID(PackageBase * packageToInstall, PCWSTR name);
 };
 }

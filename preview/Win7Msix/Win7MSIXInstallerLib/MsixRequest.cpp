@@ -25,6 +25,7 @@
 #include "Protocol.hpp"
 #include "FileTypeAssociation.hpp"
 #include "InstallComplete.hpp"
+#include "ProcessPotentialUpdate.hpp"
 #include "GeneralUtil.hpp"
 #include "Constants.hpp"
 
@@ -42,6 +43,7 @@ struct HandlerInfo
 std::map<PCWSTR, HandlerInfo> AddHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
+    {ProcessPotentialUpdate::HandlerName, {ProcessPotentialUpdate::CreateHandler, Extractor::HandlerName }},
     {Extractor::HandlerName,            {Extractor::CreateHandler,           StartMenuLink::HandlerName }},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
@@ -125,7 +127,7 @@ HRESULT MsixRequest::ProcessAddRequest()
         return E_FAIL;
     }
 
-    PCWSTR currentHandlerName = Extractor::HandlerName;
+    PCWSTR currentHandlerName = ProcessPotentialUpdate::HandlerName;
 
     auto installationPath = filemapping.GetMsix7Directory() + packageInfo->GetPackageFullName() + L"\\";
     while (currentHandlerName != nullptr)
@@ -179,7 +181,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     }
     std::wstring msix7Directory = filemapping.GetMsix7Directory();
 
-    InstalledPackageInfo* installedPackageInfo;
+    InstalledPackage* installedPackageInfo;
     std::wstring applicationDirectoryPath = msix7Directory + this->m_packageFullName;
 
     if (FAILED(PopulatePackageInfo::GetPackageInfoFromManifest(applicationDirectoryPath.data(), this->m_validationOptions, &installedPackageInfo)) || installedPackageInfo == nullptr)

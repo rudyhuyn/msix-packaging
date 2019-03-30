@@ -56,7 +56,7 @@ HRESULT StartMenuLink::ExecuteForAddRequest(Package * packageToInstall, const st
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
+HRESULT StartMenuLink::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
 {
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageToUninstall->GetDisplayName() + L".lnk";
 

@@ -7,11 +7,12 @@
 namespace Win7MsixInstallerLib
 {
 
-    class PackageInfoBase
+    class PackageBase
     {
     protected:
         ComPtr<IAppxManifestReader> m_manifestReader;
         std::wstring m_packageFullName;
+        std::wstring m_packageFamilyName;
         std::wstring m_relativeExecutableFilePath;
         std::wstring m_displayName;
         std::wstring m_appUserModelId;
@@ -33,6 +34,7 @@ namespace Win7MsixInstallerLib
         HRESULT SetDisplayNameFromManifestElement(IMsixElement * element);
     public:
         std::wstring GetPackageFullName() { return m_packageFullName; }
+        std::wstring GetPackageFamilyName() { return m_packageFamilyName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }
@@ -41,7 +43,7 @@ namespace Win7MsixInstallerLib
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
 
     protected:
-        PackageInfoBase() {}
+        PackageBase() {}
 
         /// Sets the manifest reader, and other fields derived from the manifest
         /// Specifically, packageFullName, packageDirectoryPath, executableFilePath, displayname, version and publisher.
@@ -62,10 +64,10 @@ namespace Win7MsixInstallerLib
     };
 
 
-    class Package : public PackageInfoBase, IPackage
+    class Package : public PackageBase, IPackage
     {
     public:
-        Package() :PackageInfoBase() {}
+        Package() :PackageBase() {}
 
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
@@ -81,10 +83,9 @@ namespace Win7MsixInstallerLib
         static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, Package** packageInfo);
     };
 
-    class InstalledPackageInfo : public PackageInfoBase, IInstalledPackageInfo
+    class InstalledPackage : public PackageBase, IInstalledPackageInfo
     {
     public:
-
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
@@ -93,7 +94,6 @@ namespace Win7MsixInstallerLib
         std::wstring GetPublisher() { return m_publisher; }
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
-
 
         virtual std::wstring GetFullExecutableFilePath()
         {
@@ -104,11 +104,11 @@ namespace Win7MsixInstallerLib
             return m_packageDirectoryPath;
         }
 
-        /// Create a InstalledPackageInfo using the manifest reader and directory path. This is intended for Remove scenarios where
+        /// Create a InstalledPackage using the manifest reader and directory path. This is intended for Remove scenarios where
         /// the actual .msix package file is no longer accessible.
-        static HRESULT MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader* manifestReader, InstalledPackageInfo** packageInfo);
+        static HRESULT MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader* manifestReader, InstalledPackage** packageInfo);
     private:
-        InstalledPackageInfo() :PackageInfoBase() {}
+        InstalledPackage() :PackageBase() {}
         std::wstring m_packageDirectoryPath;
     };
 }

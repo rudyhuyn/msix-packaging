@@ -189,7 +189,7 @@ HRESULT Extractor::ExecuteForAddRequest(Package * packageToInstall, const std::w
     return S_OK;
 }
 
-HRESULT Extractor::RemoveVfsFiles(InstalledPackageInfo * packageToUninstall)
+HRESULT Extractor::RemoveVfsFiles(InstalledPackage * packageToUninstall)
 {
     std::wstring blockMapPath = packageToUninstall->GetInstalledLocation() + blockMapFile;
     ComPtr<IStream> stream;
@@ -227,7 +227,7 @@ HRESULT Extractor::RemoveVfsFiles(InstalledPackageInfo * packageToUninstall)
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
+HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
 {
     HRESULT hrRemoveRegistry = ExtractRegistry(packageToUninstall->GetInstalledLocation(), true);
     if (FAILED(hrRemoveRegistry))

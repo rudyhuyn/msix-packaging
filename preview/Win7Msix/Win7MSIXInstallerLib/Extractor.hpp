@@ -19,7 +19,7 @@ public:
     HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes all the files, directories and registry keys written during the add.
-    HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
+    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
     
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -102,6 +102,6 @@ private:
     HRESULT ConvertVfsNameToFullPath(std::wstring fileName, std::wstring &fileFullPath);
 
     /// Removes all VFS files in the package
-    HRESULT RemoveVfsFiles(InstalledPackageInfo * packageToUninstall);
+    HRESULT RemoveVfsFiles(InstalledPackage * packageToUninstall);
 };
 }

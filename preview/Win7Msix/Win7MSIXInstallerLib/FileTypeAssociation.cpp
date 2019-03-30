@@ -12,14 +12,14 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR FileTypeAssociation::HandlerName = L"FileTypeAssociation";
 
-std::wstring FileTypeAssociation::CreateProgID(PackageInfoBase * packageToInstall, PCWSTR name)
+std::wstring FileTypeAssociation::CreateProgID(PackageBase * packageToInstall, PCWSTR name)
 {
     std::wstring packageFullName = packageToInstall->GetPackageFullName();
     std::wstring progID = msix7ProgIDPrefix + packageFullName.substr(0, packageFullName.find(L"_")) + name;
     return progID;
 }
 
-HRESULT FileTypeAssociation::ParseFtaElement(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
+HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
 {
     Text<wchar_t> ftaName;
     RETURN_IF_FAILED(ftaElement->GetAttributeValue(nameAttribute.c_str(), &ftaName));
@@ -101,7 +101,7 @@ HRESULT FileTypeAssociation::ParseFtaElement(PackageInfoBase * packageToInstall,
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ParseManifest(PackageInfoBase * package, const std::wstring & installationDirectoryPath)
+HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wstring & installationDirectoryPath)
 {
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
@@ -156,7 +156,7 @@ HRESULT FileTypeAssociation::ExecuteForAddRequest(Package * packageToInstall, co
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta)
+HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
     for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
@@ -234,7 +234,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall)
+HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
 {
     std::wstring registryFilePath = packageToUninstall->GetInstalledLocation() + registryDatFile;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));

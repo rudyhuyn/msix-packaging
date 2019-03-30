@@ -1,21 +1,22 @@
 #include "ProcessPotentialUpdate.hpp"
 #include <filesystem>
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR ProcessPotentialUpdate::HandlerName = L"ProcessPotentialUpdate";
 
-HRESULT ProcessPotentialUpdate::ExecuteForAddRequest()
+HRESULT ProcessPotentialUpdate::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     /// This design chooses the simplest solution of removing the existing package in the family before proceeding with the install
     /// This is currently good enough for our requirements; it leverages existing removal codepaths.
     /// An alternate, more complicated design would have each handler to expose a new Update verb (e.g. ExecuteForUpdate that takes in the old package)
     /// and each handler would have the opportunity to reason between the old and new packages to perform more efficient updating.
-    std::wstring currentPackageFamilyName = GetFamilyNameFromFullName(m_msixRequest->GetPackageInfo()->GetPackageFullName());
+    std::wstring currentPackageFamilyName = packageToInstall->GetPackageFamilyName();
     
-    for (auto& p : std::experimental::filesystem::directory_iterator(m_msixRequest->GetFilePathMappings()->GetMsix7Directory()))
+    for (auto& p : std::experimental::filesystem::directory_iterator(FilePathMappings::GetInstance().GetMsix7Directory()))
     {
         std::wstring installedPackageFamilyName = GetFamilyNameFromFullName(p.path().filename());
         if (CaseInsensitiveEquals(currentPackageFamilyName, installedPackageFamilyName)
-            && !CaseInsensitiveEquals(m_msixRequest->GetPackageInfo()->GetPackageFullName(), p.path().filename()))
+            && !CaseInsensitiveEquals(packageToInstall->GetPackageFullName(), p.path().filename()))
         {
             RETURN_IF_FAILED(RemovePackage(p.path().filename()));
             return S_OK;
@@ -34,7 +35,7 @@ HRESULT ProcessPotentialUpdate::RemovePackage(std::wstring packageFullName)
         TraceLoggingValue(packageFullName.c_str(), "PackageToBeRemoved"));
 
     AutoPtr<MsixRequest> localRequest;
-    RETURN_IF_FAILED(MsixRequest::Make(OperationType::Remove, Flags::NoFlags, std::wstring(), packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &localRequest));
+    RETURN_IF_FAILED(MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &localRequest));
 
     const HRESULT hrProcessRequest = localRequest->ProcessRequest();
     if (FAILED(hrProcessRequest))

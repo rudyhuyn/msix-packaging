@@ -28,19 +28,6 @@ std::wstring ConvertVersionToString(UINT64 version);
 /// @return string for the resource, resolved from the stringtable defined in Win7MsixInstaller.rc
 std::wstring GetStringResource(UINT resourceId);
 
-/// Converts a packageFullName (i.e. examplePackageName_1.0.0.0_x64_resourceId_8wekyb3d8bbwe) 
-/// into a packageFamilyName (i.e. examplePackageName_8wekyb3d8bbwe)
-///
-/// @param fullName - the packageFullName, assumed to be properly formatted and not validated.
-/// @return packageFamilyName for the packageFullName
-std::wstring GetFamilyNameFromFullName(const std::wstring& fullName);
-
-/// Determines if two strings are case-insensitive equals
-///
-/// @param left - one of the two strings
-/// @param right - the other of the two strings
-/// @return true if the strings equal, false otherwise
-bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
 
 //
 // A designated memory allocator

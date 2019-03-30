@@ -12,7 +12,7 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR Protocol::HandlerName = L"Protocol";
 
-HRESULT Protocol::ParseProtocolElement(IMsixElement* protocolElement)
+HRESULT Protocol::ParseProtocolElement(IMsixElement* protocolElement, const std::wstring & installDirectoryPath)
 {
     Text<wchar_t> protocolName;
     RETURN_IF_FAILED(protocolElement->GetAttributeValue(nameAttribute.c_str(), &protocolName));
@@ -43,7 +43,7 @@ HRESULT Protocol::ParseProtocolElement(IMsixElement* protocolElement)
         Text<wchar_t> logoPath;
         RETURN_IF_FAILED(logoElement->GetText(&logoPath));
 
-        protocol.logo = m_msixRequest->GetPackageInfo()->GetPackageDirectoryPath() + std::wstring(L"\\") + logoPath.Get();
+        protocol.logo = installDirectoryPath + logoPath.Get();
     }
 
     ComPtr<IMsixElementEnumerator> displayNameEnum;
@@ -69,10 +69,10 @@ HRESULT Protocol::ParseProtocolElement(IMsixElement* protocolElement)
     return S_OK;
 }
 
-HRESULT Protocol::ParseManifest()
+HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath)
 {
     ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(packageToInstall->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
+    RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
 
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
@@ -100,7 +100,7 @@ HRESULT Protocol::ParseManifest()
                 ComPtr<IMsixElement> protocolElement;
                 RETURN_IF_FAILED(protocolEnum->GetCurrent(&protocolElement));
 
-                RETURN_IF_FAILED(ParseProtocolElement(protocolElement.Get()));
+                RETURN_IF_FAILED(ParseProtocolElement(protocolElement.Get(), installDirectoryPath));
             }
         }
         RETURN_IF_FAILED(extensionEnum->MoveNext(&hasCurrent));
@@ -109,17 +109,19 @@ HRESULT Protocol::ParseManifest()
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForAddRequest()
+HRESULT Protocol::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
+    RETURN_IF_FAILED(ParseManifest(packageToInstall, installDirectoryPath));
+
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {
-        RETURN_IF_FAILED(ProcessProtocolForAdd(*protocol));
+        RETURN_IF_FAILED(ProcessProtocolForAdd(packageToInstall, installDirectoryPath, *protocol));
     }
 
     return S_OK;
 }
 
-HRESULT Protocol::ProcessProtocolForAdd(ProtocolData& protocol)
+HRESULT Protocol::ProcessProtocolForAdd(Package * packageToInstall, const std::wstring & installDirectoryPath, ProtocolData& protocol)
 {
     RegistryKey protocolKey;
     RETURN_IF_FAILED(m_classesKey.CreateSubKey(protocol.name.c_str(), KEY_WRITE, &protocolKey));
@@ -144,7 +146,7 @@ HRESULT Protocol::ProcessProtocolForAdd(ProtocolData& protocol)
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    std::wstring command = m_msixRequest->GetPackageInfo()->GetExecutableFilePath();
+    std::wstring command = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
     if (protocol.parameters.c_str() != nullptr)
     {
         command += std::wstring(L" ") + protocol.parameters;
@@ -158,17 +160,19 @@ HRESULT Protocol::ProcessProtocolForAdd(ProtocolData& protocol)
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForRemoveRequest()
+HRESULT Protocol::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
 {
+    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetInstalledLocation()));
+
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {
-        RETURN_IF_FAILED(ProcessProtocolForRemove(*protocol));
+        RETURN_IF_FAILED(ProcessProtocolForRemove(packageToUninstall, *protocol));
     }
 
     return S_OK;
 }
 
-bool Protocol::IsCurrentlyAssociatedWithPackage(PCWSTR name)
+bool Protocol::IsCurrentlyAssociatedWithPackage(const std::wstring & fullExecutableFilePath, PCWSTR name)
 {
     std::wstring keyPath = name + std::wstring(L"\\") + shellKeyName + std::wstring(L"\\") + openKeyName + std::wstring(L"\\") + commandKeyName;
 
@@ -184,11 +188,10 @@ bool Protocol::IsCurrentlyAssociatedWithPackage(PCWSTR name)
         return false;
     }
 
-    std::wstring executablePath = m_msixRequest->GetPackageInfo()->GetExecutableFilePath();
     std::wstring currentlyAssociatedExe;
     if (SUCCEEDED(protocolExeKey.GetStringValue(L"", currentlyAssociatedExe)))
     {
-        if (wcsncmp(currentlyAssociatedExe.c_str(), executablePath.c_str(), executablePath.size()) != 0)
+        if (wcsncmp(currentlyAssociatedExe.c_str(), fullExecutableFilePath.c_str(), fullExecutableFilePath.size()) != 0)
         {
             TraceLoggingWrite(g_MsixTraceLoggingProvider,
                 "Protocol is no longer associated with this package, not modifying this protocol",
@@ -205,9 +208,9 @@ bool Protocol::IsCurrentlyAssociatedWithPackage(PCWSTR name)
     return false;
 }
 
-HRESULT Protocol::ProcessProtocolForRemove(ProtocolData& protocol)
+HRESULT Protocol::ProcessProtocolForRemove(InstalledPackage * package, ProtocolData& protocol)
 {
-    if (IsCurrentlyAssociatedWithPackage(protocol.name.c_str()))
+    if (IsCurrentlyAssociatedWithPackage(package->GetFullExecutableFilePath(), protocol.name.c_str()))
     {
         HRESULT hrDeleteKey = m_classesKey.DeleteTree(protocol.name.c_str());
         if (FAILED(hrDeleteKey))
@@ -231,8 +234,6 @@ HRESULT Protocol::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** in
     }
 
     RETURN_IF_FAILED(localInstance->m_classesKey.Open(HKEY_CLASSES_ROOT, nullptr, KEY_READ | KEY_WRITE | WRITE_DAC));
-    RETURN_IF_FAILED(localInstance->ParseManifest());
-
     *instance = localInstance.release();
 
     return S_OK;

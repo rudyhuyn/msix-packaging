@@ -5,6 +5,9 @@
 #include "RegistryKey.hpp"
 #include <vector>
 
+namespace Win7MsixInstallerLib
+{
+
 /// Data structs to be filled in from the information in the manifest
 struct ProtocolData
 {
@@ -18,8 +21,8 @@ class Protocol : IPackageHandler
 {
 public:
     
-    HRESULT ExecuteForAddRequest();
-    HRESULT ExecuteForRemoveRequest();
+    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -35,24 +38,28 @@ private:
     /// Parse one protocol element, containing one ProtocolData to be added to the m_protocols vector.
     ///
     /// @param protocolElement - the IMsixElement representing the uap:Protocol element from the manifest
-    HRESULT ParseProtocolElement(IMsixElement * protocolElement);
+    HRESULT ParseProtocolElement(IMsixElement * protocolElement, const std::wstring & installDirectoryPath);
 
     /// Parses the manifest and fills out the m_protocols vector of ProtocolData containing data from the manifest
-    HRESULT ParseManifest();
+    HRESULT ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath);
 
     /// Adds the protocol data to the system registry
     ///
+    /// @param packageToInstall - the package to install
+    /// @param installDirectoryPath - the full directory path where to install the package
     /// @param protocol - the protocol data to be added
-    HRESULT ProcessProtocolForAdd(ProtocolData & protocol);
+    HRESULT ProcessProtocolForAdd(Package * packageToInstall, const std::wstring & installDirectoryPath, ProtocolData & protocol);
 
     /// Removes the protocol data from the system registry
     ///
+    /// @param packageToInstall - the package to uninstall
     /// @param protocol - the protocol data to be removed
-    HRESULT ProcessProtocolForRemove(ProtocolData& protocol);
+    HRESULT ProcessProtocolForRemove(InstalledPackage * package, ProtocolData& protocol);
 
     /// Determines if the protocol is currently associated with the package
     ///
+    /// @param fullExecutableFilePath - the full path of the exe associated to the package
     /// @param name - the name of the protocol
-    bool IsCurrentlyAssociatedWithPackage(PCWSTR name);
+    bool IsCurrentlyAssociatedWithPackage(const std::wstring & fullExecutableFilePath, PCWSTR name);
 };
 }

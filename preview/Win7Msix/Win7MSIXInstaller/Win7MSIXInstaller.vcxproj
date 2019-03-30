@@ -186,21 +186,12 @@
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="CommandLineInterface.hpp" />
     <ClInclude Include="InstallUI.hpp" />
-    <ClInclude Include="ProcessPotentialUpdate.hpp" />
-    <ClInclude Include="Protocol.hpp" />
-    <ClInclude Include="RegistryDevirtualizer.hpp" />
-    <ClInclude Include="RegistryKey.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Win7MSIXInstallerLogger.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="InstallUI.cpp" />
-    <ClCompile Include="PackageInfo.cpp" />
-    <ClCompile Include="ProcessPotentialUpdate.cpp" />
-    <ClCompile Include="Protocol.cpp" />
-    <ClCompile Include="RegistryDevirtualizer.cpp" />
-    <ClCompile Include="RegistryKey.cpp" />
     <ClCompile Include="CommandLineInterface.cpp" />
     <ClCompile Include="Win7MSIXInstaller.cpp" />
     <ClCompile Include="Win7MSIXInstallerLogger.cpp" />
