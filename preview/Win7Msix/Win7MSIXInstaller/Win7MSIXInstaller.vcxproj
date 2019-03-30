@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -186,12 +186,21 @@
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="CommandLineInterface.hpp" />
     <ClInclude Include="InstallUI.hpp" />
+    <ClInclude Include="ProcessPotentialUpdate.hpp" />
+    <ClInclude Include="Protocol.hpp" />
+    <ClInclude Include="RegistryDevirtualizer.hpp" />
+    <ClInclude Include="RegistryKey.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Win7MSIXInstallerLogger.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="InstallUI.cpp" />
+    <ClCompile Include="PackageInfo.cpp" />
+    <ClCompile Include="ProcessPotentialUpdate.cpp" />
+    <ClCompile Include="Protocol.cpp" />
+    <ClCompile Include="RegistryDevirtualizer.cpp" />
+    <ClCompile Include="RegistryKey.cpp" />
     <ClCompile Include="CommandLineInterface.cpp" />
     <ClCompile Include="Win7MSIXInstaller.cpp" />
     <ClCompile Include="Win7MSIXInstallerLogger.cpp" />

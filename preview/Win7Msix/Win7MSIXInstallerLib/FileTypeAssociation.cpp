@@ -148,7 +148,7 @@ HRESULT FileTypeAssociation::ExecuteForAddRequest(Package * packageToInstall, co
 
     RETURN_IF_FAILED(ParseManifest(packageToInstall, installDirectoryPath));
 
-    for (std::vector<Fta>::iterator fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
+    for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForAdd(packageToInstall, installDirectoryPath, *fta));
     }
@@ -159,7 +159,7 @@ HRESULT FileTypeAssociation::ExecuteForAddRequest(Package * packageToInstall, co
 HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
-    for (std::vector<std::wstring>::iterator extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
+    for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
     {
         bool registryHasExtension = false;
         RETURN_IF_FAILED(m_registryDevirtualizer->HasFTA(*extensionName, registryHasExtension));
@@ -215,7 +215,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageInfoBase * packageToInstall
     std::wstring command = executableFilePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 
-    for (std::vector<Verb>::iterator verb = fta.verbs.begin(); verb != fta.verbs.end(); ++verb)
+    for (auto verb = fta.verbs.begin(); verb != fta.verbs.end(); ++verb)
     {
         RegistryKey verbKey;
         RETURN_IF_FAILED(shellKey.CreateSubKey(verb->verb.c_str(), KEY_WRITE, &verbKey));
@@ -240,7 +240,7 @@ HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackageInfo * pack
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
 
     RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetInstalledLocation()));
-    for (std::vector<Fta>::iterator fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
+    for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForRemove(*fta));
     }
@@ -251,7 +251,7 @@ HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackageInfo * pack
 HRESULT FileTypeAssociation::ProcessFtaForRemove(Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
-    for (std::vector<std::wstring>::iterator extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
+    for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
     {
         bool registryHasExtension = false;
         RETURN_IF_FAILED(m_registryDevirtualizer->HasFTA(*extensionName, registryHasExtension));
