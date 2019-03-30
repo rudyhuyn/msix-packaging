@@ -1,5 +1,5 @@
 #pragma once
-#include "PackageInfo.hpp"
+#include "Package.hpp"
 #include "FilePaths.hpp"
 #include "DeploymentResult.hpp"
 #include <functional>

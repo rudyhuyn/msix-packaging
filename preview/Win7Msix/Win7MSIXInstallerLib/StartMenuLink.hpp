@@ -10,7 +10,7 @@ class StartMenuLink : IPackageHandler
 {
 public:
     /// Creates the start menu shortcut to the executable for the application
-    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the start menu link
     HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);

@@ -8,7 +8,7 @@
 
 using namespace Win7MsixInstallerLib;
 
-HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, MSIX_VALIDATION_OPTION validationOption, PackageInfo ** packageInfo)
+HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, MSIX_VALIDATION_OPTION validationOption, Package ** packageInfo)
 {
     ComPtr<IStream> inputStream;
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(packageFilePath, /*forRead */ true, &inputStream));
@@ -23,7 +23,7 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, M
     ComPtr<IAppxPackageReader> packageReader;
     RETURN_IF_FAILED(appxFactory->CreatePackageReader(inputStream.Get(), &packageReader));
 
-    RETURN_IF_FAILED(PackageInfo::MakeFromPackageReader(packageReader.Get(), packageInfo));
+    RETURN_IF_FAILED(Package::MakeFromPackageReader(packageReader.Get(), packageInfo));
 
     return S_OK;
 }

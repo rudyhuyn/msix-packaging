@@ -86,7 +86,7 @@ vector<IInstalledPackageInfo *> * PackageManager::FindPackages()
     return packages;
 }
 
-IPackageInfo * PackageManager::GetPackageInfoMsix(const wstring & msixFullPath)
+IPackage * PackageManager::GetPackageInfoMsix(const wstring & msixFullPath)
 {
     auto filemapping = FilePathMappings::GetInstance();
     auto res = filemapping.GetInitializationResult();
@@ -94,11 +94,11 @@ IPackageInfo * PackageManager::GetPackageInfoMsix(const wstring & msixFullPath)
     {
         return nullptr;
     }
-    PackageInfo* packageInfo;
+    Package* packageInfo;
     res = PopulatePackageInfo::GetPackageInfoFromPackage(msixFullPath.c_str(), MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &packageInfo);
     if (FAILED(res))
     {
         return nullptr;
     }
-    return (IPackageInfo *)packageInfo;
+    return (IPackage *)packageInfo;
 }

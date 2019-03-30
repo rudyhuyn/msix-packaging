@@ -1,6 +1,6 @@
 #include <windows.h>
 
-#include "PackageInfo.hpp"
+#include "Package.hpp"
 #include "GeneralUtil.hpp"
 #include <TraceLoggingProvider.h>
 #include <fstream>
@@ -99,9 +99,9 @@ HRESULT PackageInfoBase::SetDisplayNameFromManifestElement(IMsixElement* element
     return S_OK;
 }
 
-HRESULT PackageInfo::MakeFromPackageReader(IAppxPackageReader * packageReader, PackageInfo ** packageInfo)
+HRESULT Package::MakeFromPackageReader(IAppxPackageReader * packageReader, Package ** packageInfo)
 {
-    std::unique_ptr<PackageInfo> instance(new PackageInfo());
+    std::unique_ptr<Package> instance(new Package());
     if (instance == nullptr)
     {
         return E_OUTOFMEMORY;
@@ -172,7 +172,7 @@ HRESULT PackageInfoBase::SetManifestReader(IAppxManifestReader * manifestReader)
     return S_OK;
 }
 
-IStream* PackageInfo::GetLogo()
+IStream* Package::GetLogo()
 {
     IStream * logoStream;
     if (GetStreamFromFile(m_packageReader.Get(), m_relativeLogoPath.data(), &logoStream) == S_OK)

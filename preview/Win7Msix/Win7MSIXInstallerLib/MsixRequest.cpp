@@ -75,7 +75,7 @@ HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & pack
 
 HRESULT MsixRequest::ProcessRequest()
 {
-    auto result = DeploymentResult();
+    DeploymentResult result;
     result.Progress = 0;
     result.Status = InstallationStep::InstallationStepStarted;
     SendCallback(result);
@@ -105,13 +105,23 @@ HRESULT MsixRequest::ProcessAddRequest()
     auto res = filemapping.GetInitializationResult();
     if (FAILED(res))
     {
+        DeploymentResult result;
+        result.ExtendedErrorCode = res;
+        result.ErrorText = L"Can't initialize FilePathMappings";
+        result.Status = InstallationStep::InstallationStepError;
+        SendCallback(result);
         return E_FAIL;
     }
-    PackageInfo* packageInfo;
-    PopulatePackageInfo::GetPackageInfoFromPackage(this->m_packageFilePath.data(), this->m_validationOptions, &packageInfo);
+    Package* packageInfo;
+    res = PopulatePackageInfo::GetPackageInfoFromPackage(this->m_packageFilePath.data(), this->m_validationOptions, &packageInfo);
 
-    if (packageInfo == nullptr)
+    if (FAILED(res) || packageInfo == nullptr)
     {
+        DeploymentResult result;
+        result.ExtendedErrorCode = res;
+        result.ErrorText = L"Can't retrieve information for the package " + this->m_packageFilePath;
+        result.Status = InstallationStep::InstallationStepError;
+        SendCallback(result);
         return E_FAIL;
     }
 
@@ -126,8 +136,27 @@ HRESULT MsixRequest::ProcessAddRequest()
 
         HandlerInfo currentHandler = AddHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
-        RETURN_IF_FAILED(currentHandler.create(this, &handler));
-        RETURN_IF_FAILED(handler->ExecuteForAddRequest(packageInfo, installationPath));
+        res = currentHandler.create(this, &handler);
+        if (FAILED(res))
+        {
+            DeploymentResult result;
+            result.ExtendedErrorCode = res;
+            result.ErrorText = L"Can't create the handler " + std::wstring(currentHandlerName);
+            result.Status = InstallationStep::InstallationStepError;
+            SendCallback(result);
+            return res;
+        }
+
+        res = handler->ExecuteForAddRequest(packageInfo, installationPath);
+        if (FAILED(res))
+        {
+            DeploymentResult result;
+            result.ExtendedErrorCode = res;
+            result.ErrorText = L"Can't execute the handler " + std::wstring(currentHandlerName);
+            result.Status = InstallationStep::InstallationStepError;
+            SendCallback(result);
+            return res;
+        }
 
         currentHandlerName = currentHandler.nextHandler;
     }
@@ -141,22 +170,33 @@ HRESULT MsixRequest::ProcessRemoveRequest()
     auto res = filemapping.GetInitializationResult();
     if (FAILED(res))
     {
-        return E_FAIL;
+        DeploymentResult result;
+        result.ExtendedErrorCode = res;
+        result.ErrorText = L"Can't initialize FilePathMappings";
+        result.Status = InstallationStep::InstallationStepError;
+        SendCallback(result);
+        return res;
     }
     std::wstring msix7Directory = filemapping.GetMsix7Directory();
 
     InstalledPackageInfo* installedPackageInfo;
-    std::wstring applicationDirectoryPath = msix7Directory + m_packageFullName;
+    std::wstring applicationDirectoryPath = msix7Directory + this->m_packageFullName;
 
-    if (FAILED(PopulatePackageInfo::GetPackageInfoFromManifest(applicationDirectoryPath.data(), this->m_validationOptions, &installedPackageInfo)))
+    if (FAILED(PopulatePackageInfo::GetPackageInfoFromManifest(applicationDirectoryPath.data(), this->m_validationOptions, &installedPackageInfo)) || installedPackageInfo == nullptr)
     {
-        return E_FAIL;
+        if (res == S_OK)
+        {
+            res = E_NOT_SET;
+        }
+
+        DeploymentResult result;
+        result.ExtendedErrorCode = res;
+        result.ErrorText = L"Can't retrieve information for the package " + this->m_packageFullName;
+        result.Status = InstallationStep::InstallationStepError;
+        SendCallback(result);
+        return res;
     }
 
-    if (installedPackageInfo == nullptr)
-    {
-        return E_FAIL;
-    }
     PCWSTR currentHandlerName = StartMenuLink::HandlerName;
 
     while (currentHandlerName != nullptr)

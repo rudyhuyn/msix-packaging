@@ -2,7 +2,7 @@
 
 #include <map>
 #include <functional>
-#include <IPackageInfo.hpp>
+#include <IPackage.hpp>
 #include <AppxPackaging.hpp>
 enum CommandLineOperationType
 {

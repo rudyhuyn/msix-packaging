@@ -10,7 +10,7 @@ class AddRemovePrograms : IPackageHandler
 public:
     /// Creates a registry entry in the Uninstall key.
     /// This is read by the control panel's AddRemovePrograms to show packages that can be removed.
-    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the registry entry.
     HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);

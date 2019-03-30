@@ -46,7 +46,7 @@ class FileTypeAssociation : IPackageHandler
 {
 public:
     /// Adds the file type associations to the registry so this application can handle specific file types.
-    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes the file type associations from the registry.
     HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);

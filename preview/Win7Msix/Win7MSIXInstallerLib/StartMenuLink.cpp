@@ -45,7 +45,7 @@ HRESULT StartMenuLink::CreateLink(PCWSTR targetFilePath, PCWSTR linkFilePath, PC
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT StartMenuLink::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageToInstall->GetDisplayName() + L".lnk";
 

@@ -2,7 +2,7 @@
 
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
-#include "PackageInfo.hpp"
+#include "Package.hpp"
 
 namespace Win7MsixInstallerLib
 {
@@ -16,7 +16,7 @@ public:
     /// Extracts the files from the package to the package's root directory
     /// Copies over the VFS files from the package root directory to the actual file system location
     /// Devirtualizes the registry keys from the package's registry.dat
-    HRESULT ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Removes all the files, directories and registry keys written during the add.
     HRESULT ExecuteForRemoveRequest(InstalledPackageInfo * packageToUninstall);
@@ -31,7 +31,7 @@ private:
     Extractor(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Extracts all files from a package.
-    HRESULT ExtractPackage(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractPackage(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Writes the file from the package to disk.
     ///
@@ -40,10 +40,10 @@ private:
     HRESULT ExtractFile(const std::wstring & installDirectoryPath, IAppxFile* file);
 
     /// Extracts all footprint files (i.e. manifest/blockmap/signature) from a package.
-    HRESULT ExtractFootprintFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractFootprintFiles(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Extracts all payload files from a package.
-    HRESULT ExtractPayloadFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractPayloadFiles(Package * packageToInstall, const std::wstring & installDirectoryPath);
 
     /// Creates a writable IStream over a file with the specified name
     /// under the specified path.  This function will also create intermediate

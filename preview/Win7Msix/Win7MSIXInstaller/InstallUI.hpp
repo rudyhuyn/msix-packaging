@@ -37,7 +37,7 @@ public:
 
 private:
     Win7MsixInstallerLib::IPackageManager* m_packageManager = nullptr;
-    Win7MsixInstallerLib::IPackageInfo* m_packageInfo = nullptr;
+    Win7MsixInstallerLib::IPackage* m_packageInfo = nullptr;
     std::wstring m_path;
     
     HANDLE m_closeUI;

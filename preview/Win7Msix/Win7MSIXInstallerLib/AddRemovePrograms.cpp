@@ -12,7 +12,7 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR AddRemovePrograms::HandlerName = L"AddRemovePrograms";
 
-HRESULT AddRemovePrograms::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     std::wstring packageFullName = packageToInstall->GetPackageFullName();
 

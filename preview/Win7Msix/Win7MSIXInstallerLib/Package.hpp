@@ -2,7 +2,7 @@
 #include "GeneralUtil.hpp"
 #include "AppxPackaging.hpp"
 #include "MSIXWindows.hpp"
-#include "IPackageInfo.hpp"
+#include "IPackage.hpp"
 
 namespace Win7MsixInstallerLib
 {
@@ -62,10 +62,10 @@ namespace Win7MsixInstallerLib
     };
 
 
-    class PackageInfo : public PackageInfoBase, IPackageInfo
+    class Package : public PackageInfoBase, IPackage
     {
     public:
-        PackageInfo() :PackageInfoBase() {}
+        Package() :PackageInfoBase() {}
 
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
@@ -76,9 +76,9 @@ namespace Win7MsixInstallerLib
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
 
-        /// Create a PackageInfo using the package reader. This is intended for Add scenarios where
+        /// Create a Package using the package reader. This is intended for Add scenarios where
         /// the actual .msix package file is given.
-        static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, PackageInfo** packageInfo);
+        static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, Package** packageInfo);
     };
 
     class InstalledPackageInfo : public PackageInfoBase, IInstalledPackageInfo

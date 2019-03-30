@@ -11,7 +11,7 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR Protocol::HandlerName = L"Protocol";
 
-HRESULT Protocol::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Protocol::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(packageToInstall->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));

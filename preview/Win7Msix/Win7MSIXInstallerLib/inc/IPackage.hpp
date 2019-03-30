@@ -2,7 +2,7 @@
 #include <Windows.h>
 namespace Win7MsixInstallerLib {
 
-    class IPackageInfo {
+    class IPackage {
     public:
         virtual unsigned long long GetVersion() = 0;
         virtual std::wstring GetPublisherDisplayName() = 0;
@@ -12,7 +12,7 @@ namespace Win7MsixInstallerLib {
         virtual IStream* GetLogo() = 0;
     };
 
-    class IInstalledPackageInfo : public IPackageInfo
+    class IInstalledPackageInfo : public IPackage
     {
     public:
         virtual std::wstring GetFullExecutableFilePath() = 0;

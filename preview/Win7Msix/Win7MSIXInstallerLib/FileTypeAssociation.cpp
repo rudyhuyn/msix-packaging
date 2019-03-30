@@ -141,7 +141,7 @@ HRESULT FileTypeAssociation::ParseManifest(PackageInfoBase * package, const std:
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT FileTypeAssociation::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     std::wstring registryFilePath = installDirectoryPath + registryDatFile;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));

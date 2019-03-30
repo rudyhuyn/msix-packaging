@@ -98,7 +98,7 @@ HRESULT Extractor::ExtractFile(const std::wstring & installDirectoryPath,IAppxFi
     return S_OK;
 }
 
-HRESULT Extractor::ExtractFootprintFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractFootprintFiles(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting footprint files from the package");
@@ -122,7 +122,7 @@ HRESULT Extractor::ExtractFootprintFiles(PackageInfo * packageToInstall, const s
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPayloadFiles(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractPayloadFiles(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     ComPtr<IAppxFilesEnumerator> files;
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -157,7 +157,7 @@ HRESULT Extractor::ExtractPayloadFiles(PackageInfo * packageToInstall, const std
         RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
         ++nbrFilesExtracted;
 
-        auto result = DeploymentResult();
+        DeploymentResult result;
         result.Progress = 100 * nbrFilesExtracted / totalNumberFiles;
         result.Status = InstallationStep::InstallationStepGetExtraction;
         m_msixRequest->SendCallback(result);
@@ -181,7 +181,7 @@ HRESULT Extractor::CreatePackageRoot(const std::wstring & installDirectoryPath)
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     RETURN_IF_FAILED(CreatePackageRoot(installDirectoryPath));
 
@@ -274,7 +274,7 @@ HRESULT Extractor::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** i
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPackage(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractPackage(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
     RETURN_IF_FAILED(ExtractFootprintFiles(packageToInstall, installDirectoryPath));
     RETURN_IF_FAILED(ExtractPayloadFiles(packageToInstall, installDirectoryPath));

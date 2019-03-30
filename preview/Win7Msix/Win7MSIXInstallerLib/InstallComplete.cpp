@@ -13,9 +13,9 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
-HRESULT InstallComplete::ExecuteForAddRequest(PackageInfo * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT InstallComplete::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
 {
-    auto result = DeploymentResult();
+    DeploymentResult result;
     result.Progress = 100;
     result.Status = InstallationStep::InstallationStepCompleted;
     m_msixRequest->SendCallback(result);

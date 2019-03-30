@@ -196,11 +196,11 @@
     <ClInclude Include="MsixRequest.hpp" />
     <ClInclude Include="GeneralUtil.hpp" />
     <ClInclude Include="FilePaths.hpp" />
-    <ClInclude Include="inc\IPackageInfo.hpp" />
+    <ClInclude Include="inc\IPackage.hpp" />
     <ClInclude Include="inc\Win7MSIXInstallerActions.hpp" />
     <ClInclude Include="IPackageHandler.hpp" />
     <ClInclude Include="PackageManager.hpp" />
-    <ClInclude Include="PackageInfo.hpp" />
+    <ClInclude Include="Package.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
     <ClInclude Include="Protocol.hpp" />
     <ClInclude Include="RegistryDevirtualizer.hpp" />
@@ -215,7 +215,7 @@
     <ClCompile Include="MsixRequest.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
     <ClCompile Include="PackageManager.cpp" />
-    <ClCompile Include="PackageInfo.cpp" />
+    <ClCompile Include="Package.cpp" />
     <ClCompile Include="PopulatePackageInfo.cpp" />
     <ClCompile Include="Protocol.cpp" />
     <ClCompile Include="RegistryDevirtualizer.cpp" />
