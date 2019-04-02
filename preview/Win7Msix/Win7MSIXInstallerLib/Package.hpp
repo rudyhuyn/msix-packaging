@@ -38,7 +38,8 @@ namespace Win7MsixInstallerLib
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }
-        unsigned long long GetVersion() { return m_version; }
+        unsigned long long GetVersionNumber() { return m_version; }
+        std::wstring GetVersion();
         std::wstring GetPublisher() { return m_publisher; }
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
 
@@ -73,7 +74,8 @@ namespace Win7MsixInstallerLib
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }
-        unsigned long long GetVersion() { return m_version; }
+        unsigned long long GetVersionNumber() { return m_version; }
+        std::wstring GetVersion() { return PackageBase::GetVersion(); }
         std::wstring GetPublisher() { return m_publisher; }
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
@@ -90,7 +92,8 @@ namespace Win7MsixInstallerLib
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }
-        unsigned long long GetVersion() { return m_version; }
+        unsigned long long GetVersionNumber() { return m_version; }
+        std::wstring GetVersion() { return PackageBase::GetVersion(); }
         std::wstring GetPublisher() { return m_publisher; }
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();

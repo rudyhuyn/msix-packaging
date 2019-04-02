@@ -18,14 +18,6 @@ std::wstring utf8_to_utf16(const std::string& utf8string)
 	return result;
 }
 
-std::wstring ConvertVersionToString(UINT64 version)
-{
-    return std::to_wstring((version >> 0x30) & 0xFFFF) + L"."
-        + std::to_wstring((version >> 0x20) & 0xFFFF) + L"."
-        + std::to_wstring((version >> 0x10) & 0xFFFF) + L"."
-        + std::to_wstring((version) & 0xFFFF);
-}
-
 std::wstring GetStringResource(UINT resourceId)
 {
     HMODULE instance = GetModuleHandle(nullptr);

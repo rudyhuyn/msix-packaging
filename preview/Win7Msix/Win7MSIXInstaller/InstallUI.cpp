@@ -247,7 +247,7 @@ HRESULT UI::ParseInfoFromPackage()
     m_publisherCommonName = m_packageInfo->GetPublisherDisplayName();
 
     // Obtain version number
-    m_version = ConvertVersionToString(m_packageInfo->GetVersion());
+    m_version = m_packageInfo->GetVersion();
 
     //Obtain the number of files
     m_displayName = m_packageInfo->GetDisplayName();

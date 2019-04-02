@@ -4,7 +4,8 @@ namespace Win7MsixInstallerLib {
 
     class IPackage {
     public:
-        virtual unsigned long long GetVersion() = 0;
+        virtual unsigned long long GetVersionNumber() = 0;
+        virtual std::wstring GetVersion() = 0;
         virtual std::wstring GetPublisherDisplayName() = 0;
         virtual std::wstring GetPackageFullName() = 0;
         virtual std::wstring GetDisplayName() = 0;

@@ -16,11 +16,6 @@ std::string utf16_to_utf8(const std::wstring& utf16string);
 /// @return utf16 string
 std::wstring utf8_to_utf16(const std::string& utf8string);
 
-/// Helper to convert version number to a version string of the form a.b.c.d
-///
-/// @param version - version number
-/// @return a.b.c.d string representation of version
-std::wstring ConvertVersionToString(UINT64 version);
 
 /// Helper to get string resource
 ///

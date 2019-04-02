@@ -14,6 +14,7 @@ using namespace Win7MsixInstallerLib;
 //   name - Name of the file.
 //   stream - The stream for the file.
 //
+
 HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** stream)
 {
     *stream = nullptr;
@@ -39,6 +40,10 @@ HRESULT GetStreamFromFile(IAppxPackageReader* package, LPCWCHAR name, IStream** 
     return S_OK;
 }
 
+std::wstring PackageBase::GetVersion()
+{
+    return Win7MsixInstallerLib_ConvertVersionToString(m_version);
+}
 
 HRESULT PackageBase::SetExecutableAndAppIdFromManifestElement(IMsixElement* element)
 {
