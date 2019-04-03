@@ -27,22 +27,20 @@ class FileTypeAssociation : IPackageHandler
 {
 public:
     /// Adds the file type associations to the registry so this application can handle specific file types.
-    HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo);
+    HRESULT ExecuteForAddRequest(AddRequestInfo &requestInfo);
 
     /// Removes the file type associations from the registry.
     HRESULT ExecuteForRemoveRequest(RemoveRequestInfo& requestInfo);
 
     static const PCWSTR HandlerName;
-    static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
+    static HRESULT CreateHandler(_Out_ IPackageHandler** instance);
     ~FileTypeAssociation() {}
 private:
-    MsixRequest* m_msixRequest = nullptr;
     RegistryKey m_classesKey;
     AutoPtr<RegistryDevirtualizer> m_registryDevirtualizer;
     std::vector<Fta> m_Ftas;
 
     FileTypeAssociation() {}
-    FileTypeAssociation(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Parses the manifest and fills in the m_Ftas vector of FileTypeAssociation (Fta) data
     HRESULT ParseManifest(PackageBase * package, const std::wstring & installationDirectoryPath);

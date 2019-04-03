@@ -1,10 +1,12 @@
 #include "ProcessPotentialUpdate.hpp"
+#include "MsixRequest.hpp"
 #include <filesystem>
+
 using namespace Win7MsixInstallerLib;
 
 const PCWSTR ProcessPotentialUpdate::HandlerName = L"ProcessPotentialUpdate";
 
-HRESULT ProcessPotentialUpdate::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT ProcessPotentialUpdate::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
     /// This design chooses the simplest solution of removing the existing package in the family before proceeding with the install
     /// This is currently good enough for our requirements; it leverages existing removal codepaths.
@@ -49,9 +51,9 @@ HRESULT ProcessPotentialUpdate::RemovePackage(std::wstring packageFullName)
     return S_OK;
 }
 
-HRESULT ProcessPotentialUpdate::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT ProcessPotentialUpdate::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<ProcessPotentialUpdate> localInstance(new ProcessPotentialUpdate(msixRequest));
+    std::unique_ptr<ProcessPotentialUpdate> localInstance(new ProcessPotentialUpdate());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

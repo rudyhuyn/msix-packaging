@@ -21,19 +21,17 @@ class Protocol : IPackageHandler
 {
 public:
     
-    HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo);
+    HRESULT ExecuteForAddRequest(AddRequestInfo &requestInfo);
     HRESULT ExecuteForRemoveRequest(RemoveRequestInfo& requestInfo);
 
     static const PCWSTR HandlerName;
-    static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
+    static HRESULT CreateHandler(_Out_ IPackageHandler** instance);
     ~Protocol() {}
 private:
-    MsixRequest* m_msixRequest = nullptr;
     RegistryKey m_classesKey;
     std::vector<ProtocolData> m_protocols;
 
     Protocol() {}
-    Protocol(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Parse one protocol element, containing one ProtocolData to be added to the m_protocols vector.
     ///
@@ -48,7 +46,7 @@ private:
     /// @param requestInfo.GetPackage() - the package to install
     /// @param installDirectoryPath - the full directory path where to install the package
     /// @param protocol - the protocol data to be added
-    HRESULT ProcessProtocolForAdd(AddRequestInfo & requestInfo, ProtocolData & protocol);
+    HRESULT ProcessProtocolForAdd(AddRequestInfo &requestInfo, ProtocolData & protocol);
 
     /// Removes the protocol data from the system registry
     ///

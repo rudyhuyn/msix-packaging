@@ -32,11 +32,6 @@ namespace Win7MsixInstallerLib
         /// going through the sequence of individual handlers.
         HRESULT ProcessRequest();
 
-        // Getters
-        MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
-        const std::wstring & GetPackageFilePath() { return m_packageFilePath; }
-        const std::wstring & GetPackageFullName() { return m_packageFullName; }
-
         bool IsRemove()
         {
             return m_operationType == OperationType::Remove;

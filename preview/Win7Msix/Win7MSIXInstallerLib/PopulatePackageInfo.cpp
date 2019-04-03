@@ -2,6 +2,7 @@
 
 #include "PopulatePackageInfo.hpp"
 #include "GeneralUtil.hpp"
+#include "FilePaths.hpp"
 #include <TraceLoggingProvider.h>
 #include <experimental/filesystem> // C++-standard header file name
 #include "Constants.hpp"
@@ -48,11 +49,11 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & dir
 }
 
 
-HRESULT PopulatePackageInfo::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT PopulatePackageInfo::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
 
     Package* packageInfo;
-    RETURN_IF_FAILED(PopulatePackageInfo::GetPackageInfoFromPackage(m_msixRequest->GetPackageFilePath(), m_msixRequest->GetValidationOptions(), &packageInfo));
+    RETURN_IF_FAILED(PopulatePackageInfo::GetPackageInfoFromPackage(requestInfo.GetPackageFilePathToInstall(), requestInfo.GetValidationOptions(), &packageInfo));
 
     if (packageInfo == nullptr)
     {
@@ -72,12 +73,12 @@ HRESULT PopulatePackageInfo::ExecuteForAddRequest(AddRequestInfo & requestInfo)
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
-    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageFullName();
+    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + requestInfo.GetPackageFullNameToUninstall();
 
     InstalledPackage * package;
-    RETURN_IF_FAILED(GetPackageInfoFromManifest(packageDirectoryPath, m_msixRequest->GetValidationOptions(), &package));
+    RETURN_IF_FAILED(GetPackageInfoFromManifest(packageDirectoryPath, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN, &package));
 
     if (package == nullptr)
     {
@@ -88,9 +89,9 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo & request
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT PopulatePackageInfo::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo(msixRequest));
+    std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

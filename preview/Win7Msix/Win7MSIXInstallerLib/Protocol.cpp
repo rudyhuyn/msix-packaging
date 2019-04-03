@@ -109,7 +109,7 @@ HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & inst
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT Protocol::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
     RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
 
@@ -121,7 +121,7 @@ HRESULT Protocol::ExecuteForAddRequest(AddRequestInfo & requestInfo)
     return S_OK;
 }
 
-HRESULT Protocol::ProcessProtocolForAdd(AddRequestInfo & requestInfo, ProtocolData& protocol)
+HRESULT Protocol::ProcessProtocolForAdd(AddRequestInfo &requestInfo, ProtocolData& protocol)
 {
     RegistryKey protocolKey;
     RETURN_IF_FAILED(m_classesKey.CreateSubKey(protocol.name.c_str(), KEY_WRITE, &protocolKey));
@@ -160,7 +160,7 @@ HRESULT Protocol::ProcessProtocolForAdd(AddRequestInfo & requestInfo, ProtocolDa
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+HRESULT Protocol::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
     auto package = requestInfo.GetPackage();
     RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
@@ -226,9 +226,9 @@ HRESULT Protocol::ProcessProtocolForRemove(InstalledPackage * package, ProtocolD
     return S_OK;
 }
 
-HRESULT Protocol::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT Protocol::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<Protocol> localInstance(new Protocol(msixRequest));
+    std::unique_ptr<Protocol> localInstance(new Protocol());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

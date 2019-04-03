@@ -2,6 +2,7 @@
 #include <string>
 
 enum InstallationStep {
+    InstallationStepUnknown,
     InstallationStepStarted,
     InstallationStepGetPackageInformation,
     InstallationStepGetExtraction,
@@ -13,8 +14,8 @@ enum InstallationStep {
 
 struct DeploymentResult
 {
-    unsigned int Progress;
-    InstallationStep Status;
+    unsigned int Progress = 0;
+    InstallationStep Status = InstallationStepUnknown;
     std::wstring ErrorText;
-    int ExtendedErrorCode;
+    int ExtendedErrorCode = 0;
 };

@@ -185,6 +185,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AddRemovePrograms.hpp" />
+    <ClInclude Include="ComInterface.hpp" />
+    <ClInclude Include="ComServer.hpp" />
     <ClInclude Include="Constants.hpp" />
     <ClInclude Include="inc\DeploymentResult.hpp" />
     <ClInclude Include="inc\DeploymentOptions.hpp" />
@@ -210,6 +212,8 @@
     <ClInclude Include="StartMenuLink.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ComInterface.cpp" />
+    <ClCompile Include="ComServer.cpp" />
     <ClCompile Include="Extractor.cpp" />
     <ClCompile Include="FilePaths.cpp" />
     <ClCompile Include="FileTypeAssociation.cpp" />

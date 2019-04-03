@@ -61,7 +61,7 @@ public:
     void DisplayHelp();
     HRESULT Init();
     bool IsQuietMode() { return m_quietMode; }
-    std::wstring GetPackageFilePath() { return m_packageFilePath; }
+    std::wstring GetPackageFilePathToInstall() { return m_packageFilePath; }
     std::wstring GetPackageFullName() { return m_packageFullName; }
     CommandLineOperationType GetOperationType() { return m_operationType; }
 private:

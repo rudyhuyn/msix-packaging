@@ -23,7 +23,7 @@ public:
     /// @param ftaName - the name of the FTA extension (i.e. .mp4)
     HRESULT HasFTA(_In_ std::wstring ftaName, _Out_ bool& hasFTA);
 
-    static HRESULT Create(_In_ std::wstring hiveFileName, _In_ MsixRequest* msixRequest, _Out_ RegistryDevirtualizer** instance);
+    static HRESULT Create(_In_ std::wstring hiveFileName, _Out_ RegistryDevirtualizer** instance);
 
     /// Creates a GUID string as a temporary registry key's name
     /// The Registry.dat hive will be loaded under this name to avoid conflict with existing keys or other installs
@@ -73,17 +73,16 @@ private:
     HRESULT RemoveDevirtualizeRegistryTree(RegistryKey* virtualKey, RegistryKey* realKey);
 
 private:
-    MsixRequest* m_msixRequest = nullptr;
 
     RegistryDevirtualizer() {}
-    RegistryDevirtualizer(_In_ std::wstring hiveFileName, _In_ MsixRequest* msixRequest)
-        : m_registryHiveFileName(hiveFileName),
-        m_msixRequest(msixRequest),
+    RegistryDevirtualizer(_In_ std::wstring hiveFileName):
+        m_registryHiveFileName(hiveFileName),
         m_rootKey(nullptr) {}
 
     std::wstring m_loadedHiveKeyName;
     std::wstring m_registryHiveFileName;
 
     RegistryKey m_rootKey;
+    bool m_hiveFileNameExists = false;
 };
 }

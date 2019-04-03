@@ -141,10 +141,10 @@ HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wst
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT FileTypeAssociation::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
     std::wstring registryFilePath = requestInfo.GetInstallationDir() + registryDatFile;
-    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
+    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, &m_registryDevirtualizer));
 
     RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
 
@@ -234,11 +234,11 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * package, const std::
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+HRESULT FileTypeAssociation::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
     auto package = requestInfo.GetPackage();
     std::wstring registryFilePath = package->GetInstalledLocation() + registryDatFile;
-    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
+    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, &m_registryDevirtualizer));
 
     RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
@@ -300,9 +300,9 @@ HRESULT FileTypeAssociation::ProcessFtaForRemove(Fta& fta)
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT FileTypeAssociation::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<FileTypeAssociation> localInstance(new FileTypeAssociation(msixRequest));
+    std::unique_ptr<FileTypeAssociation> localInstance(new FileTypeAssociation());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

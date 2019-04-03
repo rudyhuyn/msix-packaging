@@ -12,7 +12,7 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR AddRemovePrograms::HandlerName = L"AddRemovePrograms";
 
-HRESULT AddRemovePrograms::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT AddRemovePrograms::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
     std::wstring packageFullName = requestInfo.GetPackage()->GetPackageFullName();
 
@@ -60,7 +60,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(AddRequestInfo & requestInfo)
     return S_OK;
 }
 
-HRESULT AddRemovePrograms::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+HRESULT AddRemovePrograms::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
     RegistryKey uninstallKey;
     RETURN_IF_FAILED(uninstallKey.Open(HKEY_LOCAL_MACHINE, uninstallKeyPath.c_str(), KEY_WRITE));
@@ -72,9 +72,9 @@ HRESULT AddRemovePrograms::ExecuteForRemoveRequest(RemoveRequestInfo & requestIn
     return S_OK;
 }
 
-HRESULT AddRemovePrograms::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT AddRemovePrograms::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<AddRemovePrograms> localInstance(new AddRemovePrograms(msixRequest));
+    std::unique_ptr<AddRemovePrograms> localInstance(new AddRemovePrograms());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

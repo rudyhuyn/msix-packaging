@@ -23,6 +23,8 @@
 #include "StartMenuLink.hpp"
 #include "AddRemovePrograms.hpp"
 #include "Protocol.hpp"
+#include "ComInterface.hpp"
+#include "ComServer.hpp"
 #include "FileTypeAssociation.hpp"
 #include "InstallComplete.hpp"
 #include "ProcessPotentialUpdate.hpp"
@@ -48,7 +50,9 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
     {Extractor::HandlerName,            {Extractor::CreateHandler,           StartMenuLink::HandlerName }},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
-    {Protocol::HandlerName,             {Protocol::CreateHandler,            FileTypeAssociation::HandlerName}},
+    {Protocol::HandlerName,               {Protocol::CreateHandler,               ComInterface::HandlerName}},
+    {ComInterface::HandlerName,           {ComInterface::CreateHandler,           ComServer::HandlerName}},
+    {ComServer::HandlerName,              {ComServer::CreateHandler,              FileTypeAssociation::HandlerName}},
     {FileTypeAssociation::HandlerName,  {FileTypeAssociation::CreateHandler, InstallComplete::HandlerName }},
     {InstallComplete::HandlerName,      {InstallComplete::CreateHandler,     nullptr}},
 };
@@ -105,7 +109,7 @@ HRESULT MsixRequest::ProcessRequest()
 
 HRESULT MsixRequest::ProcessAddRequest()
 {
-    AddRequestInfo requestInfo; //will be populated by PopulatePackageInfo
+    AddRequestInfo requestInfo(m_packageFilePath, m_validationOptions, m_callback); //will be populated by PopulatePackageInfo
     PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
     while (currentHandlerName != nullptr)
     {
@@ -115,7 +119,7 @@ HRESULT MsixRequest::ProcessAddRequest()
 
         HandlerInfo currentHandler = AddHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
-        auto hrExecute = currentHandler.create(this, &handler);
+        auto hrExecute = currentHandler.create(&handler);
         if (FAILED(hrExecute))
         {
             if (handler->IsMandatoryForAddRequest())
@@ -148,7 +152,7 @@ HRESULT MsixRequest::ProcessAddRequest()
 
 HRESULT MsixRequest::ProcessRemoveRequest()
 {
-    RemoveRequestInfo requestInfo; //will be populated by PopulatePackageInfo
+    RemoveRequestInfo requestInfo(m_packageFullName, m_callback); //will be populated by PopulatePackageInfo
     PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
     while (currentHandlerName != nullptr)
     {
@@ -158,7 +162,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
 
         HandlerInfo currentHandler = RemoveHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
-        HRESULT hrExecute = currentHandler.create(this, &handler);
+        HRESULT hrExecute = currentHandler.create(&handler);
         if (FAILED(hrExecute))
         {
             if (handler->IsMandatoryForAddRequest())

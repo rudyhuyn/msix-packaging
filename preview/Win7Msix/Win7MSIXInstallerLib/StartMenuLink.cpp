@@ -45,7 +45,7 @@ HRESULT StartMenuLink::CreateLink(PCWSTR targetFilePath, PCWSTR linkFilePath, PC
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+HRESULT StartMenuLink::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + requestInfo.GetPackage()->GetDisplayName() + L".lnk";
 
@@ -56,7 +56,7 @@ HRESULT StartMenuLink::ExecuteForAddRequest(AddRequestInfo & requestInfo)
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+HRESULT StartMenuLink::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + requestInfo.GetPackage()->GetDisplayName() + L".lnk";
 
@@ -64,9 +64,9 @@ HRESULT StartMenuLink::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
     return S_OK;
 }
 
-HRESULT StartMenuLink::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+HRESULT StartMenuLink::CreateHandler(IPackageHandler ** instance)
 {
-    std::unique_ptr<StartMenuLink> localInstance(new StartMenuLink(msixRequest));
+    std::unique_ptr<StartMenuLink> localInstance(new StartMenuLink());
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;
