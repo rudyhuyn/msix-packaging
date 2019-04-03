@@ -6,9 +6,6 @@
 
 using namespace Win7MsixInstallerLib;
 
-std::mutex filePathMappings_Init_lock;
-
-
 void Win7MsixInstallerLib_GetPathChild(std::wstring &path)
 {
     while (path.front() != '\\')

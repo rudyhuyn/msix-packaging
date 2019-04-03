@@ -16,10 +16,10 @@ public:
     /// Extracts the files from the package to the package's root directory
     /// Copies over the VFS files from the package root directory to the actual file system location
     /// Devirtualizes the registry keys from the package's registry.dat
-    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo);
 
     /// Removes all the files, directories and registry keys written during the add.
-    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
+    HRESULT ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo);
     
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -31,7 +31,7 @@ private:
     Extractor(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Extracts all files from a package.
-    HRESULT ExtractPackage(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractPackage(AddRequestInfo & requestInfo);
 
     /// Writes the file from the package to disk.
     ///
@@ -40,10 +40,10 @@ private:
     HRESULT ExtractFile(const std::wstring & installDirectoryPath, IAppxFile* file);
 
     /// Extracts all footprint files (i.e. manifest/blockmap/signature) from a package.
-    HRESULT ExtractFootprintFiles(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractFootprintFiles(AddRequestInfo & requestInfo);
 
     /// Extracts all payload files from a package.
-    HRESULT ExtractPayloadFiles(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExtractPayloadFiles(AddRequestInfo & requestInfo);
 
     /// Creates a writable IStream over a file with the specified name
     /// under the specified path.  This function will also create intermediate

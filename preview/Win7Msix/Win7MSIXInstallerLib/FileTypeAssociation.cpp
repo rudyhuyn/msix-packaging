@@ -12,20 +12,20 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR FileTypeAssociation::HandlerName = L"FileTypeAssociation";
 
-std::wstring FileTypeAssociation::CreateProgID(PackageBase * packageToInstall, PCWSTR name)
+std::wstring FileTypeAssociation::CreateProgID(PackageBase * package, PCWSTR name)
 {
-    std::wstring packageFullName = packageToInstall->GetPackageFullName();
+    std::wstring packageFullName = package->GetPackageFullName();
     std::wstring progID = msix7ProgIDPrefix + packageFullName.substr(0, packageFullName.find(L"_")) + name;
     return progID;
 }
 
-HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
+HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * package, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
 {
     Text<wchar_t> ftaName;
     RETURN_IF_FAILED(ftaElement->GetAttributeValue(nameAttribute.c_str(), &ftaName));
 
     std::wstring name = L"." + std::wstring(ftaName.Get());
-    std::wstring progID = CreateProgID(packageToInstall, name.c_str());
+    std::wstring progID = CreateProgID(package, name.c_str());
 
     Fta fta;
     fta.name = name;
@@ -141,22 +141,22 @@ HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wst
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT FileTypeAssociation::ExecuteForAddRequest(AddRequestInfo & requestInfo)
 {
-    std::wstring registryFilePath = installDirectoryPath + registryDatFile;
+    std::wstring registryFilePath = requestInfo.GetInstallationDir() + registryDatFile;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
 
-    RETURN_IF_FAILED(ParseManifest(packageToInstall, installDirectoryPath));
+    RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
 
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
-        RETURN_IF_FAILED(ProcessFtaForAdd(packageToInstall, installDirectoryPath, *fta));
+        RETURN_IF_FAILED(ProcessFtaForAdd(requestInfo.GetPackage(), requestInfo.GetInstallationDir(), *fta));
     }
 
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * packageToInstall, const std::wstring & installDirectoryPath, Fta& fta)
+HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * package, const std::wstring & installDirectoryPath, Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
     for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
@@ -211,7 +211,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * packageToInstall, co
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    auto executableFilePath = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
+    auto executableFilePath = installDirectoryPath + package->GetRelativeExecutableFilePath();
     std::wstring command = executableFilePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 
@@ -234,12 +234,13 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * packageToInstall, co
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
+HRESULT FileTypeAssociation::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
 {
-    std::wstring registryFilePath = packageToUninstall->GetInstalledLocation() + registryDatFile;
+    auto package = requestInfo.GetPackage();
+    std::wstring registryFilePath = package->GetInstalledLocation() + registryDatFile;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &m_registryDevirtualizer));
 
-    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetInstalledLocation()));
+    RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForRemove(*fta));

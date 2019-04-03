@@ -21,8 +21,8 @@ class Protocol : IPackageHandler
 {
 public:
     
-    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
-    HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall);
+    HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo);
+    HRESULT ExecuteForRemoveRequest(RemoveRequestInfo& requestInfo);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
@@ -45,14 +45,14 @@ private:
 
     /// Adds the protocol data to the system registry
     ///
-    /// @param packageToInstall - the package to install
+    /// @param requestInfo.GetPackage() - the package to install
     /// @param installDirectoryPath - the full directory path where to install the package
     /// @param protocol - the protocol data to be added
-    HRESULT ProcessProtocolForAdd(Package * packageToInstall, const std::wstring & installDirectoryPath, ProtocolData & protocol);
+    HRESULT ProcessProtocolForAdd(AddRequestInfo & requestInfo, ProtocolData & protocol);
 
     /// Removes the protocol data from the system registry
     ///
-    /// @param packageToInstall - the package to uninstall
+    /// @param requestInfo.GetPackage() - the package to uninstall
     /// @param protocol - the protocol data to be removed
     HRESULT ProcessProtocolForRemove(InstalledPackage * package, ProtocolData& protocol);
 

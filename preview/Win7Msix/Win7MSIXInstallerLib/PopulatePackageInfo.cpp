@@ -5,13 +5,14 @@
 #include <TraceLoggingProvider.h>
 #include <experimental/filesystem> // C++-standard header file name
 #include "Constants.hpp"
-
 using namespace Win7MsixInstallerLib;
 
-HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(PCWSTR packageFilePath, MSIX_VALIDATION_OPTION validationOption, Package ** packageInfo)
+const PCWSTR PopulatePackageInfo::HandlerName = L"PopulatePackageInfo";
+
+HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(const std::wstring & packageFilePath, MSIX_VALIDATION_OPTION validationOption, Package ** packageInfo)
 {
     ComPtr<IStream> inputStream;
-    RETURN_IF_FAILED(CreateStreamOnFileUTF16(packageFilePath, /*forRead */ true, &inputStream));
+    RETURN_IF_FAILED(CreateStreamOnFileUTF16(packageFilePath.c_str(), /*forRead */ true, &inputStream));
 
     // On Win32 platforms CoCreateAppxFactory defaults to CoTaskMemAlloc/CoTaskMemFree
     // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
@@ -42,6 +43,59 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & dir
     RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
 
     RETURN_IF_FAILED(InstalledPackage::MakeFromManifestReader(directoryPath, manifestReader.Get(), packageInfo));
+
+    return S_OK;
+}
+
+
+HRESULT PopulatePackageInfo::ExecuteForAddRequest(AddRequestInfo & requestInfo)
+{
+
+    Package* packageInfo;
+    RETURN_IF_FAILED(PopulatePackageInfo::GetPackageInfoFromPackage(m_msixRequest->GetPackageFilePath(), m_msixRequest->GetValidationOptions(), &packageInfo));
+
+    if (packageInfo == nullptr)
+    {
+        return E_FAIL;
+    }
+
+    requestInfo.SetPackage(packageInfo);
+
+    TraceLoggingWrite(g_MsixTraceLoggingProvider,
+        "PackageInfo",
+        TraceLoggingValue(packageInfo->GetPackageFullName().c_str(), "PackageFullName"),
+        TraceLoggingValue(packageInfo->GetNumberOfPayloadFiles(), "NumberOfPayloadFiles"),
+        TraceLoggingValue((requestInfo.GetInstallationDir() + packageInfo->GetRelativeExecutableFilePath()).c_str(), "ExecutableFilePath"),
+        TraceLoggingValue(packageInfo->GetDisplayName().c_str(), "DisplayName"));
+
+
+    return S_OK;
+}
+
+HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
+{
+    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageFullName();
+
+    InstalledPackage * package;
+    RETURN_IF_FAILED(GetPackageInfoFromManifest(packageDirectoryPath, m_msixRequest->GetValidationOptions(), &package));
+
+    if (package == nullptr)
+    {
+        return E_FAIL;
+    }
+    requestInfo.SetPackage(package);
+
+    return S_OK;
+}
+
+HRESULT PopulatePackageInfo::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
+{
+    std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo(msixRequest));
+    if (localInstance == nullptr)
+    {
+        return E_OUTOFMEMORY;
+    }
+    *instance = localInstance.release();
 
     return S_OK;
 }

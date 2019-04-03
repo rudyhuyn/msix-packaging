@@ -98,7 +98,7 @@ HRESULT Extractor::ExtractFile(const std::wstring & installDirectoryPath,IAppxFi
     return S_OK;
 }
 
-HRESULT Extractor::ExtractFootprintFiles(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractFootprintFiles(AddRequestInfo & requestInfo)
 {
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting footprint files from the package");
@@ -106,10 +106,10 @@ HRESULT Extractor::ExtractFootprintFiles(Package * packageToInstall, const std::
     for (int i = 0; i < FootprintFilesCount; i++)
     {
         ComPtr<IAppxFile> footprintFile;
-        HRESULT hr = packageToInstall->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
+        HRESULT hr = requestInfo.GetPackage()->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
         if (SUCCEEDED(hr) && footprintFile.Get())
         {
-            RETURN_IF_FAILED(ExtractFile(installDirectoryPath, footprintFile.Get()));
+            RETURN_IF_FAILED(ExtractFile(requestInfo.GetInstallationDir(), footprintFile.Get()));
         }
         else if (g_footprintFilesType[i].isRequired)
         {
@@ -122,13 +122,13 @@ HRESULT Extractor::ExtractFootprintFiles(Package * packageToInstall, const std::
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPayloadFiles(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractPayloadFiles(AddRequestInfo & requestInfo)
 {
     ComPtr<IAppxFilesEnumerator> files;
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting payload files from the package");
 
-    RETURN_IF_FAILED(packageToInstall->GetPackageReader()->GetPayloadFiles(&files));
+    RETURN_IF_FAILED(requestInfo.GetPackage()->GetPackageReader()->GetPayloadFiles(&files));
 
     BOOL hasCurrent = FALSE;
     RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));
@@ -136,14 +136,14 @@ HRESULT Extractor::ExtractPayloadFiles(Package * packageToInstall, const std::ws
     // Retrieve the number of files
 
 
-    unsigned int totalNumberFiles = packageToInstall->GetNumberOfPayloadFiles();
+    unsigned int totalNumberFiles = requestInfo.GetPackage()->GetNumberOfPayloadFiles();
     unsigned int nbrFilesExtracted = 0;
     while (hasCurrent)
     {
         ComPtr<IAppxFile> file;
         RETURN_IF_FAILED(files->GetCurrent(&file));
 
-        RETURN_IF_FAILED(ExtractFile(installDirectoryPath, file.Get()));
+        RETURN_IF_FAILED(ExtractFile(requestInfo.GetInstallationDir(), file.Get()));
 
         // After extracting the file, if it's a VFS file, copy it to the local location
         Text<WCHAR> name;
@@ -151,7 +151,7 @@ HRESULT Extractor::ExtractPayloadFiles(Package * packageToInstall, const std::ws
         std::wstring nameStr = name.Get();
         if (nameStr.find(L"VFS") != std::wstring::npos)
         {
-            RETURN_IF_FAILED(CopyVfsFileToLocal(installDirectoryPath, nameStr));
+            RETURN_IF_FAILED(CopyVfsFileToLocal(requestInfo.GetInstallationDir(), nameStr));
         }
 
         RETURN_IF_FAILED(files->MoveNext(&hasCurrent));
@@ -181,11 +181,11 @@ HRESULT Extractor::CreatePackageRoot(const std::wstring & installDirectoryPath)
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExecuteForAddRequest(AddRequestInfo & requestInfo)
 {
-    RETURN_IF_FAILED(CreatePackageRoot(installDirectoryPath));
+    RETURN_IF_FAILED(CreatePackageRoot(requestInfo.GetInstallationDir()));
 
-    RETURN_IF_FAILED(ExtractPackage(packageToInstall, installDirectoryPath));
+    RETURN_IF_FAILED(ExtractPackage(requestInfo));
     return S_OK;
 }
 
@@ -227,8 +227,9 @@ HRESULT Extractor::RemoveVfsFiles(InstalledPackage * packageToUninstall)
     return S_OK;
 }
 
-HRESULT Extractor::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
+HRESULT Extractor::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
 {
+    auto packageToUninstall = requestInfo.GetPackage();
     HRESULT hrRemoveRegistry = ExtractRegistry(packageToUninstall->GetInstalledLocation(), true);
     if (FAILED(hrRemoveRegistry))
     {
@@ -274,11 +275,11 @@ HRESULT Extractor::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** i
     return S_OK;
 }
 
-HRESULT Extractor::ExtractPackage(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Extractor::ExtractPackage(AddRequestInfo & requestInfo)
 {
-    RETURN_IF_FAILED(ExtractFootprintFiles(packageToInstall, installDirectoryPath));
-    RETURN_IF_FAILED(ExtractPayloadFiles(packageToInstall, installDirectoryPath));
-    RETURN_IF_FAILED(ExtractRegistry(installDirectoryPath, false));
+    RETURN_IF_FAILED(ExtractFootprintFiles(requestInfo));
+    RETURN_IF_FAILED(ExtractPayloadFiles(requestInfo));
+    RETURN_IF_FAILED(ExtractRegistry(requestInfo.GetInstallationDir(), false));
     return S_OK;
 }
 

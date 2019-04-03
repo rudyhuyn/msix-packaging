@@ -13,7 +13,7 @@ class ProcessPotentialUpdate : IPackageHandler
 public:
     /// Determines if the incoming add request is actually an update to an existing package.
     /// If it is, it'll remove the outdated package. This handler is only run on an AddRequest.
-    HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath);
+    HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo);
 
     static const PCWSTR HandlerName;
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);

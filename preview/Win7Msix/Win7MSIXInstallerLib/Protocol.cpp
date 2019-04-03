@@ -109,19 +109,19 @@ HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & inst
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT Protocol::ExecuteForAddRequest(AddRequestInfo & requestInfo)
 {
-    RETURN_IF_FAILED(ParseManifest(packageToInstall, installDirectoryPath));
+    RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
 
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {
-        RETURN_IF_FAILED(ProcessProtocolForAdd(packageToInstall, installDirectoryPath, *protocol));
+        RETURN_IF_FAILED(ProcessProtocolForAdd(requestInfo, *protocol));
     }
 
     return S_OK;
 }
 
-HRESULT Protocol::ProcessProtocolForAdd(Package * packageToInstall, const std::wstring & installDirectoryPath, ProtocolData& protocol)
+HRESULT Protocol::ProcessProtocolForAdd(AddRequestInfo & requestInfo, ProtocolData& protocol)
 {
     RegistryKey protocolKey;
     RETURN_IF_FAILED(m_classesKey.CreateSubKey(protocol.name.c_str(), KEY_WRITE, &protocolKey));
@@ -146,7 +146,7 @@ HRESULT Protocol::ProcessProtocolForAdd(Package * packageToInstall, const std::w
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    std::wstring command = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
+    std::wstring command = requestInfo.GetInstallationDir() + requestInfo.GetPackage()->GetRelativeExecutableFilePath();
     if (protocol.parameters.c_str() != nullptr)
     {
         command += std::wstring(L" ") + protocol.parameters;
@@ -160,13 +160,14 @@ HRESULT Protocol::ProcessProtocolForAdd(Package * packageToInstall, const std::w
     return S_OK;
 }
 
-HRESULT Protocol::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
+HRESULT Protocol::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
 {
-    RETURN_IF_FAILED(ParseManifest(packageToUninstall, packageToUninstall->GetInstalledLocation()));
+    auto package = requestInfo.GetPackage();
+    RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
 
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {
-        RETURN_IF_FAILED(ProcessProtocolForRemove(packageToUninstall, *protocol));
+        RETURN_IF_FAILED(ProcessProtocolForRemove(package, *protocol));
     }
 
     return S_OK;

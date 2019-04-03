@@ -12,9 +12,9 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR AddRemovePrograms::HandlerName = L"AddRemovePrograms";
 
-HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT AddRemovePrograms::ExecuteForAddRequest(AddRequestInfo & requestInfo)
 {
-    std::wstring packageFullName = packageToInstall->GetPackageFullName();
+    std::wstring packageFullName = requestInfo.GetPackage()->GetPackageFullName();
 
     RegistryKey uninstallKey;
     RETURN_IF_FAILED(uninstallKey.Open(HKEY_LOCAL_MACHINE, uninstallKeyPath.c_str(), KEY_WRITE));
@@ -22,10 +22,10 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, cons
     RegistryKey packageKey;
     RETURN_IF_FAILED(uninstallKey.CreateSubKey(packageFullName.c_str(), KEY_WRITE, &packageKey));
 
-    std::wstring displayName = packageToInstall->GetDisplayName();
+    std::wstring displayName = requestInfo.GetPackage()->GetDisplayName();
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayName", displayName));
 
-    RETURN_IF_FAILED(packageKey.SetStringValue(L"InstallLocation", installDirectoryPath));
+    RETURN_IF_FAILED(packageKey.SetStringValue(L"InstallLocation", requestInfo.GetInstallationDir()));
 
     WCHAR filePath[MAX_PATH];
     DWORD lengthCopied = GetModuleFileNameW(nullptr, filePath, MAX_PATH);
@@ -37,22 +37,22 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, cons
     std::wstring uninstallCommand = filePath + std::wstring(L" -RemovePackage ") + packageFullName;
     RETURN_IF_FAILED(packageKey.SetStringValue(L"UninstallString", uninstallCommand));
 
-    std::wstring publisherNameString(packageToInstall->GetPublisherDisplayName());
+    std::wstring publisherNameString(requestInfo.GetPackage()->GetPublisherDisplayName());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"Publisher", publisherNameString));
 
-    std::wstring versionString(packageToInstall->GetVersion());
+    std::wstring versionString(requestInfo.GetPackage()->GetVersion());
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
-    std::wstring packageIconString = installDirectoryPath + packageToInstall->GetRelativeExecutableFilePath();
+    std::wstring packageIconString = requestInfo.GetInstallationDir() + requestInfo.GetPackage()->GetRelativeExecutableFilePath();
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayIcon", packageIconString));
 
-    std::wstring publisherString(packageToInstall->GetPublisher());
+    std::wstring publisherString(requestInfo.GetPackage()->GetPublisher());
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Added Uninstall key successfully",
         TraceLoggingValue(packageFullName.c_str(), "packageFullName"),
         TraceLoggingValue(uninstallCommand.c_str(), "uninstallString"),
         TraceLoggingValue(displayName.c_str(), "displayName"),
-        TraceLoggingValue(installDirectoryPath.c_str(), "installLocation"),
+        TraceLoggingValue(requestInfo.GetInstallationDir().c_str(), "installLocation"),
         TraceLoggingValue(publisherString.c_str(), "publisher"),
         TraceLoggingValue(versionString.c_str(), "displayVersion"),
         TraceLoggingValue(packageIconString.c_str(), "displayIcon"));
@@ -60,12 +60,12 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest(Package * packageToInstall, cons
     return S_OK;
 }
 
-HRESULT AddRemovePrograms::ExecuteForRemoveRequest(InstalledPackage * packageToUninstall)
+HRESULT AddRemovePrograms::ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo)
 {
     RegistryKey uninstallKey;
     RETURN_IF_FAILED(uninstallKey.Open(HKEY_LOCAL_MACHINE, uninstallKeyPath.c_str(), KEY_WRITE));
 
-    RETURN_IF_FAILED(uninstallKey.DeleteSubKey(packageToUninstall->GetPackageFullName().c_str()));
+    RETURN_IF_FAILED(uninstallKey.DeleteSubKey(requestInfo.GetPackage()->GetPackageFullName().c_str()));
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Removed Uninstall key successfully");

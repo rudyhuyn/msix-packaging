@@ -206,6 +206,7 @@
     <ClInclude Include="Protocol.hpp" />
     <ClInclude Include="RegistryDevirtualizer.hpp" />
     <ClInclude Include="RegistryKey.hpp" />
+    <ClInclude Include="RequestInfo.hpp" />
     <ClInclude Include="StartMenuLink.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +224,7 @@
     <ClCompile Include="RegistryDevirtualizer.cpp" />
     <ClCompile Include="RegistryKey.cpp" />
     <ClCompile Include="AddRemovePrograms.cpp" />
+    <ClCompile Include="RequestInfo.cpp" />
     <ClCompile Include="StartMenuLink.cpp" />
     <ClCompile Include="Win7MSIXInstallerActions.cpp" />
   </ItemGroup>

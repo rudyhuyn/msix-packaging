@@ -1,6 +1,8 @@
 #pragma once
 #include "MsixRequest.hpp"
+#include "RequestInfo.hpp"
 #include "Package.hpp"
+
 namespace Win7MsixInstallerLib
 {
 /// Interface for a logical chunk of work done on an Msix request
@@ -8,9 +10,11 @@ class IPackageHandler
 {
 public:
 
-    virtual HRESULT ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath) = 0;
+    virtual HRESULT ExecuteForAddRequest(AddRequestInfo & requestInfo) = 0;
 
-    virtual HRESULT ExecuteForRemoveRequest(InstalledPackage * packageToUninstall) { return S_OK; }
+    virtual HRESULT ExecuteForRemoveRequest(RemoveRequestInfo & requestInfo) { return S_OK; }
+    virtual bool IsMandatoryForRemoveRequest() { return false; }
+    virtual bool IsMandatoryForAddRequest() { return true; }
 
     virtual ~IPackageHandler() {};
 };

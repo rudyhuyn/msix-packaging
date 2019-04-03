@@ -13,7 +13,7 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
-HRESULT InstallComplete::ExecuteForAddRequest(Package * packageToInstall, const std::wstring & installDirectoryPath)
+HRESULT InstallComplete::ExecuteForAddRequest(AddRequestInfo & requestInfo)
 {
     DeploymentResult result;
     result.Progress = 100;

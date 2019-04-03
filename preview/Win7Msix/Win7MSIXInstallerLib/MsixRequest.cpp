@@ -43,6 +43,7 @@ struct HandlerInfo
 std::map<PCWSTR, HandlerInfo> AddHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
+    {PopulatePackageInfo::HandlerName, {PopulatePackageInfo::CreateHandler, ProcessPotentialUpdate::HandlerName }},
     {ProcessPotentialUpdate::HandlerName, {ProcessPotentialUpdate::CreateHandler, Extractor::HandlerName }},
     {Extractor::HandlerName,            {Extractor::CreateHandler,           StartMenuLink::HandlerName }},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
@@ -55,6 +56,7 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
 std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
+    {PopulatePackageInfo::HandlerName, {PopulatePackageInfo::CreateHandler, StartMenuLink::HandlerName }},
     {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
     {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
     {Protocol::HandlerName,             {Protocol::CreateHandler,            FileTypeAssociation::HandlerName}},
@@ -103,33 +105,8 @@ HRESULT MsixRequest::ProcessRequest()
 
 HRESULT MsixRequest::ProcessAddRequest()
 {
-    auto filemapping = FilePathMappings::GetInstance();
-    auto res = filemapping.GetInitializationResult();
-    if (FAILED(res))
-    {
-        DeploymentResult result;
-        result.ExtendedErrorCode = res;
-        result.ErrorText = L"Can't initialize FilePathMappings";
-        result.Status = InstallationStep::InstallationStepError;
-        SendCallback(result);
-        return E_FAIL;
-    }
-    Package* packageInfo;
-    res = PopulatePackageInfo::GetPackageInfoFromPackage(this->m_packageFilePath.data(), this->m_validationOptions, &packageInfo);
-
-    if (FAILED(res) || packageInfo == nullptr)
-    {
-        DeploymentResult result;
-        result.ExtendedErrorCode = res;
-        result.ErrorText = L"Can't retrieve information for the package " + this->m_packageFilePath;
-        result.Status = InstallationStep::InstallationStepError;
-        SendCallback(result);
-        return E_FAIL;
-    }
-
-    PCWSTR currentHandlerName = ProcessPotentialUpdate::HandlerName;
-
-    auto installationPath = filemapping.GetMsix7Directory() + packageInfo->GetPackageFullName() + L"\\";
+    AddRequestInfo requestInfo; //will be populated by PopulatePackageInfo
+    PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
     while (currentHandlerName != nullptr)
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -138,26 +115,29 @@ HRESULT MsixRequest::ProcessAddRequest()
 
         HandlerInfo currentHandler = AddHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
-        res = currentHandler.create(this, &handler);
-        if (FAILED(res))
+        auto hrExecute = currentHandler.create(this, &handler);
+        if (FAILED(hrExecute))
         {
-            DeploymentResult result;
-            result.ExtendedErrorCode = res;
-            result.ErrorText = L"Can't create the handler " + std::wstring(currentHandlerName);
-            result.Status = InstallationStep::InstallationStepError;
-            SendCallback(result);
-            return res;
+            if (handler->IsMandatoryForAddRequest())
+            {
+                DeploymentResult result;
+                result.ExtendedErrorCode = hrExecute;
+                result.ErrorText = L"Can't create the handler " + std::wstring(currentHandlerName);
+                result.Status = InstallationStep::InstallationStepError;
+                SendCallback(result);
+                return hrExecute;
+            }
         }
 
-        res = handler->ExecuteForAddRequest(packageInfo, installationPath);
-        if (FAILED(res))
+        hrExecute = handler->ExecuteForAddRequest(requestInfo);
+        if (FAILED(hrExecute))
         {
             DeploymentResult result;
-            result.ExtendedErrorCode = res;
+            result.ExtendedErrorCode = hrExecute;
             result.ErrorText = L"Can't execute the handler " + std::wstring(currentHandlerName);
             result.Status = InstallationStep::InstallationStepError;
             SendCallback(result);
-            return res;
+            return hrExecute;
         }
 
         currentHandlerName = currentHandler.nextHandler;
@@ -168,39 +148,8 @@ HRESULT MsixRequest::ProcessAddRequest()
 
 HRESULT MsixRequest::ProcessRemoveRequest()
 {
-    auto filemapping = FilePathMappings::GetInstance();
-    auto res = filemapping.GetInitializationResult();
-    if (FAILED(res))
-    {
-        DeploymentResult result;
-        result.ExtendedErrorCode = res;
-        result.ErrorText = L"Can't initialize FilePathMappings";
-        result.Status = InstallationStep::InstallationStepError;
-        SendCallback(result);
-        return res;
-    }
-    std::wstring msix7Directory = filemapping.GetMsix7Directory();
-
-    InstalledPackage* installedPackageInfo;
-    std::wstring applicationDirectoryPath = msix7Directory + this->m_packageFullName;
-
-    if (FAILED(PopulatePackageInfo::GetPackageInfoFromManifest(applicationDirectoryPath.data(), this->m_validationOptions, &installedPackageInfo)) || installedPackageInfo == nullptr)
-    {
-        if (res == S_OK)
-        {
-            res = E_NOT_SET;
-        }
-
-        DeploymentResult result;
-        result.ExtendedErrorCode = res;
-        result.ErrorText = L"Can't retrieve information for the package " + this->m_packageFullName;
-        result.Status = InstallationStep::InstallationStepError;
-        SendCallback(result);
-        return res;
-    }
-
-    PCWSTR currentHandlerName = StartMenuLink::HandlerName;
-
+    RemoveRequestInfo requestInfo; //will be populated by PopulatePackageInfo
+    PCWSTR currentHandlerName = PopulatePackageInfo::HandlerName;
     while (currentHandlerName != nullptr)
     {
         TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -209,8 +158,21 @@ HRESULT MsixRequest::ProcessRemoveRequest()
 
         HandlerInfo currentHandler = RemoveHandlers[currentHandlerName];
         AutoPtr<IPackageHandler> handler;
-        RETURN_IF_FAILED(currentHandler.create(this, &handler));
-        HRESULT hrExecute = handler->ExecuteForRemoveRequest(installedPackageInfo);
+        HRESULT hrExecute = currentHandler.create(this, &handler);
+        if (FAILED(hrExecute))
+        {
+            if (handler->IsMandatoryForAddRequest())
+            {
+                DeploymentResult result;
+                result.ExtendedErrorCode = hrExecute;
+                result.ErrorText = L"Can't create the handler " + std::wstring(currentHandlerName);
+                result.Status = InstallationStep::InstallationStepError;
+                SendCallback(result);
+                return hrExecute;
+            }
+        }
+
+        hrExecute = handler->ExecuteForRemoveRequest(requestInfo);
         if (FAILED(hrExecute))
         {
             TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -218,6 +180,15 @@ HRESULT MsixRequest::ProcessRemoveRequest()
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingValue(currentHandlerName, "HandlerName"),
                 TraceLoggingValue(hrExecute, "HR"));
+            if (handler->IsMandatoryForRemoveRequest())
+            {
+                DeploymentResult result;
+                result.ExtendedErrorCode = hrExecute;
+                result.ErrorText = L"Can't execute the handler " + std::wstring(currentHandlerName);
+                result.Status = InstallationStep::InstallationStepError;
+                SendCallback(result);
+                return hrExecute;
+            }
         }
 
         currentHandlerName = currentHandler.nextHandler;
