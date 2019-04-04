@@ -5,7 +5,7 @@ enum InstallationStep {
     InstallationStepUnknown,
     InstallationStepStarted,
     InstallationStepGetPackageInformation,
-    InstallationStepGetExtraction,
+    InstallationStepExtraction,
     InstallationStepCompleted,
     InstallationStepError,
     //can be extend for future scenarios.

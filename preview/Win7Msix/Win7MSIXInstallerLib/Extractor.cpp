@@ -159,7 +159,7 @@ HRESULT Extractor::ExtractPayloadFiles(AddRequestInfo &requestInfo)
 
         DeploymentResult result;
         result.Progress = 100 * nbrFilesExtracted / totalNumberFiles;
-        result.Status = InstallationStep::InstallationStepGetExtraction;
+        result.Status = InstallationStep::InstallationStepExtraction;
         requestInfo.SendCallback(result);
             //    ui->UpdateProgressBarValue((float)nbrFilesExtracted / totalNumberFiles);
     }
