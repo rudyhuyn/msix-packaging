@@ -43,10 +43,28 @@ if(XML_PARSER MATCHES msxml6)
     add_definitions(-DUSING_MSXML=1)
 endif()
 
-if(WIN32)
-    set(DirectoryObject PAL/FileSystem/Win32/DirectoryObject.cpp)
+if(CRYPTO_LIB MATCHES crypt32)
+    message(STATUS "CRYPTO_LIB defined.  Using crypt32 library." )
     set(SHA256 PAL/SHA256/Win32/SHA256.cpp)
     set(Signature PAL/Signature/Win32/SignatureValidator.cpp)
+    add_definitions(-DUSING_CRYPT32=1)
+endif()
+
+if(CRYPTO_LIB MATCHES openssl)
+    message(STATUS "CRYPTO_LIB defined.  Using OpenSSL library." )
+    if(OpenSSL_FOUND)
+        message(STATUS "Using OpenSSL ${OpenSLL_VERSION}")
+        set(SHA256    PAL/SHA256/OpenSSL/SHA256.cpp)
+        set(Signature PAL/Signature/OpenSSL/SignatureValidator.cpp)
+    else()
+        # ... and were done here...  :/
+        message(STATUS "OpenSSL NOT FOUND!")
+        return()
+    endif()
+endif()
+
+if(WIN32)
+    set(DirectoryObject PAL/FileSystem/Win32/DirectoryObject.cpp)
     set(Applicability PAL/Applicability/Win32/Applicability.cpp)
 else()
     # Visibility variables for non-win32 platforms
@@ -86,7 +104,6 @@ else()
         if(NOT FOUNDATION_LIBRARY)
             message(FATAL_ERROR "Foundation library not found")
         endif()
-        find_library (LIBSTDCXX NAMES stdc++)
         set(Applicability PAL/Applicability/Apple/Applicability.cpp)
         if(IOS)
             add_definitions(-DIOS)
@@ -119,15 +136,6 @@ else()
     message(STATUS "Using export flag: ${DEFINE_EXPORTS}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${DEFINE_EXPORTS}")
 
-    if(OpenSSL_FOUND)
-        message(STATUS "Using OpenSSL ${OpenSLL_VERSION}")
-        set(SHA256    PAL/SHA256/OpenSSL/SHA256.cpp)
-        set(Signature PAL/Signature/OpenSSL/SignatureValidator.cpp)
-    else()
-        # ... and were done here...  :/
-        message(STATUS "OpenSSL NOT FOUND!")
-        return()
-    endif()
     set(DirectoryObject PAL/FileSystem/POSIX/DirectoryObject.cpp)
 endif()
 
@@ -186,6 +194,7 @@ add_library(${PROJECT_NAME} SHARED
     UnicodeConversion.cpp
     msix.cpp
     ZipObject.cpp
+    MSIXResource.cpp
     ${DirectoryObject}
     ${SHA256}
     ${Signature}
@@ -325,7 +334,7 @@ endif()
 
 # Misc Linking
 if((IOS) OR (MACOS))
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${COREFOUNDATION_LIBRARY} ${FOUNDATION_LIBRARY} ${LIBSTDCXX})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${COREFOUNDATION_LIBRARY} ${FOUNDATION_LIBRARY})
 endif()
 if(LINUX)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${ICU_LIBRARIES})

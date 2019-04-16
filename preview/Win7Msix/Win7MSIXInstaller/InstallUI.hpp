@@ -1,23 +1,25 @@
 #pragma once
-// Install UI Header
-// UI Functions
+/// Install UI Header
+/// UI Functions
 #include <windows.h>
 #include <string>
 #include <IPackageManager.hpp>
 #include "GeneralUtil.hpp"
-// Child window identifiers
-#define IDC_LAUNCHCHECKBOX 1
-#define IDC_INSTALLBUTTON 2
-#define IDC_CANCELBUTTON 3
-#define IDC_LAUNCHBUTTON 4
+#include "resource.h"
+/// Child window identifiers
+#define IDC_LAUNCHCHECKBOX 101
+#define IDC_INSTALLBUTTON 102
+#define IDC_CANCELBUTTON 103
+#define IDC_LAUNCHBUTTON 104
+#define WM_INSTALLCOMPLETE_MSG (WM_APP+1)
 
-// Global variables
-static HWND hWnd = NULL; // parent window hwnd
+/// Global variables
 static HWND g_buttonHWnd = NULL;
 static HWND g_checkboxHWnd = NULL;
 static HWND g_progressHWnd = NULL;
 static HWND g_CancelbuttonHWnd = NULL;
 static HWND g_LaunchbuttonHWnd = NULL;
+
 static bool g_installed = false;
 static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
 
@@ -64,50 +66,37 @@ public:
     // count: the number of objects to be iterated through in the progress bar
     BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
-    // FUNCTION: LaunchButton(HWND parentHWnd, RECT parentRect)
-    //
-    // PURPOSE: Create the lower right install button
-    // 
-    // parentHWnd: the HWND of the window to add the button to
-    // parentRect: the specs of the parent window
-    BOOL LaunchButton(HWND parentHWnd, RECT parentRect);
+    /// Create the lower right install button
+    /// 
+    /// @param parentHWnd - the HWND of the window to add the button to
+    /// @param parentRect - the specs of the parent window
+    BOOL InstallButton(HWND parentHWnd, RECT parentRect);
 
-    // FUNCTION: CreateCheckbox(HWND parentHWnd, RECT parentRect)
-    //
-    // PURPOSE: Create the launch when ready checkbox on the bottom left
-    // 
-    // parentHWnd: the HWND of the window to add the checkbox to
-    // parentRect: the specs of the parent window
+    /// Create the launch when ready checkbox on the bottom left
+    /// 
+    /// @param parentHWnd - the HWND of the window to add the checkbox to
+    /// @param parentRect - the specs of the parent window
     BOOL CreateCheckbox(HWND parentHWnd, RECT parentRect);
 
-    // FUNCTION: CreateCancelButton(HWND parentHWnd, RECT parentRect)
-    //
-    // PURPOSE: Create the cancel button on the bottom right corner when user clicks on install
-    // 
-    // parentHWnd: the HWND of the window to add the checkbox to
-    // parentRect: the specs of the parent window
+    /// Create the cancel button on the bottom right corner when user clicks on install
+    /// 
+    /// @param parentHWnd - the HWND of the window to add the checkbox to
+    /// @param parentRect - the specs of the parent window
     BOOL CreateCancelButton(HWND parentHWnd, RECT parentRect);
 
-    // FUNCTION: CreateLaunchButton(HWND parentHWnd, RECT parentRect)
-    //
-    // PURPOSE: Create the launch button on the botton right after app has been installed
-    // 
-    // parentHWnd: the HWND of the window to add the checkbox to
-    // parentRect: the specs of the parent window
-    BOOL CreateLaunchButton(HWND parentHWnd, RECT parentRect);
+    /// Create the launch button on the botton right after app has been installed
+    /// 
+    /// @param parentHWnd - the HWND of the window to add the checkbox to
+    /// @param parentRect - the specs of the parent window
+    /// @param xDiff - the x coordinate difference to create the button from the parent window
+    /// @param yDiff - the y coordinate difference to create the button from the parent window
+    BOOL CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff);
 
-    // FUNCTION: ChangeButtonText(LPARAM newMessage)
-    //
-    // PURPOSE: Changes the text of the lower right button
-    //
-    // newMessage: the message to change the button to
-    BOOL ChangeButtonText(const std::wstring& newMessage);
-
-    // FUNCTION: HideButtonWindow()
-    //
-    // PURPOSE: Hides the lower right button
-    //
-    BOOL HideButtonWindow();
+    /// Changes the text of the lower right 'Install' button
+    /// Changes text to 'Update' in case of an update, changes text to 'Reinstall' in case app is already installed on the machine
+    ///
+    /// @param newMessage - the message to change the button to
+    BOOL ChangeInstallButtonText(const std::wstring& newMessage);
 
     // FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
     //

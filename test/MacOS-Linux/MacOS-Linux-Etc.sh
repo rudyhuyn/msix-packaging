@@ -105,11 +105,10 @@ RunTest 18 ./../appx/UnsignedZip64WithCI-APPX_E_MISSING_REQUIRED_FILE.appx
 RunTest 1 ./../appx/FileDoesNotExist.appx -ss
 RunTest 81 ./../appx/BlockMap/Missing_Manifest_in_blockmap.appx -ss
 RunTest 81 ./../appx/BlockMap/ContentTypes_in_blockmap.appx -ss
-# RunTest 81 ./../appx/BlockMap/Invalid_Bad_Block.appx -ss           ### WIN8-era package
-# RunTest 81 ./../appx/BlockMap/Size_wrong_uncompressed.appx -ss     ### WIN8-era package
-# RunTest 0 ./../appx/BlockMap/HelloWorld.appx -ss                   ### WIN8-era package
-# RunTest 2 ./../appx/BlockMap/Extra_file_in_blockmap.appx -ss       ### WIN8-era package
-# RunTest 81 ./../appx/BlockMap/File_missing_from_blockmap.appx -ss  ### WIN8-era package
+RunTest 81 ./../appx/BlockMap/Invalid_Bad_Block.msix -ss
+RunTest 81 ./../appx/BlockMap/Size_wrong_uncompressed.msix -ss
+RunTest 2 ./../appx/BlockMap/Extra_file_in_blockmap.msix -ss
+RunTest 81 ./../appx/BlockMap/File_missing_from_blockmap.msix -ss
 RunTest 51 ./../appx/BlockMap/No_blockmap.appx -ss
 RunTest 3 ./../appx/BlockMap/Bad_Namespace_Blockmap.appx -ss
 RunTest 81 ./../appx/BlockMap/Duplicate_file_in_blockmap.appx -ss
@@ -133,11 +132,11 @@ RunTest 0 ./../appx/bundles/MainBundle.appxbundle -ss
 # RunTest 0 ./../appx/bundles/ManifestDeclaresResourcePackageForAppPackage.appxbundle
 # RunTest 0 ./../appx/bundles/ManifestHasExtraPackage.appxbundle
 RunTest 52 ./../appx/bundles/ManifestIsMissing.appxbundle -ss
-RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectArchitecture.appxbundle -ss
-RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectName.appxbundle -ss
-RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectPublisher.appxbundle -ss
+#RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectArchitecture.appxbundle -ss ### WIN8-era package
+#RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectName.appxbundle -ss ### WIN8-era package
+#RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectPublisher.appxbundle -ss ### WIN8-era package
 RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectSize.appxbundle -ss
-RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectVersion.appxbundle -ss
+#RunTest 97 ./../appx/bundles/ManifestPackageHasIncorrectVersion.appxbundle -ss ### WIN8-era package
 # RunTest 0 ./../appx/bundles/ManifestPackageHasInvalidOffset.appxbundle
 # RunTest 0 ./../appx/bundles/ManifestPackageHasInvalidRange.appxbundle
 RunTest 2 ./../appx/bundles/ManifestViolatesSchema.appxbundle -ss

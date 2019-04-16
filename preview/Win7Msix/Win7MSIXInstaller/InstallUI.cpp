@@ -1,5 +1,3 @@
-// UI Functions
-
 #include "InstallUI.hpp"
 #include <windows.h>
 #include <string>
@@ -11,6 +9,8 @@
 #include <sstream>
 #include <iostream>
 #include "resource.h"
+#include <filesystem>
+
 #include "GeneralUtil.hpp"
 #include "Win7MSIXInstallerLogger.hpp"
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
@@ -32,7 +32,7 @@ HRESULT UI::DrawPackageInfo(HWND hWnd, RECT windowRect)
 {
     if (SUCCEEDED(m_loadingPackageInfoCode))
     {
-        auto displayText = L"Install " + m_displayName + L"?";
+        auto displayText = m_installOrUpdateText + L" " + m_displayName + L"?";
         auto messageText = L"Publisher: " + m_publisherCommonName + L"\nVersion: " + m_version;
         ChangeText(hWnd, displayText, messageText, m_logoStream.Get());
         ChangeText(hWnd, GetStringResource(IDS_STRING_UI_INSTALL_COMPLETE), GetStringResource(IDS_STRING_UI_COMPLETION_MESSAGE));
@@ -56,14 +56,14 @@ HRESULT UI::DrawPackageInfo(HWND hWnd, RECT windowRect)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UI* ui = (UI*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-
     RECT windowRect;
     GetClientRect(hWnd, &windowRect);
     switch (message)
     {
     case WM_CREATE:
-        ui->LaunchButton(hWnd, windowRect);
         ui->CreateCheckbox(hWnd, windowRect);
+        ui->InstallButton(hWnd, windowRect);
+        ui->CreateLaunchButton(hWnd, windowRect, 275, 60);
         break;
     case WM_PAINT:
     {
@@ -141,6 +141,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+void UI::ConfirmAppCancel(HWND hWnd)
+{
+    const int cancelResult = MessageBox(hWnd, m_cancelPopUpMessage.c_str(), m_cancelPopUpTitle.c_str(), MB_YESNO);
+    switch (cancelResult)
+    {
+    case IDYES:
+        m_msixRequest->GetMsixResponse()->CancelRequest();
+        break;
+    case IDNO:
+        break;
+    }
+}
+
 HRESULT UI::LaunchInstalledApp()
 {
 
@@ -152,7 +165,6 @@ HRESULT UI::LaunchInstalledApp()
 
 void StartParseFile(HWND hWnd)
 {
-    //auto result = ParseAndRun(hWnd);
     int result = 0;
 
     if (result != 0)
@@ -255,14 +267,7 @@ HRESULT UI::ParseInfoFromPackage()
     return S_OK;
 }
 
-
-// FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Creates the progress bar
-//
-// parentHWnd: the HWND of the window to add the progress bar to
-// parentRect: the dimensions of the parent window
-BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
+BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
 {
     int scrollHeight = GetSystemMetrics(SM_CYVSCROLL);
 
@@ -287,36 +292,6 @@ BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-// FUNCTION: LaunchButton(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Create the lower right button
-// 
-// parentHWnd: the HWND of the window to add the button to
-// parentRect: the specs of the parent window
-BOOL UI::LaunchButton(HWND parentHWnd, RECT parentRect) {
-    LPVOID buttonPointer = nullptr;
-    g_buttonHWnd = CreateWindowEx(
-        WS_EX_LEFT, // extended window style
-        L"BUTTON",
-        L"Install",  // text
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
-        parentRect.right - 100 - 50, // x coord
-        parentRect.bottom - 60,  // y coord
-        120,  // width
-        35,  // height
-        parentHWnd,  // parent
-        (HMENU)IDC_INSTALLBUTTON, // menu
-        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
-        buttonPointer); // pointer to button
-    return TRUE;
-}
-
-// FUNCTION: CreateCheckbox(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Create the launch checkbox on the bottom left
-// 
-// parentHWnd: the HWND of the window to add the checkbox to
-// parentRect: the specs of the parent window
 BOOL UI::CreateCheckbox(HWND parentHWnd, RECT parentRect)
 {
     g_checkboxHWnd = CreateWindowEx(
@@ -363,22 +338,16 @@ BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-// FUNCTION: CreateLaunchButton(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Create the launch button on the botton right after app has been installed
-// 
-// parentHWnd: the HWND of the window to add the checkbox to
-// parentRect: the specs of the parent window
-BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect)
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff) 
 {
     LPVOID buttonPointer = nullptr;
     g_LaunchbuttonHWnd = CreateWindowEx(
         WS_EX_LEFT, // extended window style
         L"BUTTON",
         L"Launch",  // text
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
-        parentRect.right - 100 - 50, // x coord
-        parentRect.bottom - 60,  // y coord
+        WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+        parentRect.right - xDiff, // x coord
+        parentRect.bottom - yDiff,  // y coord
         120,  // width
         35,  // height
         parentHWnd,  // parent
@@ -388,28 +357,12 @@ BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-// FUNCTION: ChangeButtonText(LPARAM newMessage)
-//
-// PURPOSE: Changes the text of the lower right button
-//
-// newMessage: the message to change the button to
-BOOL UI::ChangeButtonText(const std::wstring& newMessage)
+BOOL UI::ChangeInstallButtonText(const std::wstring& newMessage)
 {
     SendMessage(g_buttonHWnd, WM_SETTEXT, NULL, reinterpret_cast<LPARAM>(newMessage.c_str()));
     return ShowWindow(g_buttonHWnd, SW_SHOW);
 }
 
-BOOL UI::HideButtonWindow()
-{
-    return ShowWindow(g_buttonHWnd, SW_HIDE);
-}
-
-// FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
-//
-// PURPOSE: Change the text of the installation window based on the given input
-//
-// parentHWnd: the HWND of the window to be changed
-// windowText: the text to change the window to
 BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring messageText, IStream* logoStream)
 {
     PAINTSTRUCT paint;
@@ -446,14 +399,9 @@ BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring mess
     return TRUE;
 }
 
-// FUNCTION: CreateInitWindow(HINSTANCE hInstance, int nCmdShow, TCHAR windowClass[], TCHAR windowTitle[])
-//
-// PURPOSE: Creates the initial installation UI window
-// windowClass: the class text of the window
-// windowTitle: the window title
 int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title)
 {
-    hWnd = CreateWindow(
+    HWND hWnd = CreateWindow(
         const_cast<wchar_t*>(windowClass.c_str()),
         const_cast<wchar_t*>(title.c_str()),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
