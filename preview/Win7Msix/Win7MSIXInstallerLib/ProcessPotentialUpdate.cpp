@@ -16,9 +16,9 @@ HRESULT ProcessPotentialUpdate::ExecuteForAddRequest(AddRequestInfo &requestInfo
     
     for (auto& p : std::experimental::filesystem::directory_iterator(FilePathMappings::GetInstance().GetMsix7Directory()))
     {
-        std::wstring installedPackageFamilyName = GetFamilyNameFromFullName(p.path().filename());
-        if (CaseInsensitiveEquals(currentPackageFamilyName, installedPackageFamilyName)
-            && !CaseInsensitiveEquals(requestInfo.GetPackage()->GetPackageFullName(), p.path().filename()))
+        std::wstring installedPackageFamilyName = Win7MsixInstallerLib_GetFamilyNameFromFullName(p.path().filename());
+        if (Win7MsixInstallerLib_CaseInsensitiveEquals(currentPackageFamilyName, installedPackageFamilyName)
+            && !Win7MsixInstallerLib_CaseInsensitiveEquals(requestInfo.GetPackage()->GetPackageFullName(), p.path().filename()))
         {
             RETURN_IF_FAILED(RemovePackage(p.path().filename()));
             return S_OK;

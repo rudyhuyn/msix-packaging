@@ -33,3 +33,8 @@ std::wstring GetStringResource(UINT resourceId)
 
     return stringResource;
 }
+
+bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right)
+{
+    return (_wcsicmp(left.c_str(), right.c_str()) == 0);
+}

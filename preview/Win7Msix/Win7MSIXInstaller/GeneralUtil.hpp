@@ -23,6 +23,13 @@ std::wstring utf8_to_utf16(const std::string& utf8string);
 /// @return string for the resource, resolved from the stringtable defined in Win7MsixInstaller.rc
 std::wstring GetStringResource(UINT resourceId);
 
+/// Determines if two strings are case-insensitive equals
+///
+/// @param left - one of the two strings
+/// @param right - the other of the two strings
+/// @return true if the strings equal, false otherwise
+bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
+
 
 //
 // A designated memory allocator

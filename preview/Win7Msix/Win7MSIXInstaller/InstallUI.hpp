@@ -67,6 +67,27 @@ private:
 
     HANDLE m_closeUI;
 
+    HRESULT ParseInfoFromPackage();
+
+    void ShowCompletedUI();
+
+    /// This function sets the parent window hwnd after create window
+    ///
+    /// @param hWnd - the HWND of the parent window
+    void SetHwnd(HWND hwnd)
+    {
+        hWnd = hwnd;
+    }
+
+    /// This function returns the parent window hwnd
+    ///
+    /// @return hWnd: parent window hwnd
+    HWND GetHwnd()
+    {
+        return hWnd;
+    }
+
+
 public:
 
     /// This function compiles the information displayed on the UI when the user selects an msix
@@ -134,7 +155,4 @@ public:
     /// This method checks the same and sets the button and install screen UI text to 'Update'
     ///
     void PreprocessRequest();
-private:
-    HRESULT ParseInfoFromPackage();
-    void ShowCompletedUI();
 };

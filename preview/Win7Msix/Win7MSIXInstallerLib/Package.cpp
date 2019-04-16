@@ -157,7 +157,7 @@ HRESULT PackageBase::SetManifestReader(IAppxManifestReader * manifestReader)
     Text<WCHAR> packageFullName;
     RETURN_IF_FAILED(manifestId->GetPackageFullName(&packageFullName));
     m_packageFullName = packageFullName.Get();
-    m_packageFamilyName = GetFamilyNameFromFullName(m_packageFullName);
+    m_packageFamilyName = Win7MsixInstallerLib_GetFamilyNameFromFullName(m_packageFullName);
 
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(manifestReader->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));

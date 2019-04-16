@@ -58,14 +58,14 @@ inline void STDMETHODCALLTYPE Win7MsixInstallerLib_MyFree(LPVOID pv) { std::free
 ///
 /// @param fullName - the packageFullName, assumed to be properly formatted and not validated.
 /// @return packageFamilyName for the packageFullName
-std::wstring GetFamilyNameFromFullName(const std::wstring& fullName);
+std::wstring Win7MsixInstallerLib_GetFamilyNameFromFullName(const std::wstring& fullName);
 
 /// Determines if two strings are case-insensitive equals
 ///
 /// @param left - one of the two strings
 /// @param right - the other of the two strings
 /// @return true if the strings equal, false otherwise
-bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
+bool Win7MsixInstallerLib_CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
 
 namespace Win7MsixInstallerLib
 {

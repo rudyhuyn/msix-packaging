@@ -283,29 +283,15 @@ HRESULT UI::ParseInfoFromPackage()
     return S_OK;
 }
 
-void UI::PreprocessRequest()
+bool UI::Show()
 {
+    m_loadingPackageInfoCode = ParseInfoFromPackage();
 
-    //TODO
-/*    std::wstring currentPackageFamilyName = this->m_packageInfo.GetPackageFamilyName();
-    for (auto& p : std::experimental::filesystem::directory_iterator(m_msixRequest->GetFilePathMappings()->GetMsix7Directory()))
-    {
-        std::wstring installedPackageFamilyName = GetFamilyNameFromFullName(p.path().filename());
-        if (CaseInsensitiveEquals(m_msixRequest->GetPackageInfo()->GetPackageFullName(), p.path().filename()))
-        {
-            /// Same package is already installed
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_REINSTALLAPP)); /// change install button text to 'reinstall'
-            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW); /// show launch button window
-        }
-        else if (CaseInsensitiveEquals(currentPackageFamilyName, installedPackageFamilyName))
-        {
-            /// Package with same family name exists and may be an update
-            m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
-            m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
-        }
-    }
-    */
+    std::thread thread(StartUIThread, this);
+    thread.detach();
+
+    DWORD waitResult = WaitForSingleObject(m_closeUI, INFINITE);
+    return waitResult == WAIT_OBJECT_0;
 }
 
 BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
@@ -410,7 +396,6 @@ BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDi
     return TRUE;
 }
 
-
 BOOL UI::ChangeInstallButtonText(const std::wstring& newMessage)
 {
     SendMessage(g_buttonHWnd, WM_SETTEXT, NULL, reinterpret_cast<LPARAM>(newMessage.c_str()));
@@ -474,7 +459,9 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
         return 1;
     }
 
+    SetHwnd(hWnd);
     SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);
+    PreprocessRequest();
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
@@ -489,17 +476,26 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     return static_cast<int>(msg.wParam);
 }
 
-bool UI::Show()
+void UI::PreprocessRequest()
 {
-    m_loadingPackageInfoCode = ParseInfoFromPackage();
-
-    std::thread thread(StartUIThread, this);
-    thread.detach();
-
-    DWORD waitResult = WaitForSingleObject(m_closeUI, INFINITE);
-    return waitResult == WAIT_OBJECT_0;
+    auto existingPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFamilyName());
+    if (existingPackage != nullptr)
+    {
+        if (CaseInsensitiveEquals(existingPackage->GetPackageFullName(), m_packageInfo->GetPackageFullName()))
+        {
+            /// Same package is already installed
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_REINSTALLAPP)); /// change install button text to 'reinstall'
+            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW); /// show launch button window
+        }
+        else
+        {
+            /// Package with same family name exists and may be an update
+            m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
+            m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
+        }
+    }
 }
-
 
 void UI::ButtonClicked()
 {
