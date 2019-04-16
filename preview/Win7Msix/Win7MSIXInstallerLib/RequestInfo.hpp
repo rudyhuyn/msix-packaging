@@ -35,10 +35,12 @@ namespace Win7MsixInstallerLib
         inline const std::wstring & GetInstallationDir() const { return m_installationDir; }
         MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
         const std::wstring & GetPackageFilePathToInstall() { return m_packageFilePathToInstall; }
+        bool GetIsInstallCancelled() { return false; }
     private:
         Package * m_package;
         std::wstring m_installationDir;
         std::wstring m_packageFilePathToInstall;
+        
         MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
     };
 

@@ -14,6 +14,11 @@ const PCWSTR AddRemovePrograms::HandlerName = L"AddRemovePrograms";
 
 HRESULT AddRemovePrograms::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
+    if (requestInfo.GetIsInstallCancelled())
+    {
+        return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
+    }
+
     std::wstring packageFullName = requestInfo.GetPackage()->GetPackageFullName();
 
     RegistryKey uninstallKey;

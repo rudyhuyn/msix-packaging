@@ -56,6 +56,9 @@ HRESULT UI::DrawPackageInfo(HWND hWnd, RECT windowRect)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UI* ui = (UI*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    if (ui == nullptr)
+        return E_FAIL;
+
     RECT windowRect;
     GetClientRect(hWnd, &windowRect);
     switch (message)
@@ -74,24 +77,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_COMMAND:
+    {
         switch (LOWORD(wParam))
         {
         case IDC_INSTALLBUTTON:
         {
-            if (!g_installed)
-            {
-                DestroyWindow(g_buttonHWnd);
-                ui->CreateCancelButton(hWnd, windowRect);
-                UpdateWindow(hWnd);
-                ui->CreateProgressBar(hWnd, windowRect);
-                ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
-                ui->ButtonClicked();
-            }
-            else
-            {
-                PostQuitMessage(0);
-                exit(0);
-            }
+            g_installing = true;
+            DestroyWindow(g_LaunchbuttonHWnd);
+            DestroyWindow(g_buttonHWnd);
+            ui->CreateCancelButton(hWnd, windowRect);
+            UpdateWindow(hWnd);
+            ui->CreateProgressBar(hWnd, windowRect);
+            ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
+            ui->ButtonClicked();
         }
         break;
         case IDC_LAUNCHCHECKBOX:
@@ -106,18 +104,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+        case IDC_CANCELBUTTON:
+        {
+            ui->ConfirmAppCancel(hWnd);
+            break;
+        }
         case IDC_LAUNCHBUTTON:
             ui->LaunchInstalledApp();
             break;
         }
         break;
-    case WM_SIZE:
-    case WM_SIZING:
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        exit(0);
-        break;
+    }
     case WM_CTLCOLORSTATIC:
     {
         switch (::GetDlgCtrlID((HWND)lParam))
@@ -133,6 +130,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         break;
     }
+    case WM_CLOSE:
+    {
+        //show popup asking if user wants to stop installation only during app installation
+        if (g_installing)
+        {
+            ui->ConfirmAppCancel(hWnd);
+        }
+        else
+        {
+            DestroyWindow(hWnd);
+        }
+        break;
+    }
+    case WM_SIZE:
+    case WM_SIZING:
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        exit(0);
+        break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
         break;
@@ -147,7 +164,7 @@ void UI::ConfirmAppCancel(HWND hWnd)
     switch (cancelResult)
     {
     case IDYES:
-        m_msixRequest->GetMsixResponse()->CancelRequest();
+        //TODO m_msixRequest->GetMsixResponse()->CancelRequest();
         break;
     case IDNO:
         break;
@@ -156,9 +173,8 @@ void UI::ConfirmAppCancel(HWND hWnd)
 
 HRESULT UI::LaunchInstalledApp()
 {
-
     auto installedPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFullName());
-
+    //check for error while launching app here
     ShellExecute(NULL, NULL, installedPackage->GetFullExecutableFilePath().c_str(), NULL, NULL, SW_SHOW);
     return S_OK;
 }
@@ -267,7 +283,32 @@ HRESULT UI::ParseInfoFromPackage()
     return S_OK;
 }
 
-BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect, int count)
+void UI::PreprocessRequest()
+{
+
+    //TODO
+/*    std::wstring currentPackageFamilyName = this->m_packageInfo.GetPackageFamilyName();
+    for (auto& p : std::experimental::filesystem::directory_iterator(m_msixRequest->GetFilePathMappings()->GetMsix7Directory()))
+    {
+        std::wstring installedPackageFamilyName = GetFamilyNameFromFullName(p.path().filename());
+        if (CaseInsensitiveEquals(m_msixRequest->GetPackageInfo()->GetPackageFullName(), p.path().filename()))
+        {
+            /// Same package is already installed
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_REINSTALLAPP)); /// change install button text to 'reinstall'
+            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW); /// show launch button window
+        }
+        else if (CaseInsensitiveEquals(currentPackageFamilyName, installedPackageFamilyName))
+        {
+            /// Package with same family name exists and may be an update
+            m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
+            m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
+        }
+    }
+    */
+}
+
+BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
 {
     int scrollHeight = GetSystemMetrics(SM_CYVSCROLL);
 
@@ -313,12 +354,24 @@ BOOL UI::CreateCheckbox(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-// FUNCTION: CancelButton(HWND parentHWnd, RECT parentRect)
-//
-// PURPOSE: Create the lower right cancel button when install is clicked
-// 
-// parentHWnd: the HWND of the window to add the button to
-// parentRect: the specs of the parent window
+BOOL UI::InstallButton(HWND parentHWnd, RECT parentRect) {
+    LPVOID buttonPointer = nullptr;
+    g_buttonHWnd = CreateWindowEx(
+        WS_EX_LEFT, // extended window style
+        L"Button",
+        L"Install",  // text
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+        parentRect.right - 100 - 50, // x coord
+        parentRect.bottom - 60,  // y coord
+        120,  // width
+        35,  // height
+        parentHWnd,  // parent
+        (HMENU)IDC_INSTALLBUTTON, // menu
+        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
+        buttonPointer); // pointer to button
+    return TRUE;
+}
+
 BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
 {
     LPVOID buttonPointer = nullptr;
@@ -338,7 +391,7 @@ BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff) 
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff)
 {
     LPVOID buttonPointer = nullptr;
     g_LaunchbuttonHWnd = CreateWindowEx(
@@ -356,6 +409,7 @@ BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDi
         buttonPointer); // pointer to button
     return TRUE;
 }
+
 
 BOOL UI::ChangeInstallButtonText(const std::wstring& newMessage)
 {
@@ -477,7 +531,7 @@ void UI::ShowCompletedUI()
     DestroyWindow(g_CancelbuttonHWnd);
     RECT windowRect;
     GetClientRect(hWnd, &windowRect);
-    CreateLaunchButton(hWnd, windowRect);
+    CreateLaunchButton(hWnd, windowRect, 150, 60);
     UpdateWindow(hWnd);
     ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
     ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box

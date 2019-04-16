@@ -150,18 +150,18 @@ HRESULT FileTypeAssociation::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
-        RETURN_IF_FAILED(ProcessFtaForAdd(requestInfo.GetPackage(), requestInfo.GetInstallationDir(), *fta));
+        RETURN_IF_FAILED(ProcessFtaForAdd(requestInfo, *fta));
     }
 
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * package, const std::wstring & installDirectoryPath, Fta& fta)
+HRESULT FileTypeAssociation::ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
     for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
     {
-        if (m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
+        if (requestInfo.GetIsInstallCancelled())
         {
             return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
         }
@@ -216,7 +216,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(PackageBase * package, const std::
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    auto executableFilePath = installDirectoryPath + package->GetRelativeExecutableFilePath();
+    auto executableFilePath = requestInfo.GetInstallationDir() + requestInfo.GetPackage()->GetRelativeExecutableFilePath();
     std::wstring command = executableFilePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 

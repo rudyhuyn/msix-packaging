@@ -39,7 +39,7 @@ private:
     HRESULT ParseProtocolElement(IMsixElement * protocolElement, const std::wstring & installDirectoryPath);
 
     /// Parses the manifest and fills out the m_protocols vector of ProtocolData containing data from the manifest
-    HRESULT ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath);
+    HRESULT ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath, std::function<bool()> checkIfCancelled = nullptr);
 
     /// Adds the protocol data to the system registry
     ///

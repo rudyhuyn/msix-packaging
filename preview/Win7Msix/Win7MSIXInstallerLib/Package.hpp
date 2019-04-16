@@ -71,6 +71,7 @@ namespace Win7MsixInstallerLib
         Package() :PackageBase() {}
 
         std::wstring GetPackageFullName() { return m_packageFullName; }
+        std::wstring GetPackageFamilyName() { return m_packageFamilyName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }
@@ -89,6 +90,7 @@ namespace Win7MsixInstallerLib
     {
     public:
         std::wstring GetPackageFullName() { return m_packageFullName; }
+        std::wstring GetPackageFamilyName() { return m_packageFamilyName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
         std::wstring GetDisplayName() { return m_displayName; }
         std::wstring GetId() { return m_appUserModelId; }

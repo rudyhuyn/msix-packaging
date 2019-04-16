@@ -8,6 +8,7 @@ namespace Win7MsixInstallerLib {
         virtual std::wstring GetVersion() = 0;
         virtual std::wstring GetPublisherDisplayName() = 0;
         virtual std::wstring GetPackageFullName() = 0;
+        virtual std::wstring GetPackageFamilyName() = 0;
         virtual std::wstring GetDisplayName() = 0;
         virtual std::wstring GetId() = 0;
         virtual IStream* GetLogo() = 0;

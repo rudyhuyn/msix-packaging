@@ -14,11 +14,14 @@ const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
 HRESULT InstallComplete::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
-    DeploymentResult result;
-    result.Progress = 100;
-    result.Status = InstallationStep::InstallationStepCompleted;
-    requestInfo.SendCallback(result);
-    return S_OK;
+    if (!requestInfo.GetIsInstallCancelled())
+    {
+        DeploymentResult result;
+        result.Progress = 100;
+        result.Status = InstallationStep::InstallationStepCompleted;
+        requestInfo.SendCallback(result);
+        return S_OK;
+    }
 }
 
 HRESULT InstallComplete::CreateHandler(IPackageHandler ** instance)

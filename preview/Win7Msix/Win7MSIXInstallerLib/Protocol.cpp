@@ -69,7 +69,7 @@ HRESULT Protocol::ParseProtocolElement(IMsixElement* protocolElement, const std:
     return S_OK;
 }
 
-HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath)
+HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & installDirectoryPath, std::function<bool()> checkIfCancelled)
 {
     ComPtr<IMsixDocumentElement> domElement;
     RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
@@ -83,7 +83,7 @@ HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & inst
     RETURN_IF_FAILED(extensionEnum->GetHasCurrent(&hasCurrent));
     while (hasCurrent)
     {
-        if (m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
+        if (checkIfCancelled != nullptr && checkIfCancelled())
         {
             return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
         }
@@ -116,7 +116,9 @@ HRESULT Protocol::ParseManifest(PackageBase * package, const std::wstring & inst
 
 HRESULT Protocol::ExecuteForAddRequest(AddRequestInfo &requestInfo)
 {
-    RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
+    RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir(), [&requestInfo]() {
+        return requestInfo.GetIsInstallCancelled();
+    }));
 
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {
@@ -168,7 +170,7 @@ HRESULT Protocol::ProcessProtocolForAdd(AddRequestInfo &requestInfo, ProtocolDat
 HRESULT Protocol::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
 {
     auto package = requestInfo.GetPackage();
-    RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
+    RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation(), nullptr));
 
     for (auto protocol = m_protocols.begin(); protocol != m_protocols.end(); ++protocol)
     {

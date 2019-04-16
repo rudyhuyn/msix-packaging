@@ -51,7 +51,7 @@ private:
     HRESULT ParseFtaElement(PackageBase * package, const std::wstring & installDirectoryPath, IMsixElement* ftaElement);
 
     /// Adds the file type association (fta) entries if necessary
-    HRESULT ProcessFtaForAdd(PackageBase * package, const std::wstring & installDirectoryPath, Fta& fta);
+    HRESULT ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta& fta);
 
     /// Removes the file type association (fta) entries if necessary
     HRESULT ProcessFtaForRemove(Fta& fta);

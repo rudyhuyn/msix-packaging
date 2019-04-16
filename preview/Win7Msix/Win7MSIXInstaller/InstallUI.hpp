@@ -19,21 +19,24 @@ static HWND g_checkboxHWnd = NULL;
 static HWND g_progressHWnd = NULL;
 static HWND g_CancelbuttonHWnd = NULL;
 static HWND g_LaunchbuttonHWnd = NULL;
+static bool g_launchCheckBoxState = true; /// launch checkbox is checked by default
+static bool g_installing = false; /// variable used to indicate that app installation is in progress
 
-static bool g_installed = false;
-static bool g_launchCheckBoxState = true; // launch checkbox is checked by default
 
 enum UIType { InstallUIAdd, InstallUIRemove};
 
 class UI
 {
 public:
+    HRESULT ShowUI();
+    HRESULT LaunchInstalledApp();
+    void ConfirmAppCancel(HWND parentHWnd);
+
     UI(_In_ Win7MsixInstallerLib::IPackageManager* packageManager, _In_ const std::wstring & path, UIType type) : m_packageManager(packageManager), m_type(type)
     {
         m_path = std::wstring(path);
         m_closeUI = CreateEvent(NULL, FALSE, FALSE, NULL);
     }
-    HRESULT LaunchInstalledApp();
     ~UI() {}
     bool Show();
 
@@ -41,9 +44,18 @@ private:
     Win7MsixInstallerLib::IPackageManager* m_packageManager = nullptr;
     Win7MsixInstallerLib::IPackage* m_packageInfo = nullptr;
     std::wstring m_path;
-    
-    HANDLE m_closeUI;
 
+    //Parent Window Hwnd
+    HWND hWnd = NULL;
+
+    /// Default prefix text on UI while prompting for app installation is 'Install'
+    std::wstring m_installOrUpdateText = GetStringResource(IDS_STRING_INSTALLTEXT);
+
+    /// Message to prompt user while cancelling app installation
+    std::wstring m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_INSTALLPOPUP);
+
+    /// Popup message title while cancelling app installation
+    std::wstring m_cancelPopUpTitle = GetStringResource(IDS_STRING_CANCEL_POPUP_TITLE);
     //Cached information used to draw the dialog
     std::wstring m_displayName = L"";
     std::wstring m_publisherCommonName = L"";
@@ -52,18 +64,31 @@ private:
 
     HRESULT m_loadingPackageInfoCode = 0;
     UIType m_type;
+
+    HANDLE m_closeUI;
+
 public:
+
+    /// This function compiles the information displayed on the UI when the user selects an msix
+    ///
+    /// @param hWnd - the HWND of the window to draw controls
+    /// @param windowRect - the size of the window
     HRESULT DrawPackageInfo(HWND hWnd, RECT windowRect);
+
+    /// Creates the initial installation UI window
+    ///
+    /// @param windowClass - the class text of the window
+    /// @param windowTitle - the window title
     int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
+    void LoadInfo();
+
     void ButtonClicked();
 
-    // FUNCTION: CreateProgressBar(HWND parentHWnd, RECT parentRect)
-    //
-    // PURPOSE: Creates the progress bar
-    //
-    // parentHWnd: the HWND of the window to add the progress bar to
-    // parentRect: the dimmensions of the parent window
-    // count: the number of objects to be iterated through in the progress bar
+    /// Creates the progress bar
+    ///
+    /// @param parentHWnd - the HWND of the window to add the progress bar to
+    /// @param parentRect - the dimmensions of the parent window
+    /// count: the number of objects to be iterated through in the progress bar
     BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
     /// Create the lower right install button
@@ -98,14 +123,17 @@ public:
     /// @param newMessage - the message to change the button to
     BOOL ChangeInstallButtonText(const std::wstring& newMessage);
 
-    // FUNCTION: ChangeText(HWND parentHWnd, std::wstring& windowText)
-    //
-    // PURPOSE: Change the text of the installation window based on the given input
-    //
-    // parentHWnd: the HWND of the window to be changed
-    // windowText: the text to change the window to
+    /// Change the text of the installation window based on the given input
+    ///
+    /// @param parentHWnd - the HWND of the window to be changed
+    /// @param windowText - the text to change the window to
     BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
 
+    /// The add operation could be an update if V1 version of the package is already installed. Show appropriate UI with respect to operation type
+    /// The add operation could be an update if V1 version of the package is already installed on the machine
+    /// This method checks the same and sets the button and install screen UI text to 'Update'
+    ///
+    void PreprocessRequest();
 private:
     HRESULT ParseInfoFromPackage();
     void ShowCompletedUI();
