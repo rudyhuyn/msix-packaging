@@ -7,6 +7,7 @@
 #include <TraceLoggingProvider.h>
 #include "ErrorHandler.hpp"
 #include "MsixRequest.hpp"
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR ErrorHandler::HandlerName = L"ErrorHandler";
 
@@ -18,7 +19,8 @@ HRESULT ErrorHandler::ExecuteForAddRequest()
 
 HRESULT ErrorHandler::RemovePackage(std::wstring packageFullName)
 {
-    AutoPtr<MsixRequest> removePackageRequest;
+    //todo
+ /*   AutoPtr<MsixRequest> removePackageRequest;
     RETURN_IF_FAILED(MsixRequest::Make(OperationType::Remove, Flags::NoFlags, std::wstring(), packageFullName,
         MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &removePackageRequest));
 
@@ -29,7 +31,7 @@ HRESULT ErrorHandler::RemovePackage(std::wstring packageFullName)
         "Failed to process cancel request",
         TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
         TraceLoggingValue(hrCancelRequest, "HR"));
-    }
+    }        */
     return S_OK;
 }
 

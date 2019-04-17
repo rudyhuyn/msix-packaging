@@ -1,8 +1,8 @@
 #pragma once
 #include "Package.hpp"
 #include "FilePaths.hpp"
-#include "DeploymentResult.hpp"
-#include <functional>
+#include "MsixResponse.hpp"
+
 namespace Win7MsixInstallerLib
 {
 
@@ -21,7 +21,12 @@ namespace Win7MsixInstallerLib
         std::wstring m_packageFullName;
         MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
         OperationType m_operationType = Add;
-        std::function<void(DeploymentResult)> m_callback;
+
+        /// Filled by PopulatePackageInfo
+        AutoPtr<PackageBase> m_packageInfo;
+
+        /// MsixResponse object populated by handlers
+        AutoPtr<MsixResponse> m_msixResponse;
 
     protected:
         MsixRequest() {}
@@ -43,17 +48,21 @@ namespace Win7MsixInstallerLib
             return true;
         }
 
-        void SetCallback(std::function<void(const DeploymentResult &)> callback) {
-            m_callback = callback;
-        }
+        inline MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
+        inline PCWSTR GetPackageFilePath() { return m_packageFilePath.c_str(); }
+        inline PCWSTR GetPackageFullName() { return m_packageFullName.c_str(); }
 
-        void SendCallback(const DeploymentResult & result)
-        {
-            if (m_callback != nullptr)
-            {
-                m_callback(result);
-            }
-        }
+        /// Retrieves the msixResponse object
+        ///
+        /// @return m_msixResponse object
+        MsixResponse* GetMsixResponse() { return m_msixResponse; }
+
+        /// Called by PopulatePackageInfo
+        void SetPackageInfo(PackageBase* packageInfo);
+        std::wstring GetPackageDirectoryPath();
+
+        /// @return can return null if called before PopulatePackageInfo.
+        PackageBase* GetPackageInfo() { return m_packageInfo; }
 
     private:
         /// This handles Add operation and proceeds through each of the AddSequenceHandlers to install the package

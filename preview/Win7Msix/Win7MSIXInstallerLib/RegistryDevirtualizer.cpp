@@ -364,12 +364,12 @@ HRESULT RegistryDevirtualizer::RemoveDevirtualizeRegistryTree(RegistryKey * virt
     return S_OK;
 }
 
-HRESULT RegistryDevirtualizer::Create(std::wstring hiveFileName, RegistryDevirtualizer ** instance)
+HRESULT RegistryDevirtualizer::Create(std::wstring hiveFileName, MsixRequest* msixRequest, RegistryDevirtualizer ** instance)
 {
     bool registryFileExists = false;
     RETURN_IF_FAILED(FileExists(hiveFileName, registryFileExists));
 
-    std::unique_ptr<RegistryDevirtualizer> localInstance(new RegistryDevirtualizer(hiveFileName));
+    std::unique_ptr<RegistryDevirtualizer> localInstance(new RegistryDevirtualizer(hiveFileName, msixRequest));
     if (localInstance == nullptr)
     {
         RETURN_IF_FAILED(E_OUTOFMEMORY);

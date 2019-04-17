@@ -12,20 +12,20 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR FileTypeAssociation::HandlerName = L"FileTypeAssociation";
 
-std::wstring FileTypeAssociation::CreateProgID(PackageBase * package, PCWSTR name)
+std::wstring FileTypeAssociation::CreateProgID(PCWSTR name)
 {
-    std::wstring packageFullName = package->GetPackageFullName();
+    std::wstring packageFullName = m_msixRequest->GetPackageInfo()->GetPackageFullName();
     std::wstring progID = msix7ProgIDPrefix + packageFullName.substr(0, packageFullName.find(L"_")) + name;
     return progID;
 }
 
-HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * package, const std::wstring & installDirectoryPath, IMsixElement* ftaElement)
+HRESULT FileTypeAssociation::ParseFtaElement(IMsixElement* ftaElement)
 {
     Text<wchar_t> ftaName;
     RETURN_IF_FAILED(ftaElement->GetAttributeValue(nameAttribute.c_str(), &ftaName));
 
     std::wstring name = L"." + std::wstring(ftaName.Get());
-    std::wstring progID = CreateProgID(package, name.c_str());
+    std::wstring progID = CreateProgID(name.c_str());
 
     Fta fta;
     fta.name = name;
@@ -66,7 +66,7 @@ HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * package, const std::w
         Text<wchar_t> logoPath;
         RETURN_IF_FAILED(logoElement->GetText(&logoPath));
 
-        fta.logo = installDirectoryPath + std::wstring(L"\\") + logoPath.Get();
+        fta.logo = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName() + std::wstring(L"\\") + logoPath.Get();
     }
 
     ComPtr<IMsixElementEnumerator> verbsEnum;
@@ -101,10 +101,10 @@ HRESULT FileTypeAssociation::ParseFtaElement(PackageBase * package, const std::w
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wstring & installationDirectoryPath)
+HRESULT FileTypeAssociation::ParseManifest()
 {
     ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
+    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
 
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
@@ -132,7 +132,7 @@ HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wst
                 ComPtr<IMsixElement> ftaElement;
                 RETURN_IF_FAILED(ftaEnum->GetCurrent(&ftaElement));
 
-                RETURN_IF_FAILED(ParseFtaElement(package, installationDirectoryPath, ftaElement.Get()));
+                RETURN_IF_FAILED(ParseFtaElement(ftaElement.Get()));
             }
         }
         RETURN_IF_FAILED(extensionEnum->MoveNext(&hasCurrent));
@@ -141,27 +141,22 @@ HRESULT FileTypeAssociation::ParseManifest(PackageBase * package, const std::wst
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForAddRequest(AddRequestInfo &requestInfo)
+HRESULT FileTypeAssociation::ExecuteForAddRequest()
 {
-    std::wstring registryFilePath = requestInfo.GetInstallationDir() + registryDatFile;
-    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, &m_registryDevirtualizer));
-
-    RETURN_IF_FAILED(ParseManifest(requestInfo.GetPackage(), requestInfo.GetInstallationDir()));
-
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
-        RETURN_IF_FAILED(ProcessFtaForAdd(requestInfo, *fta));
+        RETURN_IF_FAILED(ProcessFtaForAdd(*fta));
     }
 
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta& fta)
+HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
 {
     bool needToProcessAnyExtensions = false;
     for (auto extensionName = fta.extensions.begin(); extensionName != fta.extensions.end(); ++extensionName)
     {
-        if (requestInfo.GetIsInstallCancelled())
+        if (m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
         {
             return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
         }
@@ -216,8 +211,8 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta&
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    auto executableFilePath = requestInfo.GetInstallationDir() + requestInfo.GetPackage()->GetRelativeExecutableFilePath();
-    std::wstring command = executableFilePath + commandArgument;
+    std::wstring executablePath = m_msixRequest->GetPackageDirectoryPath() + m_msixRequest->GetPackageInfo()->GetRelativeExecutableFilePath();
+    std::wstring command = executablePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 
     for (auto verb = fta.verbs.begin(); verb != fta.verbs.end(); ++verb)
@@ -228,7 +223,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta&
         RegistryKey verbCommandKey;
         RETURN_IF_FAILED(verbKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &verbCommandKey));
 
-        std::wstring verbCommand = executableFilePath;
+        std::wstring verbCommand = executablePath;
         if (verb->parameter.c_str() != nullptr)
         {
             verbCommand += std::wstring(L" ") + verb->parameter.c_str();
@@ -239,13 +234,8 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(AddRequestInfo & requestInfo, Fta&
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
+HRESULT FileTypeAssociation::ExecuteForRemoveRequest()
 {
-    auto package = requestInfo.GetPackage();
-    std::wstring registryFilePath = package->GetInstalledLocation() + registryDatFile;
-    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, &m_registryDevirtualizer));
-
-    RETURN_IF_FAILED(ParseManifest(package, package->GetInstalledLocation()));
     for (auto fta = m_Ftas.begin(); fta != m_Ftas.end(); ++fta)
     {
         RETURN_IF_FAILED(ProcessFtaForRemove(*fta));
@@ -305,15 +295,20 @@ HRESULT FileTypeAssociation::ProcessFtaForRemove(Fta& fta)
     return S_OK;
 }
 
-HRESULT FileTypeAssociation::CreateHandler(IPackageHandler ** instance)
+HRESULT FileTypeAssociation::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
-    std::unique_ptr<FileTypeAssociation> localInstance(new FileTypeAssociation());
+    std::unique_ptr<FileTypeAssociation> localInstance(new FileTypeAssociation(msixRequest));
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;
     }
 
     RETURN_IF_FAILED(localInstance->m_classesKey.Open(HKEY_CLASSES_ROOT, nullptr, KEY_READ | KEY_WRITE | WRITE_DAC));
+
+    std::wstring registryFilePath = msixRequest->GetPackageDirectoryPath() + registryDatFile;
+    RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, msixRequest, &localInstance->m_registryDevirtualizer));
+
+    RETURN_IF_FAILED(localInstance->ParseManifest());
 
     *instance = localInstance.release();
 

@@ -2,6 +2,7 @@
 
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
+#include "MsixRequest.hpp"
 
 namespace Win7MsixInstallerLib
 {
@@ -10,17 +11,19 @@ class StartMenuLink : IPackageHandler
 {
 public:
     /// Creates the start menu shortcut to the executable for the application
-    HRESULT ExecuteForAddRequest(AddRequestInfo &requestInfo);
+    HRESULT ExecuteForAddRequest();
 
     /// Removes the start menu link
-    HRESULT ExecuteForRemoveRequest(RemoveRequestInfo& requestInfo);
+    HRESULT ExecuteForRemoveRequest();
 
     static const PCWSTR HandlerName;
-    static HRESULT CreateHandler(_Out_ IPackageHandler** instance);
+    static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
     ~StartMenuLink() {}
 private:
+    MsixRequest* m_msixRequest = nullptr;
 
     StartMenuLink() {}
+    StartMenuLink(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
     /// Creates the Shell link for the start menu shortcut.
     /// Uses the Shell's IShellLink and IPersistFile interfaces

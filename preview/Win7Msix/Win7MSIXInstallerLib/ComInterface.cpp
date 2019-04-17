@@ -12,25 +12,38 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR ComInterface::HandlerName = L"ComInterface";
 
-HRESULT ComInterface::ExecuteForAddRequest(AddRequestInfo & request)
+HRESULT ComInterface::ExecuteForAddRequest()
 {
     for (auto comInterface = m_interfaces.begin(); comInterface != m_interfaces.end(); ++comInterface)
     {
-        RETURN_IF_FAILED(ProcessInterfaceForAddRequest(request, *comInterface));
+        RETURN_IF_FAILED(ProcessInterfaceForAddRequest(*comInterface));
     }
 
     for (auto typeLib = m_typeLibs.begin(); typeLib != m_typeLibs.end(); ++typeLib)
     {
-        RETURN_IF_FAILED(ProcessTypeLibForAddRequest(request, *typeLib));
+        RETURN_IF_FAILED(ProcessTypeLibForAddRequest(*typeLib));
     }
 
     return S_OK;
 }
 
-HRESULT ComInterface::ProcessInterfaceForAddRequest(AddRequestInfo & request, Interface& comInterface)
+HRESULT ComInterface::ExecuteForRemoveRequest()
 {
-    RETURN_IF_FAILED(ParseManifest(request.GetPackage()));
+    for (auto comInterface = m_interfaces.begin(); comInterface != m_interfaces.end(); ++comInterface)
+    {
+        RETURN_IF_FAILED(ProcessInterfaceForRemoveRequest(*comInterface));
+    }
 
+    for (auto typeLib = m_typeLibs.begin(); typeLib != m_typeLibs.end(); ++typeLib)
+    {
+        RETURN_IF_FAILED(ProcessTypeLibForRemoveRequest(*typeLib));
+    }
+
+    return S_OK;
+}
+
+HRESULT ComInterface::ProcessInterfaceForAddRequest(Interface& comInterface)
+{
     RegistryKey interfaceKey;
     RETURN_IF_FAILED(m_classesKey.CreateSubKey(interfaceKeyName.c_str(), KEY_WRITE, &interfaceKey));
 
@@ -48,7 +61,7 @@ HRESULT ComInterface::ProcessInterfaceForAddRequest(AddRequestInfo & request, In
     return S_OK;
 }
 
-HRESULT ComInterface::ProcessTypeLibForAddRequest(AddRequestInfo & request, TypeLib& typeLib)
+HRESULT ComInterface::ProcessTypeLibForAddRequest(TypeLib& typeLib)
 {
     RegistryKey typeLibKey;
     RETURN_IF_FAILED(m_classesKey.CreateSubKey(typeLibKeyName.c_str(), KEY_WRITE, &typeLibKey));
@@ -73,7 +86,7 @@ HRESULT ComInterface::ProcessTypeLibForAddRequest(AddRequestInfo & request, Type
             RegistryKey win32Key;
             RETURN_IF_FAILED(localeIdKey.CreateSubKey(win32KeyName.c_str(), KEY_WRITE, &win32Key));
 
-            std::wstring win32FullPath = FilePathMappings::GetInstance().GetExecutablePath(version->win32Path, request.GetPackage()->GetPackageFullName().c_str());
+            std::wstring win32FullPath = FilePathMappings::GetInstance().GetExecutablePath(version->win32Path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
             RETURN_IF_FAILED(win32Key.SetStringValue(L"", win32FullPath));
         }
 
@@ -82,7 +95,7 @@ HRESULT ComInterface::ProcessTypeLibForAddRequest(AddRequestInfo & request, Type
             RegistryKey win64Key;
             RETURN_IF_FAILED(localeIdKey.CreateSubKey(win64KeyName.c_str(), KEY_WRITE, &win64Key));
 
-            std::wstring win64FullPath = FilePathMappings::GetInstance().GetExecutablePath(version->win64Path, request.GetPackage()->GetPackageFullName().c_str());
+            std::wstring win64FullPath = FilePathMappings::GetInstance().GetExecutablePath(version->win64Path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
             RETURN_IF_FAILED(win64Key.SetStringValue(L"", win64FullPath));
         }
 
@@ -98,7 +111,7 @@ HRESULT ComInterface::ProcessTypeLibForAddRequest(AddRequestInfo & request, Type
             RegistryKey helpDirKey;
             RETURN_IF_FAILED(versionNumberKey.CreateSubKey(helpDirKeyName.c_str(), KEY_WRITE, &helpDirKey));
 
-            std::wstring helpDirFullPath = FilePathMappings::GetInstance().GetExecutablePath(version->helpDirectory, request.GetPackage()->GetPackageFullName().c_str());
+            std::wstring helpDirFullPath = FilePathMappings::GetInstance().GetExecutablePath(version->helpDirectory, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
             RETURN_IF_FAILED(helpDirKey.SetStringValue(L"", helpDirFullPath));
         }
     }
@@ -106,10 +119,46 @@ HRESULT ComInterface::ProcessTypeLibForAddRequest(AddRequestInfo & request, Type
     return S_OK;
 }
 
-HRESULT ComInterface::ParseManifest(Package * package)
+HRESULT ComInterface::ProcessInterfaceForRemoveRequest(Interface& comInterface)
+{
+    RegistryKey interfaceKey;
+    RETURN_IF_FAILED(m_classesKey.OpenSubKey(interfaceKeyName.c_str(), KEY_WRITE, &interfaceKey));
+
+    const HRESULT hrDeleteKey = interfaceKey.DeleteTree(comInterface.id.c_str());
+    if (FAILED(hrDeleteKey))
+    {
+        TraceLoggingWrite(g_MsixTraceLoggingProvider,
+            "Unable to delete com interface",
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingValue(hrDeleteKey, "HR"),
+            TraceLoggingValue(comInterface.id.c_str(), "interface"));
+    }
+
+    return S_OK;
+}
+
+HRESULT ComInterface::ProcessTypeLibForRemoveRequest(TypeLib& typeLib)
+{
+    RegistryKey typeLibKey;
+    RETURN_IF_FAILED(m_classesKey.OpenSubKey(typeLibKeyName.c_str(), KEY_WRITE, &typeLibKey));
+
+    const HRESULT hrDeleteKey = typeLibKey.DeleteTree(typeLib.id.c_str());
+    if (FAILED(hrDeleteKey))
+    {
+        TraceLoggingWrite(g_MsixTraceLoggingProvider,
+            "Unable to delete com interface typeLib",
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingValue(hrDeleteKey, "HR"),
+            TraceLoggingValue(typeLib.id.c_str(), "interface"));
+    }
+
+    return S_OK;
+}
+
+HRESULT ComInterface::ParseManifest()
 {
     ComPtr<IMsixDocumentElement> domElement;
-    RETURN_IF_FAILED(package->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
+    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetManifestReader()->QueryInterface(UuidOfImpl<IMsixDocumentElement>::iid, reinterpret_cast<void**>(&domElement)));
 
     ComPtr<IMsixElement> element;
     RETURN_IF_FAILED(domElement->GetDocumentElement(&element));
@@ -262,15 +311,17 @@ HRESULT ComInterface::ParseVersionElement(TypeLib & typeLib, IMsixElement * vers
     return S_OK;
 }
 
-HRESULT ComInterface::CreateHandler(IPackageHandler ** instance)
+HRESULT ComInterface::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
-    std::unique_ptr<ComInterface> localInstance(new ComInterface());
+    std::unique_ptr<ComInterface> localInstance(new ComInterface(msixRequest));
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;
     }
 
     RETURN_IF_FAILED(localInstance->m_classesKey.Open(HKEY_CLASSES_ROOT, nullptr, KEY_READ | KEY_WRITE | WRITE_DAC));
+
+    RETURN_IF_FAILED(localInstance->ParseManifest());
 
     *instance = localInstance.release();
 

@@ -188,7 +188,8 @@
     <ClInclude Include="ComInterface.hpp" />
     <ClInclude Include="ComServer.hpp" />
     <ClInclude Include="Constants.hpp" />
-    <ClInclude Include="inc\DeploymentResult.hpp" />
+    <ClInclude Include="ErrorHandler.hpp" />
+    <ClInclude Include="inc\IMsixResponse.hpp" />
     <ClInclude Include="inc\DeploymentOptions.hpp" />
     <ClInclude Include="Extractor.hpp" />
     <ClInclude Include="FileTypeAssociation.hpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="inc\IPackage.hpp" />
     <ClInclude Include="inc\Win7MSIXInstallerActions.hpp" />
     <ClInclude Include="IPackageHandler.hpp" />
+    <ClInclude Include="MsixResponse.hpp" />
     <ClInclude Include="PackageManager.hpp" />
     <ClInclude Include="Package.hpp" />
     <ClInclude Include="PopulatePackageInfo.hpp" />
@@ -208,18 +210,19 @@
     <ClInclude Include="Protocol.hpp" />
     <ClInclude Include="RegistryDevirtualizer.hpp" />
     <ClInclude Include="RegistryKey.hpp" />
-    <ClInclude Include="RequestInfo.hpp" />
     <ClInclude Include="StartMenuLink.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComInterface.cpp" />
     <ClCompile Include="ComServer.cpp" />
+    <ClCompile Include="ErrorHandler.cpp" />
     <ClCompile Include="Extractor.cpp" />
     <ClCompile Include="FilePaths.cpp" />
     <ClCompile Include="FileTypeAssociation.cpp" />
     <ClCompile Include="InstallComplete.cpp" />
     <ClCompile Include="MsixRequest.cpp" />
     <ClCompile Include="GeneralUtil.cpp" />
+    <ClCompile Include="MsixResponse.cpp" />
     <ClCompile Include="PackageManager.cpp" />
     <ClCompile Include="Package.cpp" />
     <ClCompile Include="PopulatePackageInfo.cpp" />
@@ -228,7 +231,6 @@
     <ClCompile Include="RegistryDevirtualizer.cpp" />
     <ClCompile Include="RegistryKey.cpp" />
     <ClCompile Include="AddRemovePrograms.cpp" />
-    <ClCompile Include="RequestInfo.cpp" />
     <ClCompile Include="StartMenuLink.cpp" />
     <ClCompile Include="Win7MSIXInstallerActions.cpp" />
   </ItemGroup>

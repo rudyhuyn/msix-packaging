@@ -1,11 +1,15 @@
 #pragma once
 #include <windows.h>
 #include <string>
-#include "GeneralUtil.hpp"
+#include <functional>
+#include "IMsixResponse.hpp"
 
+#include "GeneralUtil.hpp"
+namespace Win7MsixInstallerLib
+{
 /// The response class tracks the response state of the msix deploy operation
 /// (if the operation was cancelled, progress bar updates)
-class MsixResponse
+class MsixResponse: public IMsixResponse
 {
 private:
 
@@ -16,7 +20,15 @@ private:
     HRESULT m_hresultTextCode;
 
     /// Detailed text status of the msix response
-    PCWSTR m_textStatus;
+    std::wstring m_textStatus;
+
+    /// Progress percentage of the msix deployment
+    float m_progress;
+
+    InstallationStep m_status = InstallationStepUnknown;
+
+    /// Callback to indicate how the progress of the installation
+    std::function<void(IMsixResponse *)> m_callback;
 
 public:
 
@@ -47,7 +59,7 @@ public:
     /// Get the Hresult value in an msix response
     ///
     /// @return Hresult code as set in the response
-    inline HRESULT GetHResultTextCode()
+    virtual inline HRESULT GetHResultTextCode()
     {
         return m_hresultTextCode;
     }
@@ -55,7 +67,7 @@ public:
     /// Sets the detailed text status in the msix response object
     ///
     /// @param textStatus - the textStatus to be set 
-    inline void SetTextStatus(PCWSTR textStatus)
+    inline void SetTextStatus(std::wstring textStatus)
     {
         m_textStatus = textStatus;
     }
@@ -63,8 +75,30 @@ public:
     /// Returns the detailed text status as set in the msix response object
     ///
     /// @return textStatus in the msix response
-    inline PCWSTR GetTextStatus()
+    virtual inline std::wstring GetTextStatus()
     {
         return m_textStatus;
     }
+
+    /// Send a callback to the UI to indicate the current step of the installation
+    ///
+    /// @param progress - current percentage of progress
+    /// @param stepInfo - current step
+    void SendCallback(InstallationStep status, float progress);
+
+    virtual void SetCallback(std::function<void(IMsixResponse *)> callback);
+
+    /// Returns the progress percentage 
+    ///
+    /// @return the percentage (from 0 to 100)
+    virtual inline float GetProgress()
+    {
+        return m_progress;
+    }
+
+    virtual inline InstallationStep GetStatus()
+    {
+        return m_status;
+    }
 };
+}

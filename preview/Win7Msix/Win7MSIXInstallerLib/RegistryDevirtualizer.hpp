@@ -4,6 +4,8 @@
 #include "MsixRequest.hpp"
 #include "RegistryKey.hpp"
 #include <vector>
+#include "MsixRequest.hpp"
+
 namespace Win7MsixInstallerLib
 {
 /// Handles the conversion of the information stored in Registry.dat 
@@ -23,7 +25,7 @@ public:
     /// @param ftaName - the name of the FTA extension (i.e. .mp4)
     HRESULT HasFTA(_In_ std::wstring ftaName, _Out_ bool& hasFTA);
 
-    static HRESULT Create(_In_ std::wstring hiveFileName, _Out_ RegistryDevirtualizer** instance);
+    static HRESULT Create(_In_ std::wstring hiveFileName, _In_ MsixRequest* msixRequest, _Out_ RegistryDevirtualizer** instance);
 
     /// Creates a GUID string as a temporary registry key's name
     /// The Registry.dat hive will be loaded under this name to avoid conflict with existing keys or other installs
@@ -73,11 +75,13 @@ private:
     HRESULT RemoveDevirtualizeRegistryTree(RegistryKey* virtualKey, RegistryKey* realKey);
 
 private:
+    MsixRequest* m_msixRequest = nullptr;
 
     RegistryDevirtualizer() {}
-    RegistryDevirtualizer(_In_ std::wstring hiveFileName):
-        m_registryHiveFileName(hiveFileName),
-        m_rootKey(nullptr) {}
+    RegistryDevirtualizer(_In_ std::wstring hiveFileName, _In_ MsixRequest* msixRequest)
+        : m_registryHiveFileName(hiveFileName),
+          m_msixRequest(msixRequest),
+          m_rootKey(nullptr) {}
 
     std::wstring m_loadedHiveKeyName;
     std::wstring m_registryHiveFileName;

@@ -45,28 +45,36 @@ HRESULT StartMenuLink::CreateLink(PCWSTR targetFilePath, PCWSTR linkFilePath, PC
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForAddRequest(AddRequestInfo &requestInfo)
+HRESULT StartMenuLink::ExecuteForAddRequest()
 {
-    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + requestInfo.GetPackage()->GetDisplayName() + L".lnk";
+    if (m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
+    {
+        return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
+    }
+    auto packageInfo = m_msixRequest->GetPackageInfo();
 
-    std::wstring resolvedExecutableFullPath = requestInfo.GetInstallationDir() + requestInfo.GetPackage()->GetRelativeExecutableFilePath();
-    std::wstring appUserModelId = requestInfo.GetPackage()->GetId();
+    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageInfo->GetDisplayName() + L".lnk";
+
+    std::wstring resolvedExecutableFullPath = m_msixRequest->GetPackageDirectoryPath() + packageInfo->GetRelativeExecutableFilePath();
+    std::wstring appUserModelId = m_msixRequest->GetPackageInfo()->GetId();
     RETURN_IF_FAILED(CreateLink(resolvedExecutableFullPath.c_str(), filePath.c_str(), L"", appUserModelId.c_str()));
 
     return S_OK;
 }
 
-HRESULT StartMenuLink::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
+HRESULT StartMenuLink::ExecuteForRemoveRequest()
 {
-    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + requestInfo.GetPackage()->GetDisplayName() + L".lnk";
+    auto packageInfo = m_msixRequest->GetPackageInfo();
+
+    std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageInfo->GetDisplayName() + L".lnk";
 
     RETURN_IF_FAILED(DeleteFile(filePath.c_str()));
     return S_OK;
 }
 
-HRESULT StartMenuLink::CreateHandler(IPackageHandler ** instance)
+HRESULT StartMenuLink::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
-    std::unique_ptr<StartMenuLink> localInstance(new StartMenuLink());
+    std::unique_ptr<StartMenuLink> localInstance(new StartMenuLink(msixRequest));
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

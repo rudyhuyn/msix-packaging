@@ -500,18 +500,22 @@ void UI::ButtonClicked()
     {
     case InstallUIAdd:
     {
-        m_packageManager->AddPackage(m_path, DeploymentOptions::None, [this](const DeploymentResult & result) {
+        auto msixResponse = m_packageManager->AddPackage(m_path, DeploymentOptions::None);
+        if (msixResponse != nullptr)
+        {
+            msixResponse->SetCallback([this](IMsixResponse * sender) {
 
-            SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)result.Progress, 0);
-            switch (result.Status)
-            {
-            case InstallationStep::InstallationStepCompleted:
-            {
-                ShowCompletedUI();
-            }
-            break;
-            }
-        });
+                SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)sender->GetProgress(), 0);
+                switch (sender->GetStatus())
+                {
+                case InstallationStep::InstallationStepCompleted:
+                {
+                    this->ShowCompletedUI();
+                }
+                break;
+                }
+            });
+        }
     }
     break;
     }

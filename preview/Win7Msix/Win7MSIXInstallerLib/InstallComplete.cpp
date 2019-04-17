@@ -12,21 +12,18 @@ using namespace Win7MsixInstallerLib;
 
 const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
-HRESULT InstallComplete::ExecuteForAddRequest(AddRequestInfo &requestInfo)
+HRESULT InstallComplete::ExecuteForAddRequest()
 {
-    if (!requestInfo.GetIsInstallCancelled())
+    if (!m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
     {
-        DeploymentResult result;
-        result.Progress = 100;
-        result.Status = InstallationStep::InstallationStepCompleted;
-        requestInfo.SendCallback(result);
-        return S_OK;
+        m_msixRequest->GetMsixResponse()->SendCallback(InstallationStep::InstallationStepCompleted, 100);
     }
+    return S_OK;
 }
 
-HRESULT InstallComplete::CreateHandler(IPackageHandler ** instance)
+HRESULT InstallComplete::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
-    std::unique_ptr<InstallComplete> localInstance(new InstallComplete());
+    std::unique_ptr<InstallComplete> localInstance(new InstallComplete(msixRequest));
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

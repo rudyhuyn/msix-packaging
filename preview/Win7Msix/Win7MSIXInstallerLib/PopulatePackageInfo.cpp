@@ -49,33 +49,33 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & dir
 }
 
 
-HRESULT PopulatePackageInfo::ExecuteForAddRequest(AddRequestInfo &requestInfo)
+HRESULT PopulatePackageInfo::ExecuteForAddRequest()
 {
 
     Package* packageInfo;
-    RETURN_IF_FAILED(PopulatePackageInfo::GetPackageInfoFromPackage(requestInfo.GetPackageFilePathToInstall(), requestInfo.GetValidationOptions(), &packageInfo));
+    RETURN_IF_FAILED(PopulatePackageInfo::GetPackageInfoFromPackage(m_msixRequest->GetPackageFilePath(), m_msixRequest->GetValidationOptions(), &packageInfo));
 
     if (packageInfo == nullptr)
     {
         return E_FAIL;
     }
 
-    requestInfo.SetPackage(packageInfo);
+    m_msixRequest->SetPackageInfo(packageInfo);
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "PackageInfo",
         TraceLoggingValue(packageInfo->GetPackageFullName().c_str(), "PackageFullName"),
         TraceLoggingValue(packageInfo->GetNumberOfPayloadFiles(), "NumberOfPayloadFiles"),
-        TraceLoggingValue((requestInfo.GetInstallationDir() + packageInfo->GetRelativeExecutableFilePath()).c_str(), "ExecutableFilePath"),
+        TraceLoggingValue(m_msixRequest->GetPackageDirectoryPath().c_str(), "ExecutableFilePath"),
         TraceLoggingValue(packageInfo->GetDisplayName().c_str(), "DisplayName"));
 
 
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo &requestInfo)
+HRESULT PopulatePackageInfo::ExecuteForRemoveRequest()
 {
-    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + requestInfo.GetPackageFullNameToUninstall();
+    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageFullName();
 
     InstalledPackage * package;
     RETURN_IF_FAILED(GetPackageInfoFromManifest(packageDirectoryPath, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN, &package));
@@ -84,14 +84,14 @@ HRESULT PopulatePackageInfo::ExecuteForRemoveRequest(RemoveRequestInfo &requestI
     {
         return E_FAIL;
     }
-    requestInfo.SetPackage(package);
+    m_msixRequest->SetPackageInfo(package);
 
     return S_OK;
 }
 
-HRESULT PopulatePackageInfo::CreateHandler(IPackageHandler ** instance)
+HRESULT PopulatePackageInfo::CreateHandler(MsixRequest * msixRequest, IPackageHandler ** instance)
 {
-    std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo());
+    std::unique_ptr<PopulatePackageInfo> localInstance(new PopulatePackageInfo(msixRequest));
     if (localInstance == nullptr)
     {
         return E_OUTOFMEMORY;

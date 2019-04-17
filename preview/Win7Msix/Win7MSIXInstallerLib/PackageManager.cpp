@@ -3,6 +3,7 @@
 #include "Constants.hpp"
 #include "PopulatePackageInfo.hpp"
 #include <experimental/filesystem>
+#include <thread>
 
 using namespace std;
 using namespace Win7MsixInstallerLib;
@@ -11,33 +12,36 @@ PackageManager::PackageManager()
 {
 }
 
-bool PackageManager::AddPackage(const wstring & packageFilePath, DeploymentOptions options, function<void(const DeploymentResult&)> callback)
+IMsixResponse * PackageManager::AddPackage(const wstring & packageFilePath, DeploymentOptions options)
 {
-    MsixRequest *impl;
+    MsixRequest* impl;
     auto res = (MsixRequest::Make(OperationType::Add, packageFilePath, L"", MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
     if (FAILED(res))
     {
-        return false;
+        return nullptr;
     }
-    impl->SetCallback(callback);
-    res = impl->ProcessRequest();
-    delete impl;
-    return SUCCEEDED(res);
+    auto t = std::thread([&impl]() {
+        impl->ProcessRequest();
+        impl = nullptr;
+    });
+    t.detach();
+    return (IMsixResponse*)impl->GetMsixResponse();
 }
 
-bool PackageManager::RemovePackage(const wstring & packageFullName, function<void(const DeploymentResult&)> callback)
+IMsixResponse * PackageManager::RemovePackage(const wstring & packageFullName)
 {
-    MsixRequest *impl;
+    MsixRequest* impl;
     auto res = (MsixRequest::Make(OperationType::Remove, L"", packageFullName, MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL, &impl));
     if (FAILED(res))
     {
-        return false;
+        return nullptr;
     }
-
-    res = impl->ProcessRequest();
-    impl->SetCallback(callback);
-    delete impl;
-    return SUCCEEDED(res);
+    std::thread t([&impl]() {
+        impl->ProcessRequest();
+        impl = nullptr;
+    });
+    t.detach();
+    return (IMsixResponse*)impl->GetMsixResponse();
 }
 
 IInstalledPackageInfo * PackageManager::GetPackageInfo(const std::wstring & msix7Directory, const std::wstring & directoryPath)
