@@ -56,24 +56,20 @@ HRESULT UI::DrawPackageInfo(HWND hWnd, RECT windowRect)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UI* ui = (UI*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-    if (ui == nullptr)
-        return E_FAIL;
-
     RECT windowRect;
     GetClientRect(hWnd, &windowRect);
     switch (message)
     {
     case WM_CREATE:
+    {
         ui->CreateCheckbox(hWnd, windowRect);
         ui->InstallButton(hWnd, windowRect);
         ui->CreateLaunchButton(hWnd, windowRect, 275, 60);
         break;
+    }
     case WM_PAINT:
     {
-        if (ui != NULL)
-        {
-            ui->DrawPackageInfo(hWnd, windowRect);
-        }
+        ui->DrawPackageInfo(hWnd, windowRect);
         break;
     }
     case WM_COMMAND:
