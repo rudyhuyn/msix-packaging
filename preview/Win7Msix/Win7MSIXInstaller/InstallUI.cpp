@@ -61,12 +61,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
-    {
         ui->CreateCheckbox(hWnd, windowRect);
         ui->InstallButton(hWnd, windowRect);
         ui->CreateLaunchButton(hWnd, windowRect, 275, 60);
         break;
-    }
     case WM_PAINT:
     {
         if (ui != NULL)
@@ -76,55 +74,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_COMMAND:
-        switch (LOWORD(wParam))
+        switch (LOWORD(wParam)) 
         {
-        case IDC_INSTALLBUTTON:
-        {
-            g_installing = true;
-            DestroyWindow(g_LaunchbuttonHWnd);
-            DestroyWindow(g_buttonHWnd);
-            ui->CreateCancelButton(hWnd, windowRect);
-            UpdateWindow(hWnd);
-            ui->CreateProgressBar(hWnd, windowRect);
-            ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
-            ui->ButtonClicked();
+            case IDC_INSTALLBUTTON:
+            {
+                g_installing = true;
+                DestroyWindow(g_LaunchbuttonHWnd);
+                DestroyWindow(g_buttonHWnd);
+                ui->CreateCancelButton(hWnd, windowRect);
+                UpdateWindow(hWnd);
+                ui->CreateProgressBar(hWnd, windowRect);
+                ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
+                ui->ButtonClicked();
+            }
+            break;
+            case IDC_LAUNCHCHECKBOX:
+            {
+                if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
+                {
+                    g_launchCheckBoxState = true;
+                }
+                else
+                {
+                    g_launchCheckBoxState = false;
+                }
+            }
+            break;
+            case IDC_CANCELBUTTON:
+            {
+                ui->ConfirmAppCancel(hWnd);
+                break;
+            }
+            case IDC_LAUNCHBUTTON:
+            {
+                ui->LaunchInstalledApp();
+                break;
+            }
         }
         break;
-        case IDC_LAUNCHCHECKBOX:
-        {
-            if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
-            {
-                g_launchCheckBoxState = true;
-            }
-            else
-            {
-                g_launchCheckBoxState = false;
-            }
-        }
-        break;
-        case IDC_CANCELBUTTON:
-        {
-            ui->ConfirmAppCancel(hWnd);
-            break;
-        }
-        case IDC_LAUNCHBUTTON:
-        {
-            ui->LaunchInstalledApp();
-            break;
-        }
-    }
-    break;
     case WM_CTLCOLORSTATIC:
     {
         switch (::GetDlgCtrlID((HWND)lParam))
-        {
-        case IDC_LAUNCHCHECKBOX:
-        {
-            HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
-            ::DeleteObject(hbr);
-            SetBkMode((HDC)wParam, TRANSPARENT);
-            return (LRESULT)::GetStockObject(NULL_BRUSH);
-        }
+            {
+            case IDC_LAUNCHCHECKBOX:
+            {
+                HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
+                ::DeleteObject(hbr);
+                SetBkMode((HDC)wParam, TRANSPARENT);
+                return (LRESULT)::GetStockObject(NULL_BRUSH);
+            }
         }
 
         break;
@@ -308,7 +306,7 @@ void UI::PreprocessRequest()
             /// Package with same family name exists and may be an update
             m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
             m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));    
         }
     }
 }
@@ -379,21 +377,21 @@ BOOL UI::InstallButton(HWND parentHWnd, RECT parentRect) {
 
 BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect) 
 {
-        LPVOID buttonPointer = nullptr;
-        g_CancelbuttonHWnd = CreateWindowEx(
-            WS_EX_LEFT, // extended window style
-            L"BUTTON",
-            L"Cancel",  // text
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
-            parentRect.right - 100 - 50, // x coord
-            parentRect.bottom - 60,  // y coord
-            120,  // width
-            35,  // height
-            parentHWnd,  // parent
-            (HMENU)IDC_CANCELBUTTON, // menu
-            reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
-            buttonPointer); // pointer to button
-        return TRUE;
+    LPVOID buttonPointer = nullptr;
+    g_CancelbuttonHWnd = CreateWindowEx(
+        WS_EX_LEFT, // extended window style
+        L"BUTTON",
+        L"Cancel",  // text
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+        parentRect.right - 100 - 50, // x coord
+        parentRect.bottom - 60,  // y coord
+        120,  // width
+        35,  // height
+        parentHWnd,  // parent
+        (HMENU)IDC_CANCELBUTTON, // menu
+        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
+        buttonPointer); // pointer to button
+    return TRUE;
 }
 
 BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff) 
@@ -433,9 +431,9 @@ BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring mess
     Gdiplus::Font messageFont(L"Arial", 10);
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear);
-        auto windowsTextColor = Gdiplus::Color();
-        windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
-        Gdiplus::SolidBrush textBrush(windowsTextColor);
+    auto windowsTextColor = Gdiplus::Color();
+    windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
+    Gdiplus::SolidBrush textBrush(windowsTextColor);
 
     graphics.DrawString(displayName.c_str(), -1, &displayNameFont, layoutRect, &format, &textBrush);
     layoutRect.Y += 40;

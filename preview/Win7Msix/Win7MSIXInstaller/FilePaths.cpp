@@ -2,7 +2,6 @@
 #include "GeneralUtil.hpp"
 #include <shlobj_core.h>
 #include <KnownFolders.h>
-#include <mutex>
 
 using namespace Win7MsixInstallerLib;
 
@@ -143,6 +142,5 @@ HRESULT FilePathMappings::InitializePaths()
     RETURN_IF_FAILED(SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, NULL, &programFilesPath));
 
     m_msix7Directory = std::wstring(programFilesPath.Get()) + std::wstring(L"\\Msix7apps\\");
-
     return S_OK;
 }

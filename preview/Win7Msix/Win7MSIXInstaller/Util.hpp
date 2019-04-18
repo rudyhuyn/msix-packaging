@@ -16,7 +16,6 @@ std::string utf16_to_utf8(const std::wstring& utf16string);
 /// @return utf16 string
 std::wstring utf8_to_utf16(const std::string& utf8string);
 
-
 /// Helper to get string resource
 ///
 /// @param resourceId - resource ID, these should be listed in resource.h
@@ -29,7 +28,6 @@ std::wstring GetStringResource(UINT resourceId);
 /// @param right - the other of the two strings
 /// @return true if the strings equal, false otherwise
 bool CaseInsensitiveEquals(const std::wstring& left, const std::wstring& right);
-
 
 //
 // A designated memory allocator

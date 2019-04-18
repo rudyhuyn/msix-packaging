@@ -73,7 +73,7 @@ public:
         _In_opt_ PCWSTR subkey,
         _In_ const REGSAM sam,
         _Inout_ RegistryKey * regkey);
-
+  
     HRESULT CreateSubKey(
         _In_opt_ PCWSTR subkey,
         _In_ const REGSAM sam,
@@ -123,7 +123,7 @@ public:
 
     HRESULT DeleteTree(
         _In_ PCWSTR subkey);
-
+    
     template<typename TAction> static HRESULT EnumKeyAndDoActionForAllSubkeys(
         _In_ RegistryKey* registryKey,
         _In_ TAction subkeyActionFunction)

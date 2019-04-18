@@ -81,7 +81,7 @@ HRESULT ComServer::ProcessExeServerForAdd(ExeServer& exeServer)
             RETURN_IF_FAILED(classIdKey.CreateSubKey(inprocHandlerKeyName.c_str(), KEY_WRITE, &inprocHandlerKey));
             RETURN_IF_FAILED(inprocHandlerKey.SetStringValue(L"", defaultInprocHandler));
         }
-
+        
         if (!exeServerClass->insertableObject.empty())
         {
             RegistryKey insertableObjectKey;
@@ -317,7 +317,7 @@ HRESULT ComServer::ParseExeServerElement(IMsixElement* exeServerElement)
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, argumentsAttribute, exeServer.arguments));
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, displayNameAttribute, exeServer.displayName));
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, launchAndActivationPermissionAttribute, exeServer.launchAndActivationPermission));
-
+    
     BOOL hasCurrent = FALSE;
     ComPtr<IMsixElementEnumerator> classesEnum;
     RETURN_IF_FAILED(exeServerElement->GetElements(exeServerClassQuery.c_str(), &classesEnum));

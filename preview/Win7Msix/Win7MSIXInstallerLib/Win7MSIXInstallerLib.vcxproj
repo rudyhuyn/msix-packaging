@@ -193,7 +193,7 @@
     <ClInclude Include="inc\DeploymentOptions.hpp" />
     <ClInclude Include="..\Win7MSIXInstaller\Extractor.hpp" />
     <ClInclude Include="..\Win7MSIXInstaller\FileTypeAssociation.hpp" />
-    <ClInclude Include="FootprintFiles.hpp" />
+    <ClInclude Include="..\Win7MSIXInstaller\FootprintFiles.hpp" />
     <ClInclude Include="inc\IPackageManager.hpp" />
     <ClInclude Include="..\Win7MSIXInstaller\InstallComplete.hpp" />
     <ClInclude Include="..\Win7MSIXInstaller\MsixRequest.hpp" />

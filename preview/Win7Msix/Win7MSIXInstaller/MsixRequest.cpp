@@ -19,9 +19,9 @@
 
 // handlers
 #include "Extractor.hpp"
-#include "PopulatePackageInfo.hpp"
 #include "StartMenuLink.hpp"
 #include "AddRemovePrograms.hpp"
+#include "PopulatePackageInfo.hpp"
 #include "Protocol.hpp"
 #include "ComInterface.hpp"
 #include "ComServer.hpp"
@@ -30,7 +30,6 @@
 #include "InstallComplete.hpp"
 #include "ErrorHandler.hpp"
 
-#include "GeneralUtil.hpp"
 #include "Constants.hpp"
 
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
@@ -64,14 +63,14 @@ std::map<PCWSTR, HandlerInfo> AddHandlers =
 std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 {
     //HandlerName                       Function to create                   NextHandler
-    {PopulatePackageInfo::HandlerName,  {PopulatePackageInfo::CreateHandler, StartMenuLink::HandlerName, nullptr }},
-    {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName, nullptr}},
-    {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName, nullptr}},
-    {Protocol::HandlerName,             {Protocol::CreateHandler,            ComInterface::HandlerName, nullptr}},
-    {ComInterface::HandlerName,         {ComInterface::CreateHandler,        ComServer::HandlerName, nullptr}},
-    {ComServer::HandlerName,            {ComServer::CreateHandler,           FileTypeAssociation::HandlerName, nullptr}},
-    {FileTypeAssociation::HandlerName,  {FileTypeAssociation::CreateHandler, Extractor::HandlerName, nullptr}},
-    {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr, nullptr}},
+    {PopulatePackageInfo::HandlerName,  {PopulatePackageInfo::CreateHandler, StartMenuLink::HandlerName}},
+    {StartMenuLink::HandlerName,        {StartMenuLink::CreateHandler,       AddRemovePrograms::HandlerName}},
+    {AddRemovePrograms::HandlerName,    {AddRemovePrograms::CreateHandler,   Protocol::HandlerName}},
+    {Protocol::HandlerName,             {Protocol::CreateHandler,            ComInterface::HandlerName}},
+    {ComInterface::HandlerName,         {ComInterface::CreateHandler,        ComServer::HandlerName}},
+    {ComServer::HandlerName,            {ComServer::CreateHandler,           FileTypeAssociation::HandlerName}},
+    {FileTypeAssociation::HandlerName,  {FileTypeAssociation::CreateHandler, Extractor::HandlerName}},
+    {Extractor::HandlerName,            {Extractor::CreateHandler,           nullptr}},
 };
 
 HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
