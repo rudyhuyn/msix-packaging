@@ -10,7 +10,6 @@ namespace Win7MsixInstallerLib
     class PackageBase
     {
     protected:
-        ComPtr<IAppxManifestReader> m_manifestReader;
         std::wstring m_packageFullName;
         std::wstring m_packageFamilyName;
         std::wstring m_relativeExecutableFilePath;
@@ -22,10 +21,8 @@ namespace Win7MsixInstallerLib
         std::wstring m_publisherName;
         std::wstring m_relativeLogoPath;
 
-        /// PackageReader and payloadFiles are available on Add, but not Remove because it's created off the original package itself which is no longer available once it's been installed.
-        ComPtr<IAppxPackageReader> m_packageReader;
+        ComPtr<IAppxManifestReader> m_manifestReader;
         unsigned int m_numberOfPayloadFiles = 0;
-
 
         /// Sets the executable path by reading it from the manifest element
         HRESULT SetExecutableAndAppIdFromManifestElement(IMsixElement * element);
@@ -45,31 +42,30 @@ namespace Win7MsixInstallerLib
 
     protected:
         PackageBase() {}
-
         /// Sets the manifest reader, and other fields derived from the manifest
         /// Specifically, packageFullName, packageDirectoryPath, executableFilePath, displayname, version and publisher.
         ///
         /// @param manifestReader - manifestReader to set
         HRESULT SetManifestReader(IAppxManifestReader* manifestReader);
     public:
-
-        /// When made from manifest reader, it won't have PackageReader available. 
-        bool HasPackageReader() { return (m_packageReader.Get() != nullptr); };
-        IAppxPackageReader * GetPackageReader() { return m_packageReader.Get(); }
+        virtual ~PackageBase()
+        {
+            ReleaseManifest();
+        }
         unsigned int GetNumberOfPayloadFiles() { return m_numberOfPayloadFiles; }
 
         // Getters
         IAppxManifestReader * GetManifestReader() { return m_manifestReader.Get(); }
         /// This is meant only to be called when deleting the manifest file; the reader needs to first be released so it can be deleted
-        void ReleaseManifest() { m_manifestReader.Release(); }
+        void ReleaseManifest() {
+            m_manifestReader.Release();
+        }
     };
 
 
     class Package : public PackageBase, IPackage
     {
     public:
-        Package() :PackageBase() {}
-
         std::wstring GetPackageFullName() { return m_packageFullName; }
         std::wstring GetPackageFamilyName() { return m_packageFamilyName; }
         std::wstring GetRelativeExecutableFilePath() { return m_relativeExecutableFilePath; }
@@ -80,10 +76,21 @@ namespace Win7MsixInstallerLib
         std::wstring GetPublisher() { return m_publisher; }
         std::wstring GetPublisherDisplayName() { return m_publisherName; }
         IStream* GetLogo();
+        IAppxPackageReader * GetPackageReader() { return m_packageReader.Get(); }
 
         /// Create a Package using the package reader. This is intended for Add scenarios where
         /// the actual .msix package file is given.
         static HRESULT MakeFromPackageReader(IAppxPackageReader* packageReader, Package** packageInfo);
+
+        virtual ~Package()
+        {
+            m_packageReader.Release();
+        }
+    private:
+        Package() :PackageBase() {}
+
+        /// PackageReader and payloadFiles are available on Add, but not Remove because it's created off the original package itself which is no longer available once it's been installed.
+        ComPtr<IAppxPackageReader> m_packageReader;
     };
 
     class InstalledPackage : public PackageBase, IInstalledPackageInfo
@@ -114,6 +121,7 @@ namespace Win7MsixInstallerLib
         static HRESULT MakeFromManifestReader(const std::wstring & directoryPath, IAppxManifestReader* manifestReader, InstalledPackage** packageInfo);
     private:
         InstalledPackage() :PackageBase() {}
+
         std::wstring m_packageDirectoryPath;
     };
 }

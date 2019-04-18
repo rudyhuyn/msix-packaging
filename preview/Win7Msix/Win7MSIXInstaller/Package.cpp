@@ -180,6 +180,11 @@ HRESULT PackageBase::SetManifestReader(IAppxManifestReader * manifestReader)
 
 IStream* Package::GetLogo()
 {
+    if (m_packageReader.Get() == nullptr)
+    {
+        return nullptr;
+    }
+
     IStream * logoStream;
     if (GetStreamFromFile(m_packageReader.Get(), m_relativeLogoPath.data(), &logoStream) == S_OK)
     {

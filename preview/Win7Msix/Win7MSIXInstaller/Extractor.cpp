@@ -105,6 +105,8 @@ HRESULT Extractor::ExtractFootprintFiles()
 {
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting footprint files from the package");
+
+    Package * packageToInstall = dynamic_cast<Package*>(m_msixRequest->GetPackageInfo());
     
     for (int i = 0; i < FootprintFilesCount; i++)
     {
@@ -113,18 +115,21 @@ HRESULT Extractor::ExtractFootprintFiles()
             return HRESULT_FROM_WIN32(ERROR_INSTALL_USEREXIT);
         }
 
-        ComPtr<IAppxFile> footprintFile;
-        HRESULT hr = m_msixRequest->GetPackageInfo()->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
-        if (SUCCEEDED(hr) && footprintFile.Get())
+        if (packageToInstall != nullptr)
         {
-            RETURN_IF_FAILED(ExtractFile(footprintFile.Get()));
-        }
-        else if (g_footprintFilesType[i].isRequired)
-        {
-            TraceLoggingWrite(g_MsixTraceLoggingProvider,
-                "Missing required Footprintfile",
-                TraceLoggingValue(g_footprintFilesType[i].description, "File Description"));
-            return hr;
+            ComPtr<IAppxFile> footprintFile;
+            HRESULT hr = packageToInstall->GetPackageReader()->GetFootprintFile(g_footprintFilesType[i].fileType, &footprintFile);
+            if (SUCCEEDED(hr) && footprintFile.Get())
+            {
+                RETURN_IF_FAILED(ExtractFile(footprintFile.Get()));
+            }
+            else if (g_footprintFilesType[i].isRequired)
+            {
+                TraceLoggingWrite(g_MsixTraceLoggingProvider,
+                    "Missing required Footprintfile",
+                    TraceLoggingValue(g_footprintFilesType[i].description, "File Description"));
+                return hr;
+            }
         }
     }
     return S_OK;
@@ -136,7 +141,13 @@ HRESULT Extractor::ExtractPayloadFiles()
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
         "Extracting payload files from the package");
 
-    RETURN_IF_FAILED(m_msixRequest->GetPackageInfo()->GetPackageReader()->GetPayloadFiles(&files));
+    Package * packageToInstall = dynamic_cast<Package*>(m_msixRequest->GetPackageInfo());
+    if (packageToInstall != nullptr)
+    {
+        return E_FAIL;
+    }
+
+    RETURN_IF_FAILED(packageToInstall->GetPackageReader()->GetPayloadFiles(&files));
 
     BOOL hasCurrent = FALSE;
     RETURN_IF_FAILED(files->GetHasCurrent(&hasCurrent));

@@ -75,7 +75,7 @@ std::map<PCWSTR, HandlerInfo> RemoveHandlers =
 
 HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest ** outInstance)
 {
-    std::unique_ptr<MsixRequest> instance(new MsixRequest());
+    AutoPtr<MsixRequest> instance(new MsixRequest());
     if (instance == nullptr)
     {
         return E_OUTOFMEMORY;
@@ -91,7 +91,7 @@ HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & pack
     RETURN_IF_FAILED(MsixResponse::Make(&localResponse));
     instance->m_msixResponse = localResponse.Detach();
 
-    *outInstance = instance.release();
+    *outInstance = instance.Detach();
 
     return S_OK;
 }
@@ -148,10 +148,12 @@ HRESULT MsixRequest::ProcessAddRequest()
             m_msixResponse->SetHResultTextCode(hrExecute);
             m_msixResponse->SetTextStatus(L"Can't execute the handler " + std::wstring(currentHandlerName));
             m_msixResponse->Update(InstallationStep::InstallationStepError, 0);
-            return hrExecute;
+            currentHandlerName = currentHandler.errorHandler;
         }
-
-        currentHandlerName = currentHandler.nextHandler;
+        else
+        {
+            currentHandlerName = currentHandler.nextHandler;
+        }
     }
 
     return S_OK;
