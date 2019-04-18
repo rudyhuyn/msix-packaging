@@ -5,6 +5,7 @@
 #include <string>
 #include "Util.hpp"
 #include <IPackageManager.hpp>
+#include <IMsixResponse.hpp>
 #include "resource.h"
 /// Child window identifiers
 #define IDC_LAUNCHCHECKBOX 101
@@ -43,6 +44,7 @@ private:
     Win7MsixInstallerLib::IPackageManager* m_packageManager = nullptr;
     Win7MsixInstallerLib::IPackage* m_packageInfo = nullptr;
     std::wstring m_path;
+    Win7MsixInstallerLib::IMsixResponse * m_msixResponse = nullptr;
 
     //Parent Window Hwnd
     HWND hWnd = NULL; 

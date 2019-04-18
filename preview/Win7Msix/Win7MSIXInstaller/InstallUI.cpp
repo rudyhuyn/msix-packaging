@@ -159,7 +159,7 @@ void UI::ConfirmAppCancel(HWND hWnd)
     switch (cancelResult)
     {
     case IDYES:
-        //TODO m_msixRequest->GetMsixResponse()->CancelRequest();
+        m_msixResponse->CancelRequest();
         break;
     case IDNO:
         break;
@@ -500,10 +500,10 @@ void UI::ButtonClicked()
     {
     case InstallUIAdd:
     {
-        auto msixResponse = m_packageManager->AddPackage(m_path, DeploymentOptions::None);
-        if (msixResponse != nullptr)
+        m_msixResponse = m_packageManager->AddPackage(m_path, DeploymentOptions::None);
+        if (m_msixResponse != nullptr)
         {
-            msixResponse->SetCallback([this](IMsixResponse * sender) {
+            m_msixResponse->SetCallback([this](IMsixResponse * sender) {
 
                 SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)sender->GetProgress(), 0);
                 switch (sender->GetStatus())

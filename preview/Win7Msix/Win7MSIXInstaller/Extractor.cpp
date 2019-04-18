@@ -94,7 +94,7 @@ HRESULT Extractor::ExtractFile(IAppxFile* file)
     RETURN_IF_FAILED(file->GetStream(&fileStream));
     ComPtr<IStream> outputStream;
 
-    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName();
+    auto packageDirectoryPath = m_msixRequest->GetPackageDirectoryPath();
 
     RETURN_IF_FAILED(GetOutputStream(packageDirectoryPath.c_str(), fileName.Get(), &outputStream));
     RETURN_IF_FAILED(fileStream->CopyTo(outputStream.Get(), fileSizeLargeInteger, nullptr, nullptr));
@@ -207,7 +207,7 @@ HRESULT Extractor::ExecuteForAddRequest()
 
 HRESULT Extractor::RemoveVfsFiles()
 {
-    std::wstring blockMapPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName() + blockMapFile;
+    std::wstring blockMapPath = m_msixRequest->GetPackageDirectoryPath() + blockMapFile;
     ComPtr<IStream> stream;
     RETURN_IF_FAILED(CreateStreamOnFileUTF16(blockMapPath.c_str(), true /*forRead*/, &stream));
 
@@ -267,7 +267,7 @@ HRESULT Extractor::ExecuteForRemoveRequest()
     m_msixRequest->GetPackageInfo()->ReleaseManifest();
 
     std::error_code error;
-    auto packageDirectoryPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName();
+    auto packageDirectoryPath = m_msixRequest->GetPackageDirectoryPath();
     uintmax_t numRemoved = std::experimental::filesystem::remove_all(packageDirectoryPath, error);
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,
@@ -543,7 +543,7 @@ HRESULT Extractor::CopyVfsFileToLocal(std::wstring fileName)
         "CopyVfsFileToLocal",
         TraceLoggingValue(fileName.c_str(), "FileName"));
 
-    std::wstring sourceFullPath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str() + std::wstring(L"\\") + fileName;
+    std::wstring sourceFullPath = m_msixRequest->GetPackageDirectoryPath() + std::wstring(L"\\") + fileName;
 
     std::wstring targetFullPath;
     if (FAILED(ConvertVfsNameToFullPath(fileName, targetFullPath)))
@@ -558,7 +558,7 @@ HRESULT Extractor::CopyVfsFileToLocal(std::wstring fileName)
 
 HRESULT Extractor::ExtractRegistry(bool remove)
 {
-    std::wstring registryFilePath = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str() + registryDatFile;
+    std::wstring registryFilePath = m_msixRequest->GetPackageDirectoryPath() + registryDatFile;
 
     AutoPtr<RegistryDevirtualizer> registryDevirtualizer;
     RETURN_IF_FAILED(RegistryDevirtualizer::Create(registryFilePath, m_msixRequest, &registryDevirtualizer));

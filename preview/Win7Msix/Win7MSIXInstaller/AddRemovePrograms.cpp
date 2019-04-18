@@ -52,7 +52,7 @@ HRESULT AddRemovePrograms::ExecuteForAddRequest()
     auto versionString = packageInfo->GetVersion();
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayVersion", versionString));
 
-    std::wstring packageIconString = m_msixRequest->GetPackageDirectoryPath() + packageInfo->GetRelativeExecutableFilePath();
+    std::wstring packageIconString = m_msixRequest->GetPackageDirectoryPath() + L"\\" + packageInfo->GetRelativeExecutableFilePath();
     RETURN_IF_FAILED(packageKey.SetStringValue(L"DisplayIcon", packageIconString));
 
     TraceLoggingWrite(g_MsixTraceLoggingProvider,

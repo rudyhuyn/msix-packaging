@@ -84,8 +84,7 @@ HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & pack
     instance->m_packageFilePath = packageFilePath;
     instance->m_packageFullName = packageFullName;
     instance->m_validationOptions = validationOption;
-    auto filepathMappings = FilePathMappings::GetInstance();
-    RETURN_IF_FAILED(filepathMappings.GetInitializationResult());
+    RETURN_IF_FAILED(FilePathMappings::GetInstance().GetInitializationResult());
 
     //Set MsixResponse
     AutoPtr<MsixResponse> localResponse;
@@ -215,5 +214,5 @@ std::wstring MsixRequest::GetPackageDirectoryPath()
     if (m_packageInfo == nullptr)
         return nullptr;
 
-    return FilePathMappings::GetInstance().GetMsix7Directory() + (m_packageInfo->GetPackageFullName());
+    return FilePathMappings::GetInstance().GetMsix7Directory() + m_packageInfo->GetPackageFullName();
 }

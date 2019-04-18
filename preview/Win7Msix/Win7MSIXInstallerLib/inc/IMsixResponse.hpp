@@ -22,5 +22,6 @@ namespace Win7MsixInstallerLib {
         virtual inline InstallationStep GetStatus() = 0;
         virtual inline HRESULT GetHResultTextCode() = 0;
         virtual inline std::wstring GetTextStatus() = 0;
+        virtual inline void CancelRequest() = 0;
     };
 }

@@ -55,7 +55,7 @@ HRESULT StartMenuLink::ExecuteForAddRequest()
 
     std::wstring filePath = FilePathMappings::GetInstance().GetMap()[L"Common Programs"] + L"\\" + packageInfo->GetDisplayName() + L".lnk";
 
-    std::wstring resolvedExecutableFullPath = m_msixRequest->GetPackageDirectoryPath() + packageInfo->GetRelativeExecutableFilePath();
+    std::wstring resolvedExecutableFullPath = m_msixRequest->GetPackageDirectoryPath() + L"\\" + packageInfo->GetRelativeExecutableFilePath();
     std::wstring appUserModelId = m_msixRequest->GetPackageInfo()->GetId();
     RETURN_IF_FAILED(CreateLink(resolvedExecutableFullPath.c_str(), filePath.c_str(), L"", appUserModelId.c_str()));
 

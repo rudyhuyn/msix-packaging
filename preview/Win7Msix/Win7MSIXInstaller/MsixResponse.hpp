@@ -43,7 +43,7 @@ public:
     }
 
     /// Method used to set the status of the cancel button if 'Cancel' is clicked
-    void CancelRequest()
+    virtual void CancelRequest()
     {
         m_isInstallCancelled = true;
     }

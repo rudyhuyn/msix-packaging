@@ -13,7 +13,7 @@ class PopulatePackageInfo : IPackageHandler
 public:
     /// Opens the package to grab the package reader, manifest reader and read the info out of the manifest
     HRESULT ExecuteForAddRequest();
-
+    
     /// Opens the manifest from the filesystem to create a manifest reader and read the info out of the manifest
     /// @return E_NOT_SET when the package cannot be found
     HRESULT ExecuteForRemoveRequest();

@@ -5,71 +5,70 @@
 
 namespace Win7MsixInstallerLib
 {
+enum OperationType
+{
+    Add = 1,
+    Remove = 2,
+};
 
-    enum OperationType
+/// MsixRequest represents what this instance of the executable will be doing and tracks the state of the current operation
+class MsixRequest
+{
+private:
+    /// Should always be available via constructor
+    std::wstring m_packageFilePath;
+    std::wstring m_packageFullName;
+    MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
+    OperationType m_operationType = Add;
+
+    /// Filled by PopulatePackageInfo
+    AutoPtr<PackageBase> m_packageInfo;
+
+    /// MsixResponse object populated by handlers
+    AutoPtr<MsixResponse> m_msixResponse;
+
+protected:
+    MsixRequest() {}
+public:
+    static HRESULT Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest** outInstance);
+
+    /// The main function processes the request based on whichever operation type was requested and then
+    /// going through the sequence of individual handlers.
+    HRESULT ProcessRequest();
+
+    bool IsRemove()
     {
-        Add = 1,
-        Remove = 2,
-    };
+        return m_operationType == OperationType::Remove;
+    }
 
-    /// MsixRequest represents what this instance of the executable will be doing and tracks the state of the current operation
-    class MsixRequest
+    bool AllowSignatureOriginUnknown()
     {
-    private:
-        /// Should always be available via constructor
-        std::wstring m_packageFilePath;
-        std::wstring m_packageFullName;
-        MSIX_VALIDATION_OPTION m_validationOptions = MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_FULL;
-        OperationType m_operationType = Add;
+        m_validationOptions = static_cast<MSIX_VALIDATION_OPTION>(m_validationOptions | MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN);
+        return true;
+    }
 
-        /// Filled by PopulatePackageInfo
-        AutoPtr<PackageBase> m_packageInfo;
+    inline MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
+    inline PCWSTR GetPackageFilePath() { return m_packageFilePath.c_str(); }
+    inline PCWSTR GetPackageFullName() { return m_packageFullName.c_str(); }
 
-        /// MsixResponse object populated by handlers
-        AutoPtr<MsixResponse> m_msixResponse;
+    /// Retrieves the msixResponse object
+    ///
+    /// @return m_msixResponse object
+    MsixResponse* GetMsixResponse() { return m_msixResponse; }
 
-    protected:
-        MsixRequest() {}
-    public:
-        static HRESULT Make(OperationType operationType, const std::wstring & packageFilePath, std::wstring packageFullName, MSIX_VALIDATION_OPTION validationOption, MsixRequest** outInstance);
+    /// Called by PopulatePackageInfo
+    void SetPackageInfo(PackageBase* packageInfo);
+    std::wstring GetPackageDirectoryPath();
 
-        /// The main function processes the request based on whichever operation type was requested and then
-        /// going through the sequence of individual handlers.
-        HRESULT ProcessRequest();
+    /// @return can return null if called before PopulatePackageInfo.
+    PackageBase* GetPackageInfo() { return m_packageInfo; }
 
-        bool IsRemove()
-        {
-            return m_operationType == OperationType::Remove;
-        }
+private:
+    /// This handles Add operation and proceeds through each of the AddSequenceHandlers to install the package
+    HRESULT ProcessAddRequest();
 
-        bool AllowSignatureOriginUnknown()
-        {
-            m_validationOptions = static_cast<MSIX_VALIDATION_OPTION>(m_validationOptions | MSIX_VALIDATION_OPTION::MSIX_VALIDATION_OPTION_ALLOWSIGNATUREORIGINUNKNOWN);
-            return true;
-        }
+    /// This handles Remove operation and proceeds through each of the RemoveSequenceHandlers to uninstall the package
+    HRESULT ProcessRemoveRequest();
 
-        inline MSIX_VALIDATION_OPTION GetValidationOptions() { return m_validationOptions; }
-        inline PCWSTR GetPackageFilePath() { return m_packageFilePath.c_str(); }
-        inline PCWSTR GetPackageFullName() { return m_packageFullName.c_str(); }
-
-        /// Retrieves the msixResponse object
-        ///
-        /// @return m_msixResponse object
-        MsixResponse* GetMsixResponse() { return m_msixResponse; }
-
-        /// Called by PopulatePackageInfo
-        void SetPackageInfo(PackageBase* packageInfo);
-        std::wstring GetPackageDirectoryPath();
-
-        /// @return can return null if called before PopulatePackageInfo.
-        PackageBase* GetPackageInfo() { return m_packageInfo; }
-
-    private:
-        /// This handles Add operation and proceeds through each of the AddSequenceHandlers to install the package
-        HRESULT ProcessAddRequest();
-
-        /// This handles Remove operation and proceeds through each of the RemoveSequenceHandlers to uninstall the package
-        HRESULT ProcessRemoveRequest();
-
-    };
+};
 }

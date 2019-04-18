@@ -66,7 +66,7 @@ HRESULT FileTypeAssociation::ParseFtaElement(IMsixElement* ftaElement)
         Text<wchar_t> logoPath;
         RETURN_IF_FAILED(logoElement->GetText(&logoPath));
 
-        fta.logo = FilePathMappings::GetInstance().GetMsix7Directory() + m_msixRequest->GetPackageInfo()->GetPackageFullName() + std::wstring(L"\\") + logoPath.Get();
+        fta.logo = m_msixRequest->GetPackageDirectoryPath() + std::wstring(L"\\") + logoPath.Get();
     }
 
     ComPtr<IMsixElementEnumerator> verbsEnum;
@@ -211,7 +211,7 @@ HRESULT FileTypeAssociation::ProcessFtaForAdd(Fta& fta)
     RegistryKey commandKey;
     RETURN_IF_FAILED(openKey.CreateSubKey(commandKeyName.c_str(), KEY_WRITE, &commandKey));
 
-    std::wstring executablePath = m_msixRequest->GetPackageDirectoryPath() + m_msixRequest->GetPackageInfo()->GetRelativeExecutableFilePath();
+    std::wstring executablePath = m_msixRequest->GetPackageDirectoryPath() + L"\\" + m_msixRequest->GetPackageInfo()->GetRelativeExecutableFilePath();
     std::wstring command = executablePath + commandArgument;
     RETURN_IF_FAILED(commandKey.SetStringValue(L"", command));
 

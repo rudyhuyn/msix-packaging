@@ -14,9 +14,10 @@ const PCWSTR InstallComplete::HandlerName = L"InstallComplete";
 
 HRESULT InstallComplete::ExecuteForAddRequest()
 {
-    if (!m_msixRequest->GetMsixResponse()->GetIsInstallCancelled())
+    auto msixResponse = m_msixRequest->GetMsixResponse();
+    if (msixResponse != nullptr && !msixResponse->GetIsInstallCancelled())
     {
-        m_msixRequest->GetMsixResponse()->SendCallback(InstallationStep::InstallationStepCompleted, 100);
+        msixResponse->SendCallback(InstallationStep::InstallationStepCompleted, 100);
     }
     return S_OK;
 }
