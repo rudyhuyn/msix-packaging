@@ -98,7 +98,7 @@ HRESULT MsixRequest::Make(OperationType operationType, const std::wstring & pack
 
 HRESULT MsixRequest::ProcessRequest()
 {
-    m_msixResponse->SendCallback(InstallationStep::InstallationStepStarted, 0);
+    m_msixResponse->Update(InstallationStep::InstallationStepStarted, 0);
 
     switch (m_operationType)
     {
@@ -137,7 +137,7 @@ HRESULT MsixRequest::ProcessAddRequest()
             {
                 m_msixResponse->SetHResultTextCode(hrExecute);
                 m_msixResponse->SetTextStatus(L"Can't create the handler " + std::wstring(currentHandlerName));
-                m_msixResponse->SendCallback(InstallationStep::InstallationStepError, 0);
+                m_msixResponse->Update(InstallationStep::InstallationStepError, 0);
                 return hrExecute;
             }
         }
@@ -147,7 +147,7 @@ HRESULT MsixRequest::ProcessAddRequest()
         {
             m_msixResponse->SetHResultTextCode(hrExecute);
             m_msixResponse->SetTextStatus(L"Can't execute the handler " + std::wstring(currentHandlerName));
-            m_msixResponse->SendCallback(InstallationStep::InstallationStepError, 0);
+            m_msixResponse->Update(InstallationStep::InstallationStepError, 0);
             return hrExecute;
         }
 
@@ -175,7 +175,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
             {
                 m_msixResponse->SetHResultTextCode(hrExecute);
                 m_msixResponse->SetTextStatus(L"Can't create the handler " + std::wstring(currentHandlerName));
-                m_msixResponse->SendCallback(InstallationStep::InstallationStepError, 0);
+                m_msixResponse->Update(InstallationStep::InstallationStepError, 0);
                 return hrExecute;
             }
         }
@@ -192,7 +192,7 @@ HRESULT MsixRequest::ProcessRemoveRequest()
             {
                 m_msixResponse->SetHResultTextCode(hrExecute);
                 m_msixResponse->SetTextStatus(L"Can't execute the handler " + std::wstring(currentHandlerName));
-                m_msixResponse->SendCallback(InstallationStep::InstallationStepError, 0);
+                m_msixResponse->Update(InstallationStep::InstallationStepError, 0);
                 return hrExecute;
             }
         }

@@ -74,55 +74,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_COMMAND:
-        switch (LOWORD(wParam)) 
+        switch (LOWORD(wParam))
         {
-            case IDC_INSTALLBUTTON:
+        case IDC_INSTALLBUTTON:
+        {
+            g_installing = true;
+            DestroyWindow(g_LaunchbuttonHWnd);
+            DestroyWindow(g_buttonHWnd);
+            ui->CreateCancelButton(hWnd, windowRect);
+            UpdateWindow(hWnd);
+            ui->CreateProgressBar(hWnd, windowRect);
+            ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
+            ui->ButtonClicked();
+        }
+        break;
+        case IDC_LAUNCHCHECKBOX:
+        {
+            if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
-                g_installing = true;
-                DestroyWindow(g_LaunchbuttonHWnd);
-                DestroyWindow(g_buttonHWnd);
-                ui->CreateCancelButton(hWnd, windowRect);
-                UpdateWindow(hWnd);
-                ui->CreateProgressBar(hWnd, windowRect);
-                ShowWindow(g_progressHWnd, SW_SHOW); //Show progress bar only when install is clicked
-                ui->ButtonClicked();
+                g_launchCheckBoxState = true;
             }
+            else
+            {
+                g_launchCheckBoxState = false;
+            }
+        }
+        break;
+        case IDC_CANCELBUTTON:
+        {
+            ui->ConfirmAppCancel(hWnd);
             break;
-            case IDC_LAUNCHCHECKBOX:
-            {
-                if (SendMessage(GetDlgItem(hWnd, IDC_LAUNCHCHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
-                {
-                    g_launchCheckBoxState = true;
-                }
-                else
-                {
-                    g_launchCheckBoxState = false;
-                }
-            }
+        }
+        case IDC_LAUNCHBUTTON:
+        {
+            ui->LaunchInstalledApp();
             break;
-            case IDC_CANCELBUTTON:
-            {
-                ui->ConfirmAppCancel(hWnd);
-                break;
-            }
-            case IDC_LAUNCHBUTTON:
-            {
-                ui->LaunchInstalledApp();
-                break;
-            }
+        }
         }
         break;
     case WM_CTLCOLORSTATIC:
     {
         switch (::GetDlgCtrlID((HWND)lParam))
-            {
-            case IDC_LAUNCHCHECKBOX:
-            {
-                HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
-                ::DeleteObject(hbr);
-                SetBkMode((HDC)wParam, TRANSPARENT);
-                return (LRESULT)::GetStockObject(NULL_BRUSH);
-            }
+        {
+        case IDC_LAUNCHCHECKBOX:
+        {
+            HBRUSH hbr = (HBRUSH)DefWindowProc(hWnd, message, wParam, lParam);
+            ::DeleteObject(hbr);
+            SetBkMode((HDC)wParam, TRANSPARENT);
+            return (LRESULT)::GetStockObject(NULL_BRUSH);
+        }
         }
 
         break;
@@ -292,7 +292,7 @@ HRESULT UI::ShowUI()
 
 void UI::PreprocessRequest()
 {
-    auto existingPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFamilyName());
+    auto existingPackage = m_packageManager->FindPackageByFamilyName(m_packageInfo->GetPackageFamilyName());
     if (existingPackage != nullptr)
     {
         if (CaseInsensitiveEquals(existingPackage->GetPackageFullName(), m_packageInfo->GetPackageFullName()))
@@ -306,7 +306,7 @@ void UI::PreprocessRequest()
             /// Package with same family name exists and may be an update
             m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
             m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));    
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
         }
     }
 }
@@ -375,7 +375,7 @@ BOOL UI::InstallButton(HWND parentHWnd, RECT parentRect) {
     return TRUE;
 }
 
-BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect) 
+BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
 {
     LPVOID buttonPointer = nullptr;
     g_CancelbuttonHWnd = CreateWindowEx(
@@ -394,7 +394,7 @@ BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
     return TRUE;
 }
 
-BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff) 
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff)
 {
     LPVOID buttonPointer = nullptr;
     g_LaunchbuttonHWnd = CreateWindowEx(
@@ -495,7 +495,6 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
 
 void UI::ButtonClicked()
 {
-    //    SetEvent(m_closeUI);
     switch (m_type)
     {
     case InstallUIAdd:
@@ -505,12 +504,17 @@ void UI::ButtonClicked()
         {
             m_msixResponse->SetCallback([this](IMsixResponse * sender) {
 
-                SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)sender->GetProgress(), 0);
+                SendMessage(g_progressHWnd, PBM_SETPOS, (WPARAM)sender->GetPercentage(), 0);
                 switch (sender->GetStatus())
                 {
                 case InstallationStep::InstallationStepCompleted:
                 {
                     this->ShowCompletedUI();
+                }
+                break;
+                case InstallationStep::InstallationStepError:
+                {
+                    auto error = sender->GetTextStatus();
                 }
                 break;
                 }
@@ -524,15 +528,37 @@ void UI::ButtonClicked()
 
 void UI::ShowCompletedUI()
 {
-    DestroyWindow(g_CancelbuttonHWnd);
     RECT windowRect;
     GetClientRect(hWnd, &windowRect);
+    g_installing = false; // installation complete, clicking on 'x' should not show the cancellation popup
+    DestroyWindow(g_CancelbuttonHWnd);
     CreateLaunchButton(hWnd, windowRect, 150, 60);
+    ShowWindow(g_LaunchbuttonHWnd, SW_SHOW);
     UpdateWindow(hWnd);
     ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
     ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
-    if (g_launchCheckBoxState) {
+    if (g_launchCheckBoxState)
+    {
         LaunchInstalledApp(); // launch app
         DestroyWindow(hWnd); // close msix app installer
+        SetEvent(m_closeUI);
+    }
+    else
+    {
+        //wait for user to click launch button or close the window
+        while (true)
+        {
+            switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
+            {
+            case WAIT_OBJECT_0:
+                MSG msg;
+                while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
+                break;
+            }
+        }
     }
 }

@@ -167,7 +167,7 @@ HRESULT Extractor::ExtractPayloadFiles()
         ++nbrFilesExtracted;
 
         float progress = 100.0f * nbrFilesExtracted / totalNumberFiles;
-        m_msixRequest->GetMsixResponse()->SendCallback(InstallationStep::InstallationStepExtraction, progress);
+        m_msixRequest->GetMsixResponse()->Update(InstallationStep::InstallationStepExtraction, progress);
     }
 
     return S_OK;

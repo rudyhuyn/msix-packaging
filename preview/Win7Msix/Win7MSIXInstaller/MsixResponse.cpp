@@ -17,9 +17,9 @@ HRESULT MsixResponse::Make(MsixResponse ** outInstance)
     return S_OK;
 }
 
-void MsixResponse::SendCallback(InstallationStep status, float progress)
+void MsixResponse::Update(InstallationStep status, float progress)
 {
-    m_progress = progress;
+    m_percentage = progress;
     m_status = status;
     if (m_callback)
     {

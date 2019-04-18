@@ -18,7 +18,7 @@ namespace Win7MsixInstallerLib {
     {
     public:
         virtual void SetCallback(std::function<void(IMsixResponse *)> callback) = 0;
-        virtual inline float GetProgress() = 0;
+        virtual inline float GetPercentage() = 0;
         virtual inline InstallationStep GetStatus() = 0;
         virtual inline HRESULT GetHResultTextCode() = 0;
         virtual inline std::wstring GetTextStatus() = 0;

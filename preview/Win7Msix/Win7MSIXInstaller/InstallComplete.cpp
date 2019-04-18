@@ -17,7 +17,7 @@ HRESULT InstallComplete::ExecuteForAddRequest()
     auto msixResponse = m_msixRequest->GetMsixResponse();
     if (msixResponse != nullptr && !msixResponse->GetIsInstallCancelled())
     {
-        msixResponse->SendCallback(InstallationStep::InstallationStepCompleted, 100);
+        msixResponse->Update(InstallationStep::InstallationStepCompleted, 100);
     }
     return S_OK;
 }

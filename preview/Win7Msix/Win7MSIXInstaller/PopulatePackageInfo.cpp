@@ -24,8 +24,9 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromPackage(const std::wstring & pack
     // Create a new package reader using the factory.
     ComPtr<IAppxPackageReader> packageReader;
     RETURN_IF_FAILED(appxFactory->CreatePackageReader(inputStream.Get(), &packageReader));
-
     RETURN_IF_FAILED(Package::MakeFromPackageReader(packageReader.Get(), packageInfo));
+    packageReader.Release();
+    inputStream.Release();
 
     return S_OK;
 }
@@ -34,17 +35,22 @@ HRESULT PopulatePackageInfo::GetPackageInfoFromManifest(const std::wstring & dir
 {
     std::wstring manifestPath = directoryPath + manifestFile;
 
-    ComPtr<IStream> stream;
-    RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath.c_str(), true /*forRead*/, &stream));
+    // On Win32 platforms CoCreateAppxFactory defaults to CoTaskMemAlloc/CoTaskMemFree
+    // On non-Win32 platforms CoCreateAppxFactory will return 0x80070032 (e.g. HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED))
+    // So on all platforms, it's always safe to call CoCreateAppxFactoryWithHeap, just be sure to bring your own heap!
+    ComPtr<IStream> inputStream;
+    RETURN_IF_FAILED(CreateStreamOnFileUTF16(manifestPath.c_str(), /*forRead*/ true, &inputStream));
 
+    // Create a new package reader using the factory.
     ComPtr<IAppxFactory> appxFactory;
     RETURN_IF_FAILED(CoCreateAppxFactoryWithHeap(Win7MsixInstallerLib_MyAllocate, Win7MsixInstallerLib_MyFree, validationOption, &appxFactory));
 
     ComPtr<IAppxManifestReader> manifestReader;
-    RETURN_IF_FAILED(appxFactory->CreateManifestReader(stream.Get(), &manifestReader));
+    RETURN_IF_FAILED(appxFactory->CreateManifestReader(inputStream.Get(), &manifestReader));
 
     RETURN_IF_FAILED(InstalledPackage::MakeFromManifestReader(directoryPath, manifestReader.Get(), packageInfo));
-
+    manifestReader.Release();
+    inputStream.Release();
     return S_OK;
 }
 

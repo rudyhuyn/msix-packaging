@@ -23,7 +23,7 @@ private:
     std::wstring m_textStatus;
 
     /// Progress percentage of the msix deployment
-    float m_progress;
+    float m_percentage;
 
     InstallationStep m_status = InstallationStepUnknown;
 
@@ -80,22 +80,28 @@ public:
         return m_textStatus;
     }
 
-    /// Send a callback to the UI to indicate the current step of the installation
+    /// Update response and send a callback to the UI
     ///
-    /// @param progress - current percentage of progress
-    /// @param stepInfo - current step
-    void SendCallback(InstallationStep status, float progress);
+    /// @param status - current step of the installation
+    /// @param percentage - installation progresss percentage
+    void Update(InstallationStep status, float percentage);
 
+    /// Set a callback for the UI
+    ///
+    /// @param callback - callback called when status or percentage change
     virtual void SetCallback(std::function<void(IMsixResponse *)> callback);
 
-    /// Returns the progress percentage 
+    /// Get the installation progress percentage 
     ///
     /// @return the percentage (from 0 to 100)
-    virtual inline float GetProgress()
+    virtual inline float GetPercentage()
     {
-        return m_progress;
+        return m_percentage;
     }
 
+    /// Get the installation status
+    ///
+    /// @return the installation status
     virtual inline InstallationStep GetStatus()
     {
         return m_status;

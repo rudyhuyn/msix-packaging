@@ -11,7 +11,8 @@ namespace Win7MsixInstallerLib {
         PackageManager();
         IMsixResponse * AddPackage(const std::wstring & packageFilePath, DeploymentOptions options) override;
         IMsixResponse * RemovePackage(const std::wstring & packageFullName) override;
-        IInstalledPackageInfo * FindPackage(const std::wstring & packageFamilyName) override;
+        IInstalledPackageInfo * FindPackage(const std::wstring & packageFullName) override;
+        IInstalledPackageInfo * FindPackageByFamilyName(const std::wstring & packageFamilyName) override;
         std::vector<IInstalledPackageInfo *> * FindPackages() override;
         IPackage * GetPackageInfoMsix(const std::wstring & msixFullPath) override;
     private:
