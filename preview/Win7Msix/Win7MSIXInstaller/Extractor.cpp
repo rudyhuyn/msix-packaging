@@ -142,7 +142,7 @@ HRESULT Extractor::ExtractPayloadFiles()
         "Extracting payload files from the package");
 
     Package * packageToInstall = dynamic_cast<Package*>(m_msixRequest->GetPackageInfo());
-    if (packageToInstall != nullptr)
+    if (packageToInstall == nullptr)
     {
         return E_FAIL;
     }

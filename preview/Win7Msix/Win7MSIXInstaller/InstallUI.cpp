@@ -536,6 +536,8 @@ void UI::ButtonClicked()
                 case InstallationStep::InstallationStepError:
                 {
                     auto error = sender->GetTextStatus();
+                    
+                    CloseUI();
                 }
                 break;
                 }
