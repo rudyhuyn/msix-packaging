@@ -108,10 +108,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDC_LAUNCHBUTTON:
         {
             ui->LaunchInstalledApp();
+            ui->CloseUI();
             break;
         }
         }
         break;
+    case WM_INSTALLCOMPLETE_MSG:
+    {
+        g_installing = false; // installation complete, clicking on 'x' should not show the cancellation popup
+        if (g_launchCheckBoxState)
+        {
+            ui->LaunchInstalledApp(); // launch app
+            ui->CloseUI();
+        }
+        else
+        {
+            RECT windowRect;
+            GetClientRect(hWnd, &windowRect);
+            DestroyWindow(g_CancelbuttonHWnd);
+            ui->CreateLaunchButton(hWnd, windowRect, 150, 60);
+            UpdateWindow(hWnd);
+            ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
+            ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
+            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW);
+        }
+    }
+    break;
     case WM_CTLCOLORSTATIC:
     {
         switch (::GetDlgCtrlID((HWND)lParam))
@@ -509,7 +531,7 @@ void UI::ButtonClicked()
                 {
                 case InstallationStep::InstallationStepCompleted:
                 {
-                    this->ShowCompletedUI();
+                    SendInstallCompleteMsg();
                 }
                 break;
                 case InstallationStep::InstallationStepError:
@@ -526,39 +548,14 @@ void UI::ButtonClicked()
 }
 
 
-void UI::ShowCompletedUI()
+void UI::SendInstallCompleteMsg()
 {
-    RECT windowRect;
-    GetClientRect(hWnd, &windowRect);
-    g_installing = false; // installation complete, clicking on 'x' should not show the cancellation popup
-    DestroyWindow(g_CancelbuttonHWnd);
-    CreateLaunchButton(hWnd, windowRect, 150, 60);
-    ShowWindow(g_LaunchbuttonHWnd, SW_SHOW);
-    UpdateWindow(hWnd);
-    ShowWindow(g_progressHWnd, SW_HIDE); //hide progress bar
-    ShowWindow(g_checkboxHWnd, SW_HIDE); //hide launch check box
-    if (g_launchCheckBoxState)
-    {
-        LaunchInstalledApp(); // launch app
-        DestroyWindow(hWnd); // close msix app installer
-        SetEvent(m_closeUI);
-    }
-    else
-    {
-        //wait for user to click launch button or close the window
-        while (true)
-        {
-            switch (MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE, QS_ALLINPUT))
-            {
-            case WAIT_OBJECT_0:
-                MSG msg;
-                while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-                {
-                    TranslateMessage(&msg);
-                    DispatchMessage(&msg);
-                }
-                break;
-            }
-        }
-    }
+    SendMessage(GetHwnd(), WM_INSTALLCOMPLETE_MSG, NULL, NULL);
+}
+
+
+void UI::CloseUI()
+{
+    DestroyWindow(GetHwnd()); // close msix app installer
+    SetEvent(m_closeUI);
 }

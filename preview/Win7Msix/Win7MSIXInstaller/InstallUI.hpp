@@ -29,7 +29,6 @@ enum UIType { InstallUIAdd, InstallUIRemove};
 class UI
 {
 public:
-    HRESULT ShowUI();
     HRESULT LaunchInstalledApp();
     void ConfirmAppCancel(HWND parentHWnd);
 
@@ -68,8 +67,6 @@ private:
     HANDLE m_closeUI;
 
     HRESULT ParseInfoFromPackage();
-
-    void ShowCompletedUI();
 
     /// This function sets the parent window hwnd after create window
     ///
@@ -147,9 +144,16 @@ public:
     /// @param windowText - the text to change the window to
     BOOL ChangeText(HWND parentHWnd, std::wstring displayText, std::wstring  messageText, IStream* logoStream = nullptr);
 
+    /// Sends the WM_INSTALLCOMPLETE_MSG message to the main window when app installation is complete
+    void SendInstallCompleteMsg();
+
     /// The add operation could be an update if V1 version of the package is already installed. Show appropriate UI with respect to operation type
     /// The add operation could be an update if V1 version of the package is already installed on the machine
     /// This method checks the same and sets the button and install screen UI text to 'Update'
     ///
     void PreprocessRequest();
+
+    HRESULT ShowUI();
+
+    void CloseUI();
 };
