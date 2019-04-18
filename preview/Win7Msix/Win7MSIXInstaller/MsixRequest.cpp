@@ -1,4 +1,4 @@
-#include "generalutil.hpp"
+#include "GeneralUtil.hpp"
 #include "MsixRequest.hpp"
 
 #include <string>

@@ -3,7 +3,7 @@
 #include "CommandLineInterface.hpp"
 #include "Win7MSIXInstallerLogger.hpp"
 #include <TraceLoggingProvider.h>
-#include "GeneralUtil.hpp"
+#include "Util.hpp"
 #include "resource.h"
 
 using namespace Win7MsixInstallerLib;
@@ -15,11 +15,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_ADDPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& path)
         {
-            if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
+            if (commandLineInterface->m_operationType != OperationType::Undefined)
             {
                 return E_INVALIDARG;
             }
-            commandLineInterface->m_operationType = CommandLineOperationType::Add;
+            commandLineInterface->m_operationType = OperationType::Add;
             commandLineInterface->m_packageFilePath = utf8_to_utf16(path);
             return S_OK;
         })
@@ -29,11 +29,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_REMOVEPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& packageFullName)
         {
-            if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
+            if (commandLineInterface->m_operationType != OperationType::Undefined)
             {
                 return E_INVALIDARG;
             }
-            commandLineInterface->m_operationType = CommandLineOperationType::Remove;
+            commandLineInterface->m_operationType = OperationType::Remove;
             commandLineInterface->m_packageFullName = utf8_to_utf16(packageFullName);
             return S_OK;
         })
@@ -52,11 +52,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(false, IDS_STRING_HELP_OPTION_FINDALLPACKAGES,
             [&](CommandLineInterface* commandLineInterface, const std::string&)
             {
-                if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
+                if (commandLineInterface->m_operationType != OperationType::Undefined)
                 {
                     return E_INVALIDARG;
                 }
-                commandLineInterface->m_operationType = CommandLineOperationType::FindAllPackages;
+                commandLineInterface->m_operationType = OperationType::FindAllPackages;
                 return S_OK;
             })
     },
@@ -65,11 +65,11 @@ std::map<std::wstring, Option, CaseInsensitiveLess> CommandLineInterface::s_opti
         Option(true, IDS_STRING_HELP_OPTION_FINDPACKAGE,
             [&](CommandLineInterface* commandLineInterface, const std::string& packageFullName)
             {
-                if (commandLineInterface->m_operationType != CommandLineOperationType::Undefined)
+                if (commandLineInterface->m_operationType != OperationType::Undefined)
                 {
                     return E_INVALIDARG;
                 }
-                commandLineInterface->m_operationType = CommandLineOperationType::FindPackage;
+                commandLineInterface->m_operationType = OperationType::FindPackage;
                 commandLineInterface->m_packageFullName = utf8_to_utf16(packageFullName);
                 return S_OK;
             })

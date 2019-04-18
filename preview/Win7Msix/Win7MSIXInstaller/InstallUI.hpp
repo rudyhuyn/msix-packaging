@@ -3,8 +3,8 @@
 /// UI Functions
 #include <windows.h>
 #include <string>
+#include "Util.hpp"
 #include <IPackageManager.hpp>
-#include "GeneralUtil.hpp"
 #include "resource.h"
 /// Child window identifiers
 #define IDC_LAUNCHCHECKBOX 101
@@ -38,7 +38,6 @@ public:
         m_closeUI = CreateEvent(NULL, FALSE, FALSE, NULL);
     }
     ~UI() {}
-    bool Show();
 
 private:
     Win7MsixInstallerLib::IPackageManager* m_packageManager = nullptr;
@@ -46,7 +45,7 @@ private:
     std::wstring m_path;
 
     //Parent Window Hwnd
-    HWND hWnd = NULL;
+    HWND hWnd = NULL; 
 
     /// Default prefix text on UI while prompting for app installation is 'Install'
     std::wstring m_installOrUpdateText = GetStringResource(IDS_STRING_INSTALLTEXT);
@@ -56,7 +55,6 @@ private:
 
     /// Popup message title while cancelling app installation
     std::wstring m_cancelPopUpTitle = GetStringResource(IDS_STRING_CANCEL_POPUP_TITLE);
-    //Cached information used to draw the dialog
     std::wstring m_displayName = L"";
     std::wstring m_publisherCommonName = L"";
     ComPtr<IStream> m_logoStream;
@@ -87,7 +85,6 @@ private:
         return hWnd;
     }
 
-
 public:
 
     /// This function compiles the information displayed on the UI when the user selects an msix
@@ -101,7 +98,6 @@ public:
     /// @param windowClass - the class text of the window
     /// @param windowTitle - the window title
     int CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& windowClass, const std::wstring& title);
-    void LoadInfo();
 
     void ButtonClicked();
 
@@ -109,7 +105,6 @@ public:
     ///
     /// @param parentHWnd - the HWND of the window to add the progress bar to
     /// @param parentRect - the dimmensions of the parent window
-    /// count: the number of objects to be iterated through in the progress bar
     BOOL CreateProgressBar(HWND parentHWnd, RECT parentRect);
 
     /// Create the lower right install button

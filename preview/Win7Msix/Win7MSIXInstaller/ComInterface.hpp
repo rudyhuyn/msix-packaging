@@ -2,8 +2,11 @@
 #include "GeneralUtil.hpp"
 #include "IPackageHandler.hpp"
 #include "RegistryKey.hpp"
+#include "MsixRequest.hpp"
 #include <vector>
 
+namespace Win7MsixInstallerLib
+{
 class ComInterface : IPackageHandler
 {
 public:
@@ -11,7 +14,7 @@ public:
     HRESULT ExecuteForRemoveRequest();
 
     static const PCWSTR HandlerName;
-    
+
     static HRESULT CreateHandler(_In_ MsixRequest* msixRequest, _Out_ IPackageHandler** instance);
     ~ComInterface() {}
 private:
@@ -90,3 +93,4 @@ private:
     ComInterface(_In_ MsixRequest* msixRequest) : m_msixRequest(msixRequest) {}
 
 };
+}

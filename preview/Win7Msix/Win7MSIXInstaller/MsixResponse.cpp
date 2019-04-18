@@ -1,4 +1,4 @@
-#include "generalutil.hpp"
+#include "GeneralUtil.hpp"
 #include "MsixResponse.hpp"
 using namespace Win7MsixInstallerLib;
 

@@ -8,6 +8,7 @@
 #include "GeneralUtil.hpp"
 #include "Constants.hpp"
 #include <TraceLoggingProvider.h>
+using namespace Win7MsixInstallerLib;
 
 const PCWSTR ComServer::HandlerName = L"ComServer";
 
@@ -52,7 +53,7 @@ HRESULT ComServer::ProcessExeServerForAdd(ExeServer& exeServer)
         RETURN_IF_FAILED(clsidKey.CreateSubKey(exeServerClass->id.c_str(), KEY_WRITE, &classIdKey));
         RETURN_IF_FAILED(classIdKey.SetStringValue(L"", exeServerClass->displayName));
 
-        std::wstring executableFullPath = m_msixRequest->GetFilePathMappings()->GetExecutablePath(exeServer.executable, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
+        std::wstring executableFullPath = FilePathMappings::GetInstance().GetExecutablePath(exeServer.executable, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
         RegistryKey localServerKey;
         RETURN_IF_FAILED(classIdKey.CreateSubKey(localServerKeyName.c_str(), KEY_WRITE, &localServerKey));
         RETURN_IF_FAILED(localServerKey.SetStringValue(L"", executableFullPath));
@@ -80,7 +81,7 @@ HRESULT ComServer::ProcessExeServerForAdd(ExeServer& exeServer)
             RETURN_IF_FAILED(classIdKey.CreateSubKey(inprocHandlerKeyName.c_str(), KEY_WRITE, &inprocHandlerKey));
             RETURN_IF_FAILED(inprocHandlerKey.SetStringValue(L"", defaultInprocHandler));
         }
-        
+
         if (!exeServerClass->insertableObject.empty())
         {
             RegistryKey insertableObjectKey;
@@ -316,7 +317,7 @@ HRESULT ComServer::ParseExeServerElement(IMsixElement* exeServerElement)
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, argumentsAttribute, exeServer.arguments));
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, displayNameAttribute, exeServer.displayName));
     RETURN_IF_FAILED(GetAttributeValueFromElement(exeServerElement, launchAndActivationPermissionAttribute, exeServer.launchAndActivationPermission));
-    
+
     BOOL hasCurrent = FALSE;
     ComPtr<IMsixElementEnumerator> classesEnum;
     RETURN_IF_FAILED(exeServerElement->GetElements(exeServerClassQuery.c_str(), &classesEnum));
@@ -652,7 +653,7 @@ HRESULT ComServer::ParseDefaultIcon(IMsixElement * classElement, ExeServerClass 
         std::wstring resourceIndex;
         RETURN_IF_FAILED(GetAttributeValueFromElement(defaultIconElement.Get(), resourceIndexAttribute, resourceIndex));
 
-        std::wstring resolvedPath = m_msixRequest->GetFilePathMappings()->GetExecutablePath(path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
+        std::wstring resolvedPath = FilePathMappings::GetInstance().GetExecutablePath(path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
 
         exeServerClass.defaultIcon = std::wstring(L"\"") + resolvedPath + std::wstring(L"\",") + resourceIndex;
     }
@@ -677,7 +678,7 @@ HRESULT ComServer::ParseToolboxBitmap(IMsixElement * classElement, ExeServerClas
         std::wstring resourceIndex;
         RETURN_IF_FAILED(GetAttributeValueFromElement(toolboxBitmapElement.Get(), resourceIndexAttribute, resourceIndex));
 
-        std::wstring resolvedPath = m_msixRequest->GetFilePathMappings()->GetExecutablePath(path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
+        std::wstring resolvedPath = FilePathMappings::GetInstance().GetExecutablePath(path, m_msixRequest->GetPackageInfo()->GetPackageFullName().c_str());
 
         exeServerClass.toolboxBitmap = std::wstring(L"\"") + resolvedPath + std::wstring(L"\",") + resourceIndex;
     }

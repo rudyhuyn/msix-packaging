@@ -11,7 +11,7 @@
 #include "resource.h"
 #include <filesystem>
 
-#include "GeneralUtil.hpp"
+#include "Util.hpp"
 #include "Win7MSIXInstallerLogger.hpp"
 // MSIXWindows.hpp define NOMINMAX because we want to use std::min/std::max from <algorithm>
 // GdiPlus.h requires a definiton for min and max. Use std namespace *BEFORE* including it.
@@ -69,11 +69,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     case WM_PAINT:
     {
-        ui->DrawPackageInfo(hWnd, windowRect);
+        if (ui != NULL)
+        {
+            ui->DrawPackageInfo(hWnd, windowRect);
+        }
         break;
     }
     case WM_COMMAND:
-    {
         switch (LOWORD(wParam))
         {
         case IDC_INSTALLBUTTON:
@@ -106,11 +108,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         case IDC_LAUNCHBUTTON:
+        {
             ui->LaunchInstalledApp();
             break;
         }
-        break;
     }
+    break;
     case WM_CTLCOLORSTATIC:
     {
         switch (::GetDlgCtrlID((HWND)lParam))
@@ -127,7 +130,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_CLOSE:
-    {
         //show popup asking if user wants to stop installation only during app installation
         if (g_installing)
         {
@@ -138,7 +140,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DestroyWindow(hWnd);
         }
         break;
-    }
     case WM_SIZE:
     case WM_SIZING:
         break;
@@ -279,7 +280,7 @@ HRESULT UI::ParseInfoFromPackage()
     return S_OK;
 }
 
-bool UI::Show()
+HRESULT UI::ShowUI()
 {
     m_loadingPackageInfoCode = ParseInfoFromPackage();
 
@@ -287,7 +288,29 @@ bool UI::Show()
     thread.detach();
 
     DWORD waitResult = WaitForSingleObject(m_closeUI, INFINITE);
-    return waitResult == WAIT_OBJECT_0;
+
+    return S_OK;
+}
+
+void UI::PreprocessRequest()
+{
+    auto existingPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFamilyName());
+    if (existingPackage != nullptr)
+    {
+        if (CaseInsensitiveEquals(existingPackage->GetPackageFullName(), m_packageInfo->GetPackageFullName()))
+        {
+            /// Same package is already installed
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_REINSTALLAPP)); /// change install button text to 'reinstall'
+            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW); /// show launch button window
+        }
+        else
+        {
+            /// Package with same family name exists and may be an update
+            m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
+            m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
+            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
+        }
+    }
 }
 
 BOOL UI::CreateProgressBar(HWND parentHWnd, RECT parentRect)
@@ -354,26 +377,26 @@ BOOL UI::InstallButton(HWND parentHWnd, RECT parentRect) {
     return TRUE;
 }
 
-BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect)
+BOOL UI::CreateCancelButton(HWND parentHWnd, RECT parentRect) 
 {
-    LPVOID buttonPointer = nullptr;
-    g_CancelbuttonHWnd = CreateWindowEx(
-        WS_EX_LEFT, // extended window style
-        L"BUTTON",
-        L"Cancel",  // text
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
-        parentRect.right - 100 - 50, // x coord
-        parentRect.bottom - 60,  // y coord
-        120,  // width
-        35,  // height
-        parentHWnd,  // parent
-        (HMENU)IDC_CANCELBUTTON, // menu
-        reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
-        buttonPointer); // pointer to button
-    return TRUE;
+        LPVOID buttonPointer = nullptr;
+        g_CancelbuttonHWnd = CreateWindowEx(
+            WS_EX_LEFT, // extended window style
+            L"BUTTON",
+            L"Cancel",  // text
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | BS_FLAT, // style
+            parentRect.right - 100 - 50, // x coord
+            parentRect.bottom - 60,  // y coord
+            120,  // width
+            35,  // height
+            parentHWnd,  // parent
+            (HMENU)IDC_CANCELBUTTON, // menu
+            reinterpret_cast<HINSTANCE>(GetWindowLongPtr(parentHWnd, GWLP_HINSTANCE)),
+            buttonPointer); // pointer to button
+        return TRUE;
 }
 
-BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff)
+BOOL UI::CreateLaunchButton(HWND parentHWnd, RECT parentRect, int xDiff, int yDiff) 
 {
     LPVOID buttonPointer = nullptr;
     g_LaunchbuttonHWnd = CreateWindowEx(
@@ -410,9 +433,9 @@ BOOL UI::ChangeText(HWND parentHWnd, std::wstring displayName, std::wstring mess
     Gdiplus::Font messageFont(L"Arial", 10);
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear);
-    auto windowsTextColor = Gdiplus::Color();
-    windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
-    Gdiplus::SolidBrush textBrush(windowsTextColor);
+        auto windowsTextColor = Gdiplus::Color();
+        windowsTextColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
+        Gdiplus::SolidBrush textBrush(windowsTextColor);
 
     graphics.DrawString(displayName.c_str(), -1, &displayNameFont, layoutRect, &format, &textBrush);
     layoutRect.Y += 40;
@@ -470,27 +493,6 @@ int UI::CreateInitWindow(HINSTANCE hInstance, int nCmdShow, const std::wstring& 
     }
 
     return static_cast<int>(msg.wParam);
-}
-
-void UI::PreprocessRequest()
-{
-    auto existingPackage = m_packageManager->FindPackage(m_packageInfo->GetPackageFamilyName());
-    if (existingPackage != nullptr)
-    {
-        if (CaseInsensitiveEquals(existingPackage->GetPackageFullName(), m_packageInfo->GetPackageFullName()))
-        {
-            /// Same package is already installed
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_REINSTALLAPP)); /// change install button text to 'reinstall'
-            ShowWindow(g_LaunchbuttonHWnd, SW_SHOW); /// show launch button window
-        }
-        else
-        {
-            /// Package with same family name exists and may be an update
-            m_installOrUpdateText = GetStringResource(IDS_STRING_UPDATETEXT);
-            m_cancelPopUpMessage = GetStringResource(IDS_STRING_CANCEL_UPDATEPOPUP);
-            ChangeInstallButtonText(GetStringResource(IDS_STRING_UPDATETEXT));
-        }
-    }
 }
 
 void UI::ButtonClicked()

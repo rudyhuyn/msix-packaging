@@ -4,7 +4,7 @@
 #include <functional>
 #include <IPackage.hpp>
 #include <AppxPackaging.hpp>
-enum CommandLineOperationType
+enum OperationType
 {
     Undefined = 0,
     Add = 1,
@@ -63,7 +63,7 @@ public:
     bool IsQuietMode() { return m_quietMode; }
     std::wstring GetPackageFilePathToInstall() { return m_packageFilePath; }
     std::wstring GetPackageFullName() { return m_packageFullName; }
-    CommandLineOperationType GetOperationType() { return m_operationType; }
+    OperationType GetOperationType() { return m_operationType; }
 private:
     int m_argc = 0;
     char ** m_argv = nullptr;
@@ -75,7 +75,7 @@ private:
     std::wstring m_packageFullName;
     bool m_quietMode;
 
-    CommandLineOperationType m_operationType = CommandLineOperationType::Undefined;
+    OperationType m_operationType = OperationType::Undefined;
 
     CommandLineInterface() {}
 };

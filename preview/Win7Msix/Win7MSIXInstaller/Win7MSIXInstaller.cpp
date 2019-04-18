@@ -12,7 +12,7 @@
 #include "InstallUI.hpp"
 #include "CommandLineInterface.hpp"
 #include "Win7MSIXInstallerLogger.hpp"
-#include "GeneralUtil.hpp"
+#include "Util.hpp"
 #include "resource.h"
 #include <VersionHelpers.h>
 
@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
     {
         switch (cli.GetOperationType())
         {
-        case CommandLineOperationType::Add:
+        case OperationType::Add:
         {
             AutoPtr<Win7MsixInstallerLib::IPackageManager> packageManager;
             RETURN_IF_FAILED(Win7MsixInstallerLib_CreatePackageManager(&packageManager));
@@ -53,11 +53,11 @@ int main(int argc, char * argv[])
             {
 
                 auto ui = new UI(packageManager, cli.GetPackageFilePathToInstall(), UIType::InstallUIAdd);
-                ui->Show();
+                ui->ShowUI();
             }
             break;
         }
-        case CommandLineOperationType::Remove:
+        case OperationType::Remove:
         {
             AutoPtr<Win7MsixInstallerLib::IPackageManager> packageManager;
             RETURN_IF_FAILED(Win7MsixInstallerLib_CreatePackageManager(&packageManager));
@@ -70,7 +70,7 @@ int main(int argc, char * argv[])
             }
             break;
         }
-        case CommandLineOperationType::FindPackage:
+        case OperationType::FindPackage:
         {
             AutoPtr<Win7MsixInstallerLib::IPackageManager> packageManager;
             RETURN_IF_FAILED(Win7MsixInstallerLib_CreatePackageManager(&packageManager));
@@ -92,7 +92,7 @@ int main(int argc, char * argv[])
             }
             return S_OK;
         }
-        case CommandLineOperationType::FindAllPackages:
+        case OperationType::FindAllPackages:
         {
             AutoPtr<Win7MsixInstallerLib::IPackageManager> packageManager;
             RETURN_IF_FAILED(Win7MsixInstallerLib_CreatePackageManager(&packageManager));
